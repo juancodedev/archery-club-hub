@@ -40,7 +40,7 @@ export default function TrainingSessionsPage() {
       if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
       const { data } = await supabase
         .from("training_sessions")
-        .select("*, training_enrollments(id, member_id, members(full_name))")
+        .select("*, training_enrollments(id, member_id, attended, members(full_name))")
         .eq("club_id", selectedClubId)
         .order("event_date", { ascending: false });
       return data || [];
@@ -85,6 +85,21 @@ export default function TrainingSessionsPage() {
       setTargetType("");
       setDetail("");
       setDialogClubId("");
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const toggleAttendance = useMutation({
+    mutationFn: async ({ enrollmentId, currentStatus }: { enrollmentId: string, currentStatus: boolean }) => {
+      const { error } = await supabase
+        .from("training_enrollments")
+        .update({ attended: !currentStatus } as any)
+        .eq("id", enrollmentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
+      toast({ title: "Asistencia actualizada" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -249,11 +264,25 @@ export default function TrainingSessionsPage() {
 
                 {/* Enrolled members list (visible to admin/entrenador) */}
                 {isAdmin && enrollCount > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-border">
+                  <div className="flex flex-wrap gap-2 pt-3 border-t border-border">
+                    <p className="w-full text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
+                      Asistencia / Inscritos:
+                    </p>
                     {(session.training_enrollments as any[]).map((e: any) => (
-                      <span key={e.id} className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
-                        {e.members?.full_name || "—"}
-                      </span>
+                      <button
+                        key={e.id}
+                        disabled={toggleAttendance.isPending}
+                        onClick={() => toggleAttendance.mutate({ enrollmentId: e.id, currentStatus: e.attended })}
+                        className="group transition-all"
+                      >
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors ${e.attended
+                          ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
+                          : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
+                          }`}>
+                          <div className={`h-1.5 w-1.5 rounded-full ${e.attended ? "bg-green-500 animate-pulse" : "bg-muted-foreground/30"}`} />
+                          {e.members?.full_name || "—"}
+                        </span>
+                      </button>
                     ))}
                   </div>
                 )}

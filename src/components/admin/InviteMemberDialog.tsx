@@ -1,29 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Props {
     clubId: string;
 }
 
-export default function InviteMemberDialog({ clubId }: Props) {
+export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
+    const { member } = useAuth();
+    const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState("");
     const [invitationLink, setInvitationLink] = useState("");
     const [copied, setCopied] = useState(false);
+    const [selectedClubId, setSelectedClubId] = useState(initialClubId || "");
+    const [clubs, setClubs] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (isSuperAdmin && open) {
+            fetchClubs();
+        }
+    }, [isSuperAdmin, open]);
+
+    const fetchClubs = async () => {
+        const { data } = await supabase.from("clubs").select("id, name").order("name");
+        if (data) setClubs(data);
+    };
 
     const generateInvite = async () => {
+        const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;
+        if (!targetClubId || targetClubId === "null") {
+            toast({ title: "Error", description: "Debe seleccionar un club", variant: "destructive" });
+            return;
+        }
+
         try {
             setLoading(true);
+            const isVirtual = member?.id?.startsWith('00000000');
+            const creatorId = (member?.id && !isVirtual) ? member.id : null;
+
             const { data, error } = await supabase
                 .from("member_invitations")
-                .insert({ club_id: clubId, email: email || null })
+                .insert({
+                    club_id: targetClubId,
+                    email: email || null,
+                    created_by: creatorId
+                } as any)
                 .select("token")
                 .single();
 
@@ -63,8 +94,20 @@ export default function InviteMemberDialog({ clubId }: Props) {
                 </DialogHeader>
 
                 <div className="space-y-4 pt-4">
+                    {isSuperAdmin && (
+                        <div className="space-y-2">
+                            <Label>Club de destino</Label>
+                            <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                                <SelectContent>
+                                    {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Correo Electrónico (Opcional)</label>
+                        <Label>Correo Electrónico (Opcional)</Label>
                         <Input
                             type="email"
                             placeholder="ejemplo@correo.com"
