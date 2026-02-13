@@ -10,7 +10,10 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { QRCodeCanvas } from "qrcode.react";
 import { useEffect } from "react";
+import { QrCode } from "lucide-react";
 
 export default function ClubSettingsPage() {
   const { member } = useAuth();
@@ -20,6 +23,7 @@ export default function ClubSettingsPage() {
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [clubs, setClubs] = useState<any[]>([]);
+  const [qrToken, setQrToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -217,9 +221,14 @@ export default function ClubSettingsPage() {
                     </p>
                   </div>
                   {!isUsed && !isExpired && (
-                    <Button variant="ghost" size="sm" onClick={() => copyLink(inv.token)}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => setQrToken(inv.token)} title="Ver QR">
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => copyLink(inv.token)} title="Copiar enlace">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               );
@@ -227,6 +236,42 @@ export default function ClubSettingsPage() {
           </div>
         )}
       </motion.div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrToken} onOpenChange={(open) => !open && setQrToken(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Código QR de Invitación</DialogTitle>
+            <DialogDescription>
+              Escanea este código para ir directamente a la página de registro del club.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6 space-y-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-border">
+              {qrToken && (
+                <QRCodeCanvas
+                  value={`${window.location.origin}/join?token=${qrToken}`}
+                  size={256}
+                  level="H"
+                  includeMargin={true}
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground text-center break-all max-w-[256px]">
+              {qrToken && `${window.location.origin}/join?token=${qrToken}`}
+            </p>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (qrToken) copyLink(qrToken);
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Copiar Enlace
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
