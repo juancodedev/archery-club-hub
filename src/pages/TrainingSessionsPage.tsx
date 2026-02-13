@@ -3,15 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Calendar, Plus, Users, CheckCircle, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect } from "react";
 
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
@@ -56,13 +54,18 @@ export default function TrainingSessionsPage() {
   const [division, setDivision] = useState("");
   const [targetType, setTargetType] = useState("");
   const [detail, setDetail] = useState("");
+  const [dialogClubId, setDialogClubId] = useState("");
 
   const createSession = useMutation({
     mutationFn: async () => {
-      if (!selectedClubId) throw new Error("No club selected");
+      const targetClubId = isSuperAdmin ? dialogClubId : selectedClubId;
+      if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
+
+      const creatorId = (member?.id && member.id !== "00000000-0000-0000-0000-000000000000") ? member.id : null;
+
       const { error } = await supabase.from("training_sessions").insert({
-        club_id: selectedClubId,
-        created_by: member?.id,
+        club_id: targetClubId,
+        created_by: creatorId,
         name,
         event_date: eventDate,
         division: division || null,
@@ -79,6 +82,7 @@ export default function TrainingSessionsPage() {
       setDivision("");
       setTargetType("");
       setDetail("");
+      setDialogClubId("");
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -151,7 +155,18 @@ export default function TrainingSessionsPage() {
               <DialogHeader>
                 <DialogTitle className="font-display">Crear Sesión de Entrenamiento</DialogTitle>
               </DialogHeader>
-              <form onSubmit={(e) => { e.preventDefault(); createSession.mutate(); }} className="space-y-4">
+              <form onSubmit={(e) => { e.preventDefault(); createSession.mutate(); }} className="space-y-4 pt-4">
+                {isSuperAdmin && (
+                  <div className="space-y-2">
+                    <Label>Club para el entrenamiento</Label>
+                    <Select value={dialogClubId} onValueChange={setDialogClubId}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                      <SelectContent>
+                        {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Nombre</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Entrenamiento semanal" required />
@@ -214,14 +229,18 @@ export default function TrainingSessionsPage() {
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
                       <Users className="h-3.5 w-3.5" />{enrollCount}
                     </span>
-                    {enrolled ? (
-                      <Button variant="outline" size="sm" className="gap-1 text-destructive" onClick={() => unenroll.mutate(session.id)}>
-                        <XCircle className="h-3.5 w-3.5" />Salir
-                      </Button>
-                    ) : (
-                      <Button size="sm" className="gap-1" onClick={() => enroll.mutate(session.id)}>
-                        <CheckCircle className="h-3.5 w-3.5" />Inscribirme
-                      </Button>
+                    {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
+                      <>
+                        {enrolled ? (
+                          <Button variant="outline" size="sm" className="gap-1 text-destructive" onClick={() => unenroll.mutate(session.id)}>
+                            <XCircle className="h-3.5 w-3.5" />Salir
+                          </Button>
+                        ) : (
+                          <Button size="sm" className="gap-1" onClick={() => enroll.mutate(session.id)}>
+                            <CheckCircle className="h-3.5 w-3.5" />Inscribirme
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

@@ -95,10 +95,13 @@ export default function ClubSettingsPage() {
   const createInvitation = useMutation({
     mutationFn: async () => {
       if (!selectedClubId) throw new Error("No club selected");
+
+      const creatorId = (member?.id && member.id !== "00000000-0000-0000-0000-000000000000") ? member.id : null;
+
       const { error } = await supabase.from("member_invitations").insert({
         club_id: selectedClubId,
         email: invEmail || null,
-        created_by: member?.id,
+        created_by: creatorId,
       });
       if (error) throw error;
     },
