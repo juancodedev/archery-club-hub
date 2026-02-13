@@ -55,7 +55,13 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         { auth: { persistSession: false } }
       );
 
-      const defaultPassword = "ClubArqueria2024";
+      const { data: clubData } = await supabase
+        .from("clubs")
+        .select("default_member_password")
+        .eq("id", targetClubId)
+        .single() as any;
+
+      const defaultPassword = clubData?.default_member_password || "ClubArqueria2024";
       const { data: authData, error: authError } = await tempSupabase.auth.signUp({
         email,
         password: defaultPassword,
@@ -100,12 +106,14 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         .from("member_roles")
         .insert({ member_id: newMember.id, club_id: targetClubId, role: role as any });
       if (roleError) throw roleError;
+
+      return { defaultPassword };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       toast({
         title: "Miembro agregado",
-        description: `Se creó una cuenta con la contraseña: ClubArqueria2024`
+        description: `Se creó una cuenta con la contraseña: ${data.defaultPassword}`
       });
       setOpen(false);
       setName(""); setEmail(""); setPhone(""); setIdentification(""); setRole("arquero");

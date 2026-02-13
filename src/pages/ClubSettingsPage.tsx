@@ -46,16 +46,18 @@ export default function ClubSettingsPage() {
 
   const [inscriptionFee, setInscriptionFee] = useState("");
   const [monthlyFee, setMonthlyFee] = useState("");
+  const [defaultPassword, setDefaultPassword] = useState("");
   const [feeInit, setFeeInit] = useState(false);
 
   // Init form values when club loads
   if (club && !feeInit) {
     setInscriptionFee(String(club.inscription_fee || 0));
     setMonthlyFee(String(club.monthly_fee || 0));
+    setDefaultPassword(club.default_member_password || "ClubArqueria2024");
     setFeeInit(true);
   }
 
-  const updateFees = useMutation({
+  const updateSettings = useMutation({
     mutationFn: async () => {
       if (!selectedClubId) throw new Error("No club selected");
       const { error } = await supabase
@@ -63,13 +65,14 @@ export default function ClubSettingsPage() {
         .update({
           inscription_fee: Number(inscriptionFee) || 0,
           monthly_fee: Number(monthlyFee) || 0,
+          default_member_password: defaultPassword,
         } as any)
         .eq("id", selectedClubId);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-settings"] });
-      toast({ title: "Montos actualizados" });
+      toast({ title: "Configuración actualizada" });
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -157,9 +160,14 @@ export default function ClubSettingsPage() {
             <Label>Mensualidad</Label>
             <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label>Password por defecto para nuevos miembros</Label>
+            <Input type="text" value={defaultPassword} onChange={(e) => setDefaultPassword(e.target.value)} placeholder="ClubArqueria2024" />
+            <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
+          </div>
         </div>
-        <Button onClick={() => updateFees.mutate()} disabled={updateFees.isPending}>
-          {updateFees.isPending ? "Guardando..." : "Guardar Montos"}
+        <Button onClick={() => updateSettings.mutate()} disabled={updateSettings.isPending}>
+          {updateSettings.isPending ? "Guardando..." : "Guardar Configuración"}
         </Button>
       </motion.div>
 

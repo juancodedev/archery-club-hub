@@ -26,11 +26,11 @@ const superAdminItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { member, signOut } = useAuth();
+  const { member, signOut, isSuperAdminSubdomain } = useAuth();
   const location = useLocation();
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.is_super_admin;
-  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador") || member?.is_super_admin;
-  const isSuperAdmin = member?.is_super_admin;
+  const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
+  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || isSuperAdmin;
+  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador") || isSuperAdmin;
 
   const allAdminItems = [
     ...(isSuperAdmin ? superAdminItems : []),
@@ -62,7 +62,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
             <Target className="h-5 w-5 text-primary" />
           </div>
-          <span className="font-display font-bold text-foreground">ArcheryHub</span>
+          <span className="font-display font-bold text-foreground">
+            {isSuperAdminSubdomain ? "Archery Central" : "ArcheryHub"}
+          </span>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -92,7 +94,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex md:hidden items-center justify-between border-b border-border p-4 bg-card">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            <span className="font-display font-bold text-foreground">ArcheryHub</span>
+            <span className="font-display font-bold text-foreground">
+              {isSuperAdminSubdomain ? "Archery Central" : "ArcheryHub"}
+            </span>
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}>
             <LogOut className="h-4 w-4" />

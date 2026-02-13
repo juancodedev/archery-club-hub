@@ -21,6 +21,7 @@ interface AuthContextType {
   member: MemberInfo | null;
   memberships: MemberInfo[];
   loading: boolean;
+  isSuperAdminSubdomain: boolean;
   signOut: () => Promise<void>;
   refreshMember: () => Promise<void>;
   setActiveMembership: (clubId: string) => void;
@@ -29,6 +30,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isSuperAdminSubdomain] = useState(() => {
+    const hostname = window.location.hostname;
+    return hostname.startsWith("superadmin.");
+  });
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [member, setMember] = useState<MemberInfo | null>(null);
@@ -161,7 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, member, memberships, loading, signOut, refreshMember, setActiveMembership }}>
+    <AuthContext.Provider value={{ session, user, member, memberships, loading, isSuperAdminSubdomain, signOut, refreshMember, setActiveMembership }}>
       {children}
     </AuthContext.Provider>
   );
