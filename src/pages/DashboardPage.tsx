@@ -1,0 +1,134 @@
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Target, TrendingUp, Calendar, Award } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
+export default function DashboardPage() {
+  const { member } = useAuth();
+
+  const { data: scores } = useQuery({
+    queryKey: ["my-scores", member?.id],
+    queryFn: async () => {
+      if (!member) return [];
+      const { data } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("member_id", member.id)
+        .order("score_date", { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+    enabled: !!member,
+  });
+
+  const { data: totalScores } = useQuery({
+    queryKey: ["score-count", member?.id],
+    queryFn: async () => {
+      if (!member) return 0;
+      const { count } = await supabase
+        .from("scores")
+        .select("*", { count: "exact", head: true })
+        .eq("member_id", member.id);
+      return count || 0;
+    },
+    enabled: !!member,
+  });
+
+  const bestScore = scores?.length
+    ? Math.max(...scores.map((s) => s.total_score))
+    : 0;
+
+  const statCards = [
+    { icon: Target, label: "Sesiones Registradas", value: totalScores || 0, color: "text-primary" },
+    { icon: TrendingUp, label: "Mejor Puntaje", value: bestScore, color: "text-accent" },
+    { icon: Calendar, label: "Estado", value: member?.status === "activo" ? "Activo" : "Inactivo", color: "text-primary" },
+    { icon: Award, label: "Rol Principal", value: member?.roles[0] || "—", color: "text-accent" },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+          ¡Hola, {member?.full_name?.split(" ")[0]}! 🏹
+        </h1>
+        <p className="text-muted-foreground mt-1">Bienvenido a tu panel de arquería</p>
+      </motion.div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map(({ icon: Icon, label, value, color }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="glass rounded-xl p-5"
+          >
+            <Icon className={`h-5 w-5 mb-3 ${color}`} />
+            <p className="text-2xl font-display font-bold text-foreground capitalize">{value}</p>
+            <p className="text-xs text-muted-foreground mt-1">{label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-3">
+        <Link to="/scores/new">
+          <Button className="gap-2">
+            <Target className="h-4 w-4" />
+            Registrar Puntaje
+          </Button>
+        </Link>
+        <Link to="/scores">
+          <Button variant="outline" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Ver Historial
+          </Button>
+        </Link>
+      </div>
+
+      {/* Recent Scores */}
+      <div>
+        <h2 className="text-lg font-display font-semibold text-foreground mb-4">Últimos Puntajes</h2>
+        {scores && scores.length > 0 ? (
+          <div className="space-y-3">
+            {scores.map((score, i) => (
+              <motion.div
+                key={score.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="glass rounded-lg p-4 flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-medium text-foreground">{score.event_name || "Entrenamiento"}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(score.score_date).toLocaleDateString("es-CL")}
+                    {score.division && ` • ${score.division}`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-display font-bold text-primary">{score.total_score}</p>
+                  <p className="text-xs text-muted-foreground">pts</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="glass rounded-xl p-8 text-center">
+            <Target className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-muted-foreground">Aún no tienes puntajes registrados</p>
+            <Link to="/scores/new">
+              <Button variant="outline" size="sm" className="mt-3">
+                Registrar primer puntaje
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
