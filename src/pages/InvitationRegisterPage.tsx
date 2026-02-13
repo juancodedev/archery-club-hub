@@ -51,11 +51,9 @@ export default function InvitationRegisterPage() {
   useEffect(() => {
     async function loadInvitation() {
       if (!token) { setExpired(true); setLoadingInv(false); return; }
-      const { data: inv } = await supabase
-        .from("member_invitations")
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
+      const { data: invRows } = await supabase
+        .rpc("get_invitation_by_token", { p_token: token });
+      const inv = invRows && invRows.length > 0 ? invRows[0] : null;
 
       if (!inv || inv.used_at || new Date(inv.expires_at) < new Date()) {
         setExpired(true);
