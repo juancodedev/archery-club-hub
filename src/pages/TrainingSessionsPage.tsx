@@ -2,14 +2,38 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Calendar, Plus, Users, CheckCircle, XCircle } from "lucide-react";
+import { Calendar, Plus, Users, CheckCircle, XCircle, QrCode } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import QRCode from "qrcode";
+
+function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
+  const canvasRef = (ref: HTMLCanvasElement | null) => {
+    if (ref) {
+      QRCode.toCanvas(ref, value, {
+        width: size,
+        margin: 2,
+        color: {
+          dark: "#0F172A",
+          light: "#FFFFFF",
+        },
+      }, (error) => {
+        if (error) console.error("QR Error:", error);
+      });
+    }
+  };
+
+  return (
+    <div className="p-4 bg-white rounded-2xl shadow-inner inline-block">
+      <canvas ref={canvasRef} />
+    </div>
+  );
+}
 
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
@@ -20,6 +44,7 @@ export default function TrainingSessionsPage() {
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [clubs, setClubs] = useState<any[]>([]);
+  const [qrSession, setQrSession] = useState<any>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -104,6 +129,30 @@ export default function TrainingSessionsPage() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const generateQR = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const token = Math.random().toString(36).substring(2, 15);
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 24);
+
+      const { error } = await supabase
+        .from("training_sessions")
+        .update({
+          attendance_token: token,
+          attendance_token_expires: expires.toISOString()
+        } as any)
+        .eq("id", sessionId);
+
+      if (error) throw error;
+      return { token, sessionId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
+      setQrSession(sessions?.find(s => s.id === data.sessionId));
+      toast({ title: "Código QR generado", description: "Válido por 24 horas." });
+    },
+  });
+
   const enroll = useMutation({
     mutationFn: async (sessionId: string) => {
       if (!member) throw new Error("No member");
@@ -140,6 +189,8 @@ export default function TrainingSessionsPage() {
 
   const isEnrolled = (session: any) =>
     (session.training_enrollments as any[])?.some((e: any) => e.member_id === member?.id);
+
+  const qrUrl = qrSession ? `${window.location.origin}/attendance/${qrSession.id}?token=${qrSession.attendance_token}` : "";
 
   return (
     <div className="space-y-6">
@@ -223,7 +274,10 @@ export default function TrainingSessionsPage() {
         <div className="space-y-3">
           {sessions.map((session: any, i: number) => {
             const enrolled = isEnrolled(session);
-            const enrollCount = (session.training_enrollments as any[])?.length || 0;
+            const enrollments = (session.training_enrollments as any[]) || [];
+            const enrollCount = enrollments.length;
+            const attendedCount = enrollments.filter(e => e.attended).length;
+
             return (
               <motion.div
                 key={session.id}
@@ -243,17 +297,30 @@ export default function TrainingSessionsPage() {
                     {session.detail && <p className="text-xs text-muted-foreground mt-1">{session.detail}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" />{enrollCount}
-                    </span>
+                    <div className="flex flex-col items-end mr-2">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">Asistencia</span>
+                      <span className="text-sm font-display font-bold text-primary">{attendedCount}/{enrollCount}</span>
+                    </div>
+                    {isAdmin && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 h-8"
+                        onClick={() => generateQR.mutate(session.id)}
+                        disabled={generateQR.isPending}
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                        QR
+                      </Button>
+                    )}
                     {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
                       <>
                         {enrolled ? (
-                          <Button variant="outline" size="sm" className="gap-1 text-destructive" onClick={() => unenroll.mutate(session.id)}>
+                          <Button variant="outline" size="sm" className="gap-1 text-destructive h-8" onClick={() => unenroll.mutate(session.id)}>
                             <XCircle className="h-3.5 w-3.5" />Salir
                           </Button>
                         ) : (
-                          <Button size="sm" className="gap-1" onClick={() => enroll.mutate(session.id)}>
+                          <Button size="sm" className="gap-1 h-8" onClick={() => enroll.mutate(session.id)}>
                             <CheckCircle className="h-3.5 w-3.5" />Inscribirme
                           </Button>
                         )}
@@ -266,9 +333,9 @@ export default function TrainingSessionsPage() {
                 {isAdmin && enrollCount > 0 && (
                   <div className="flex flex-wrap gap-2 pt-3 border-t border-border">
                     <p className="w-full text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
-                      Asistencia / Inscritos:
+                      Control de Asistencia:
                     </p>
-                    {(session.training_enrollments as any[]).map((e: any) => (
+                    {enrollments.map((e: any) => (
                       <button
                         key={e.id}
                         disabled={toggleAttendance.isPending}
@@ -296,6 +363,31 @@ export default function TrainingSessionsPage() {
           <p className="text-muted-foreground">No hay sesiones de entrenamiento</p>
         </div>
       )}
+
+      {/* QR Code Dialog */}
+      <Dialog open={!!qrSession} onOpenChange={(open) => !open && setQrSession(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center font-display">Asistencia vía QR</DialogTitle>
+            <DialogDescription className="text-center">
+              Escanea este código desde la app para marcar tu asistencia
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-6 space-y-4">
+            {qrSession && (
+              <QRCodeCanvas
+                value={qrUrl}
+                size={220}
+              />
+            )}
+            <div className="text-center">
+              <p className="font-semibold text-foreground">{qrSession?.name}</p>
+              <p className="text-xs text-muted-foreground">Token válido por 24 horas</p>
+            </div>
+            <Button variant="outline" className="w-full" onClick={() => setQrSession(null)}>Cerrar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

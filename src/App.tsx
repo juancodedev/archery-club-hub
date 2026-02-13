@@ -21,6 +21,8 @@ import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
 
+import AttendanceMarkPage from "./pages/AttendanceMarkPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +37,7 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-club" element={<RegisterClubPage />} />
             <Route path="/join" element={<InvitationRegisterPage />} />
+            <Route path="/attendance/:sessionId" element={<AttendanceMarkPage />} />
             <Route
               path="/dashboard"
               element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>}
@@ -68,7 +71,7 @@ const App = () => (
               element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
             />
             <Route
-              path="/super-admin"
+              path="/super-admin/*"
               element={<ProtectedRoute><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />

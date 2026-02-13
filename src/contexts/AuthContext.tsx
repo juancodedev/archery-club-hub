@@ -12,72 +12,88 @@ interface MemberInfo {
   is_super_admin: boolean;
   club_status?: string;
   subscription_end_date?: string | null;
+  club_name?: string;
 }
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   member: MemberInfo | null;
+  memberships: MemberInfo[];
   loading: boolean;
+  isSuperAdminSubdomain: boolean;
   signOut: () => Promise<void>;
   refreshMember: () => Promise<void>;
+  setActiveMembership: (clubId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isSuperAdminSubdomain] = useState(() => {
+    const hostname = window.location.hostname;
+    return hostname.startsWith("superadmin.");
+  });
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [member, setMember] = useState<MemberInfo | null>(null);
+  const [memberships, setMemberships] = useState<MemberInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchMember = async (userId: string) => {
     try {
-      // Get auth user session directly to be safe from state race conditions
       const { data: { user: authUser } } = await supabase.auth.getUser();
       const userEmail = authUser?.email;
 
-      const { data: memberData, error: memberError } = await supabase
+      const { data: membersData, error: membersError } = await supabase
         .from("members")
-        .select("id, club_id, full_name, email, status, is_super_admin")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .select(`
+          id, club_id, full_name, email, status, is_super_admin,
+          clubs (name, subscription_status, subscription_end_date)
+        `)
+        .eq("user_id", userId);
 
-      if (memberError) {
-        console.error("Error fetching member:", memberError);
+      if (membersError) {
+        console.error("Error fetching memberships:", membersError);
       }
 
-      if (memberData) {
-        const { data: rolesData } = await supabase
-          .from("member_roles")
-          .select("role")
-          .eq("member_id", memberData.id);
+      if (membersData && membersData.length > 0) {
+        const allMemberships: MemberInfo[] = await Promise.all(
+          membersData.map(async (m: any) => {
+            const { data: rolesData } = await supabase
+              .from("member_roles")
+              .select("role")
+              .eq("member_id", m.id);
 
-        let clubStatus = 'activo';
-        let subscriptionEndDate = null;
+            return {
+              id: m.id,
+              club_id: m.club_id,
+              full_name: m.full_name,
+              email: m.email,
+              status: m.status,
+              roles: rolesData?.map((r) => r.role) || [],
+              is_super_admin: m.is_super_admin || userEmail === 'cl.jmunoz@gmail.com',
+              club_status: m.clubs?.subscription_status || 'activo',
+              subscription_end_date: m.clubs?.subscription_end_date,
+              club_name: m.clubs?.name
+            };
+          })
+        );
 
-        if (memberData.club_id) {
-          const { data: clubData } = await supabase
-            .from("clubs")
-            .select("subscription_status, subscription_end_date")
-            .eq("id", memberData.club_id)
-            .maybeSingle();
-          clubStatus = clubData?.subscription_status || 'activo';
-          subscriptionEndDate = clubData?.subscription_end_date;
+        setMemberships(allMemberships);
+
+        // Try to restore previous active club
+        const savedClubId = localStorage.getItem("activeClubId");
+        const restored = savedClubId ? allMemberships.find(m => m.club_id === savedClubId) : null;
+
+        if (restored) {
+          setMember(restored);
+        } else if (allMemberships.length > 0) {
+          setMember(allMemberships[0]);
+          localStorage.setItem("activeClubId", allMemberships[0].club_id);
         }
-
-        setMember({
-          ...memberData,
-          status: memberData.status as string,
-          roles: rolesData?.map((r) => r.role) || [],
-          is_super_admin: memberData.is_super_admin || userEmail === 'cl.jmunoz@gmail.com',
-          club_status: clubStatus,
-          subscription_end_date: subscriptionEndDate,
-        });
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
-        // Virtual member for Super Admin if no member record exists yet
-        // Use a valid UUID format for the virtual ID to avoid 22P02 errors
-        setMember({
+        const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
           club_id: null as any,
           full_name: 'Super Administrador',
@@ -85,13 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           status: 'activo',
           roles: ['administrador'],
           is_super_admin: true
-        });
+        };
+        setMemberships([adminMember]);
+        setMember(adminMember);
       } else {
+        setMemberships([]);
         setMember(null);
       }
     } catch (e) {
       console.error("Auth error:", e);
+      setMemberships([]);
       setMember(null);
+    }
+  };
+
+  const setActiveMembership = (clubId: string) => {
+    const found = memberships.find(m => m.club_id === clubId);
+    if (found) {
+      setMember(found);
+      localStorage.setItem("activeClubId", clubId);
     }
   };
 
@@ -110,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchMember(currentUser.id);
         } else {
           setMember(null);
+          setMemberships([]);
         }
         setLoading(false);
       }
@@ -133,10 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setUser(null);
     setMember(null);
+    setMemberships([]);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, member, loading, signOut, refreshMember }}>
+    <AuthContext.Provider value={{ session, user, member, memberships, loading, isSuperAdminSubdomain, signOut, refreshMember, setActiveMembership }}>
       {children}
     </AuthContext.Provider>
   );
