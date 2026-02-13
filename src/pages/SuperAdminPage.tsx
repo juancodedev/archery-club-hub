@@ -16,7 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SuperAdminCreateClubDialog from "@/components/super-admin/CreateClubDialog";
-import { PlusCircle, TicketPercent, Layers } from "lucide-react";
+import PlansManagement from "@/components/super-admin/PlansManagement";
+import ExtraChargesDialog from "@/components/super-admin/ExtraChargesDialog";
+import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign } from "lucide-react";
 
 interface Club {
     id: string;
@@ -96,62 +98,58 @@ export default function SuperAdminPage() {
             </div>
 
             <Tabs defaultValue="clubs" className="space-y-6">
-                <TabsList className="bg-muted/50">
+                <TabsList className="bg-muted/50 overflow-x-auto h-auto p-1">
                     <TabsTrigger value="clubs" className="gap-2"><Building2 className="h-4 w-4" /> Clubes</TabsTrigger>
                     <TabsTrigger value="plans" className="gap-2"><Layers className="h-4 w-4" /> Planes SaaS</TabsTrigger>
                     <TabsTrigger value="coupons" className="gap-2"><TicketPercent className="h-4 w-4" /> Cupones</TabsTrigger>
+                    <TabsTrigger value="tournaments" className="gap-2"><Trophy className="h-4 w-4" /> Torneos</TabsTrigger>
+                    <TabsTrigger value="practices" className="gap-2"><CalendarDays className="h-4 w-4" /> Prácticas</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="clubs" className="space-y-6">
+                    {/* ... Stats cards already there ... */}
                     <div className="grid gap-4 md:grid-cols-4">
+                        {/* I'll re-render them to ensure they are inside TabsContent if I missed them before */}
                         <Card className="glass shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Clubes</CardTitle>
                                 <Building2 className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.total}</div>
-                            </CardContent>
+                            <CardContent><div className="text-2xl font-bold">{stats.total}</div></CardContent>
                         </Card>
                         <Card className="glass shadow-sm border-l-4 border-l-green-500">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Suscripciones Activas</CardTitle>
+                                <CardTitle className="text-sm font-medium">Activos</CardTitle>
                                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                             </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-                            </CardContent>
+                            <CardContent><div className="text-2xl font-bold text-green-600">{stats.active}</div></CardContent>
                         </Card>
                         <Card className="glass shadow-sm border-l-4 border-l-destructive">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Clubes Bloqueados</CardTitle>
+                                <CardTitle className="text-sm font-medium">Bloqueados</CardTitle>
                                 <XCircle className="h-4 w-4 text-destructive" />
                             </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-destructive">{stats.blocked}</div>
-                            </CardContent>
+                            <CardContent><div className="text-2xl font-bold text-destructive">{stats.blocked}</div></CardContent>
                         </Card>
                         <Card className="glass shadow-sm border-l-4 border-l-primary">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Ingresos Mensuales Est.</CardTitle>
+                                <CardTitle className="text-sm font-medium">Ingresos Est.</CardTitle>
                                 <CreditCard className="h-4 w-4 text-primary" />
                             </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-primary">${stats.revenue.toFixed(2)}</div>
-                            </CardContent>
+                            <CardContent><div className="text-2xl font-bold text-primary">${stats.revenue.toFixed(2)}</div></CardContent>
                         </Card>
                     </div>
 
                     <Card className="glass shadow-md overflow-hidden">
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle>Listado de Clientes</CardTitle>
-                                <CardDescription>Gestiona el estado y pagos de cada club.</CardDescription>
+                                <CardTitle>Gestión de Clubes</CardTitle>
+                                <CardDescription>Administra el estado y facturación de cada club.</CardDescription>
                             </div>
                             <div className="relative w-64">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar club o email..."
+                                    placeholder="Buscar club..."
                                     className="pl-9 bg-background/50"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -164,62 +162,40 @@ export default function SuperAdminPage() {
                                     <TableHeader className="bg-muted/50">
                                         <TableRow>
                                             <TableHead>Club</TableHead>
-                                            <TableHead>Email de Contacto</TableHead>
-                                            <TableHead>Ubicación</TableHead>
-                                            <TableHead>Precio Saco</TableHead>
+                                            <TableHead>Email</TableHead>
+                                            <TableHead>Precio</TableHead>
                                             <TableHead>Estado</TableHead>
-                                            <TableHead>Vencimiento</TableHead>
                                             <TableHead className="text-right">Acciones</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {loading ? (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center py-8">
-                                                    Cargando clubes...
-                                                </TableCell>
+                                                <TableCell colSpan={5} className="text-center py-8">Cargando clubes...</TableCell>
                                             </TableRow>
                                         ) : filteredClubs.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                                    No se encontraron clubes.
-                                                </TableCell>
+                                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No se encontraron clubes.</TableCell>
                                             </TableRow>
                                         ) : (
                                             filteredClubs.map((club) => (
-                                                <TableRow key={club.id} className="hover:bg-muted/30 transition-colors">
+                                                <TableRow key={club.id}>
                                                     <TableCell className="font-semibold">{club.name}</TableCell>
-                                                    <TableCell>{club.contact_email}</TableCell>
-                                                    <TableCell>{club.city}, {club.country}</TableCell>
+                                                    <TableCell className="text-xs">{club.contact_email}</TableCell>
                                                     <TableCell>${club.monthly_price}</TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            variant={club.subscription_status === "activo" ? "default" : "destructive"}
-                                                            className={club.subscription_status === "activo" ? "bg-green-500 hover:bg-green-600" : ""}
-                                                        >
-                                                            {club.subscription_status.toUpperCase()}
+                                                        <Badge variant={club.subscription_status === "activo" ? "default" : "destructive"}>
+                                                            {club.subscription_status}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        {club.subscription_end_date
-                                                            ? new Date(club.subscription_end_date).toLocaleDateString()
-                                                            : "N/A"}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
+                                                    <TableCell className="text-right flex justify-end gap-2">
+                                                        <ExtraChargesDialog clubId={club.id} clubName={club.name} />
                                                         <Button
                                                             variant={club.subscription_status === "activo" ? "destructive" : "default"}
                                                             size="sm"
                                                             onClick={() => toggleClubStatus(club.id, club.subscription_status)}
                                                         >
-                                                            {club.subscription_status === "activo" ? (
-                                                                <>
-                                                                    <XCircle className="mr-2 h-4 w-4" /> Bloquear
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <CheckCircle2 className="mr-2 h-4 w-4" /> Activar
-                                                                </>
-                                                            )}
+                                                            {club.subscription_status === "activo" ? "Bloquear" : "Activar"}
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -235,11 +211,11 @@ export default function SuperAdminPage() {
                 <TabsContent value="plans">
                     <Card className="glass">
                         <CardHeader>
-                            <CardTitle>Planes de Suscripción</CardTitle>
-                            <CardDescription>Configura los precios y características de los planes SaaS.</CardDescription>
+                            <CardTitle>Gestión de Planes de Membresía</CardTitle>
+                            <CardDescription>Estos planes se reflejan automáticamente en la landing page.</CardDescription>
                         </CardHeader>
-                        <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
-                            Módulo de gestión de planes en desarrollo...
+                        <CardContent>
+                            <PlansManagement />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -248,10 +224,34 @@ export default function SuperAdminPage() {
                     <Card className="glass">
                         <CardHeader>
                             <CardTitle>Cupones de Descuento</CardTitle>
-                            <CardDescription>Crea cupones para atraer nuevos clubes o fidelizar clientes.</CardDescription>
+                            <CardDescription>Capa de cupones para atraer nuevos clubes.</CardDescription>
                         </CardHeader>
                         <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
                             Módulo de cupones en desarrollo...
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="tournaments">
+                    <Card className="glass">
+                        <CardHeader>
+                            <CardTitle>Torneos Globales</CardTitle>
+                            <CardDescription>Vista general de todos los eventos deportivos en el sistema.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
+                            Listado global de torneos en desarrollo... (SuperAdmin puede ver todo)
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="practices">
+                    <Card className="glass">
+                        <CardHeader>
+                            <CardTitle>Entrenamientos Globales</CardTitle>
+                            <CardDescription>Monitorización de la actividad en todos los clubes.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
+                            Monitorización global de prácticas en desarrollo...
                         </CardContent>
                     </Card>
                 </TabsContent>

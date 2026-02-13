@@ -91,6 +91,7 @@ export type Database = {
           price: number
           interval: string
           features: Json
+          display_order: number
           created_at: string
         }
         Insert: {
@@ -100,6 +101,7 @@ export type Database = {
           price: number
           interval?: string
           features?: Json
+          display_order?: number
           created_at?: string
         }
         Update: {
@@ -109,6 +111,7 @@ export type Database = {
           price?: number
           interval?: string
           features?: Json
+          display_order?: number
           created_at?: string
         }
         Relationships: []
@@ -145,6 +148,76 @@ export type Database = {
           created_at?: string
         }
         Relationships: []
+      }
+      extra_charges: {
+        Row: {
+          id: string
+          club_id: string
+          name: string
+          description: string | null
+          amount: number
+          charge_date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          club_id: string
+          name: string
+          description?: string | null
+          amount: number
+          charge_date?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          club_id?: string
+          name?: string
+          description?: string | null
+          amount?: number
+          charge_date?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extra_charges_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      custom_roles: {
+        Row: {
+          id: string
+          club_id: string | null
+          name: string
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          club_id?: string | null
+          name: string
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          club_id?: string | null
+          name?: string
+          description?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_roles_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       member_invitations: {
         Row: {
