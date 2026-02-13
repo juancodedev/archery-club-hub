@@ -61,7 +61,9 @@ export default function TrainingSessionsPage() {
       const targetClubId = isSuperAdmin ? dialogClubId : selectedClubId;
       if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
 
-      const creatorId = (member?.id && member.id !== "00000000-0000-0000-0000-000000000000") ? member.id : null;
+      const isVirtual = member?.id?.startsWith('00000000');
+      const creatorId = (member?.id && !isVirtual) ? member.id : null;
+      console.log("Creando sesión con creador:", creatorId, "isVirtual:", isVirtual);
 
       const { error } = await supabase.from("training_sessions").insert({
         club_id: targetClubId,
