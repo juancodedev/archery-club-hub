@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AddMemberDialog from "@/components/admin/AddMemberDialog";
 import InviteMemberDialog from "@/components/admin/InviteMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
@@ -19,9 +20,12 @@ import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialo
 
 export default function AdminPage() {
   const { member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [clubs, setClubs] = useState<any[]>([]);
 
   // Edit/Role/Delete dialogs
   const [editMember, setEditMember] = useState<any>(null);
@@ -29,18 +33,31 @@ export default function AdminPage() {
   const [deleteMember, setDeleteMember] = useState<any>(null);
   const [historyMember, setHistoryMember] = useState<any>(null);
 
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchClubs();
+    } else if (member?.club_id) {
+      setSelectedClubId(member.club_id);
+    }
+  }, [member, isSuperAdmin]);
+
+  const fetchClubs = async () => {
+    const { data } = await supabase.from("clubs").select("id, name").order("name");
+    if (data) setClubs(data);
+  };
+
   const { data: members, isLoading } = useQuery({
-    queryKey: ["club-members", member?.club_id],
+    queryKey: ["club-members", selectedClubId],
     queryFn: async () => {
-      if (!member) return [];
+      if (!selectedClubId || selectedClubId === "null") return [];
       const { data } = await supabase
         .from("members")
         .select("*, member_roles(role)")
-        .eq("club_id", member.club_id)
+        .eq("club_id", selectedClubId)
         .order("full_name");
       return data || [];
     },
-    enabled: !!member,
+    enabled: !!selectedClubId,
   });
 
   const toggleStatus = useMutation({
@@ -70,9 +87,21 @@ export default function AdminPage() {
           </h1>
           <p className="text-muted-foreground">Administra los miembros y colaboradores de tu club</p>
         </div>
+
+        {isSuperAdmin && (
+          <div className="w-full md:w-64">
+            <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+              <SelectContent>
+                {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex gap-2">
-          {member && <InviteMemberDialog clubId={member.club_id} />}
-          {member && <AddMemberDialog clubId={member.club_id} />}
+          {selectedClubId && <InviteMemberDialog clubId={selectedClubId} />}
+          {selectedClubId && <AddMemberDialog clubId={selectedClubId} />}
         </div>
       </motion.div>
 
@@ -192,11 +221,11 @@ export default function AdminPage() {
         open={!!editMember}
         onOpenChange={(open) => !open && setEditMember(null)}
       />
-      {rolesMember && member && (
+      {rolesMember && selectedClubId && (
         <ManageRolesDialog
           memberId={rolesMember.id}
           memberName={rolesMember.full_name}
-          clubId={member.club_id}
+          clubId={selectedClubId}
           currentRoles={rolesMember.roles}
           open={!!rolesMember}
           onOpenChange={(open) => !open && setRolesMember(null)}
