@@ -71,7 +71,7 @@ const App = () => (
               element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
             />
             <Route
-              path="/super-admin"
+              path="/super-admin/*"
               element={<ProtectedRoute><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />

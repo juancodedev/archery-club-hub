@@ -10,7 +10,30 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { QRCodeSVG } from "qrcode.react";
+import QRCode from "qrcode";
+
+function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
+  const canvasRef = (ref: HTMLCanvasElement | null) => {
+    if (ref) {
+      QRCode.toCanvas(ref, value, {
+        width: size,
+        margin: 2,
+        color: {
+          dark: "#0F172A",
+          light: "#FFFFFF",
+        },
+      }, (error) => {
+        if (error) console.error("QR Error:", error);
+      });
+    }
+  };
+
+  return (
+    <div className="p-4 bg-white rounded-2xl shadow-inner inline-block">
+      <canvas ref={canvasRef} />
+    </div>
+  );
+}
 
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
@@ -320,8 +343,8 @@ export default function TrainingSessionsPage() {
                         className="group transition-all"
                       >
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors ${e.attended
-                            ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
-                            : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
+                          ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20"
+                          : "bg-muted text-muted-foreground border-transparent hover:bg-muted/80"
                           }`}>
                           <div className={`h-1.5 w-1.5 rounded-full ${e.attended ? "bg-green-500 animate-pulse" : "bg-muted-foreground/30"}`} />
                           {e.members?.full_name || "—"}
@@ -351,21 +374,17 @@ export default function TrainingSessionsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center justify-center p-6 space-y-4">
-            <div className="p-4 bg-white rounded-2xl shadow-inner">
-              {qrSession && (
-                <QRCodeSVG
-                  value={qrUrl}
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                />
-              )}
-            </div>
+            {qrSession && (
+              <QRCodeCanvas
+                value={qrUrl}
+                size={220}
+              />
+            )}
             <div className="text-center">
               <p className="font-semibold text-foreground">{qrSession?.name}</p>
               <p className="text-xs text-muted-foreground">Token válido por 24 horas</p>
             </div>
-            <Button variant="outline" className="w-full" onClick={() => setQrSession(null)}>Cerar</Button>
+            <Button variant="outline" className="w-full" onClick={() => setQrSession(null)}>Cerrar</Button>
           </div>
         </DialogContent>
       </Dialog>
