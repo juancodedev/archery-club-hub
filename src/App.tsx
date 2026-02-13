@@ -18,6 +18,7 @@ import ReportsPage from "./pages/ReportsPage";
 import TrainingSessionsPage from "./pages/TrainingSessionsPage";
 import ClubSettingsPage from "./pages/ClubSettingsPage";
 import InvitationRegisterPage from "./pages/InvitationRegisterPage";
+import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,10 @@ const App = () => (
             <Route
               path="/settings"
               element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/super-admin"
+              element={<ProtectedRoute><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

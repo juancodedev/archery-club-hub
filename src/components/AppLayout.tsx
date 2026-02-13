@@ -21,13 +21,19 @@ const presidenteItems = [
   { to: "/reports", icon: BarChart3, label: "Reportes" },
 ];
 
+const superAdminItems = [
+  { to: "/super-admin", icon: Shield, label: "Panel Central" },
+];
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { member, signOut } = useAuth();
   const location = useLocation();
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente");
-  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador");
+  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.is_super_admin;
+  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador") || member?.is_super_admin;
+  const isSuperAdmin = member?.is_super_admin;
 
   const allAdminItems = [
+    ...(isSuperAdmin ? superAdminItems : []),
     ...adminItems,
     ...(isPresidente ? presidenteItems : []),
   ];
