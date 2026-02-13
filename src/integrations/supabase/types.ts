@@ -28,6 +28,9 @@ export type Database = {
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           subscription_end_date: string | null
           monthly_price: number | null
+          plan_id: string | null
+          trial_ends_at: string | null
+          coupon_id: string | null
         }
         Insert: {
           city?: string | null
@@ -42,6 +45,9 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           subscription_end_date?: string | null
           monthly_price?: number | null
+          plan_id?: string | null
+          trial_ends_at?: string | null
+          coupon_id?: string | null
         }
         Update: {
           city?: string | null
@@ -56,6 +62,87 @@ export type Database = {
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           subscription_end_date?: string | null
           monthly_price?: number | null
+          plan_id?: string | null
+          trial_ends_at?: string | null
+          coupon_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clubs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      plans: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          price: number
+          interval: string
+          features: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          price: number
+          interval?: string
+          features?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          price?: number
+          interval?: string
+          features?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          id: string
+          code: string
+          discount_percent: number | null
+          discount_amount: number | null
+          valid_until: string | null
+          max_uses: number | null
+          current_uses: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          discount_percent?: number | null
+          discount_amount?: number | null
+          valid_until?: string | null
+          max_uses?: number | null
+          current_uses?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          discount_percent?: number | null
+          discount_amount?: number | null
+          valid_until?: string | null
+          max_uses?: number | null
+          current_uses?: number | null
+          created_at?: string
         }
         Relationships: []
       }

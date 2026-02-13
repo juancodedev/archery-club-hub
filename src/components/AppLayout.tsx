@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 const adminItems = [
-  { to: "/admin", icon: Shield, label: "Administración" },
+  { to: "/admin", icon: Users, label: "Miembros" },
   { to: "/settings", icon: Settings, label: "Configuración" },
 ];
 
@@ -22,7 +22,7 @@ const presidenteItems = [
 ];
 
 const superAdminItems = [
-  { to: "/super-admin", icon: Shield, label: "Panel Central" },
+  { to: "/super-admin", icon: Building2, label: "Panel Central" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
