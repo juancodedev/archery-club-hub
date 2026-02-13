@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,16 +9,44 @@ const navItems = [
   { to: "/profile", icon: User, label: "Mi Perfil" },
   { to: "/scores/new", icon: Crosshair, label: "Registrar Puntaje" },
   { to: "/scores", icon: History, label: "Historial" },
+  { to: "/training", icon: Calendar, label: "Entrenamientos" },
 ];
 
 const adminItems = [
   { to: "/admin", icon: Shield, label: "Administración" },
+  { to: "/settings", icon: Settings, label: "Configuración" },
+];
+
+const presidenteItems = [
+  { to: "/reports", icon: BarChart3, label: "Reportes" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { member, signOut } = useAuth();
   const location = useLocation();
   const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente");
+  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador");
+
+  const allAdminItems = [
+    ...adminItems,
+    ...(isPresidente ? presidenteItems : []),
+  ];
+
+  const renderLink = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => (
+    <Link
+      key={to}
+      to={to}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+        location.pathname === to
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Link>
+  );
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -32,40 +60,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                location.pathname === to
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {label}
-            </Link>
-          ))}
-
+          {navItems.map(renderLink)}
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border" />
-              {adminItems.map(({ to, icon: Icon, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                    location.pathname === to
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              ))}
+              {allAdminItems.map(renderLink)}
             </>
           )}
         </nav>
@@ -96,7 +95,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         <nav className="flex md:hidden border-b border-border bg-card overflow-x-auto">
-          {[...navItems, ...(isAdmin ? adminItems : [])].map(({ to, icon: Icon, label }) => (
+          {[...navItems, ...(isAdmin ? allAdminItems : [])].map(({ to, icon: Icon, label }) => (
             <Link
               key={to}
               to={to}
