@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import AddMemberDialog from "@/components/admin/AddMemberDialog";
+import InviteMemberDialog from "@/components/admin/InviteMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
@@ -64,12 +65,15 @@ export default function AdminPage() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Shield className="h-6 w-6 text-primary" />
-            Administración del Club
+            <Users className="h-6 w-6 text-primary" />
+            Gestión de Miembros
           </h1>
-          <p className="text-muted-foreground">Gestiona los miembros de tu club</p>
+          <p className="text-muted-foreground">Administra los miembros y colaboradores de tu club</p>
         </div>
-        {member && <AddMemberDialog clubId={member.club_id} />}
+        <div className="flex gap-2">
+          {member && <InviteMemberDialog clubId={member.club_id} />}
+          {member && <AddMemberDialog clubId={member.club_id} />}
+        </div>
       </motion.div>
 
       {/* Search */}
