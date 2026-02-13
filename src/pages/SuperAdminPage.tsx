@@ -18,7 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SuperAdminCreateClubDialog from "@/components/super-admin/CreateClubDialog";
 import PlansManagement from "@/components/super-admin/PlansManagement";
 import ExtraChargesDialog from "@/components/super-admin/ExtraChargesDialog";
-import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign } from "lucide-react";
+import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign, Users as UsersIcon } from "lucide-react";
+import MembersManagement from "@/components/super-admin/MembersManagement";
 
 interface Club {
     id: string;
@@ -100,11 +101,24 @@ export default function SuperAdminPage() {
             <Tabs defaultValue="clubs" className="space-y-6">
                 <TabsList className="bg-muted/50 overflow-x-auto h-auto p-1">
                     <TabsTrigger value="clubs" className="gap-2"><Building2 className="h-4 w-4" /> Clubes</TabsTrigger>
+                    <TabsTrigger value="members" className="gap-2"><UsersIcon className="h-4 w-4" /> Miembros</TabsTrigger>
                     <TabsTrigger value="plans" className="gap-2"><Layers className="h-4 w-4" /> Planes SaaS</TabsTrigger>
                     <TabsTrigger value="coupons" className="gap-2"><TicketPercent className="h-4 w-4" /> Cupones</TabsTrigger>
                     <TabsTrigger value="tournaments" className="gap-2"><Trophy className="h-4 w-4" /> Torneos</TabsTrigger>
                     <TabsTrigger value="practices" className="gap-2"><CalendarDays className="h-4 w-4" /> Prácticas</TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="members">
+                    <Card className="glass">
+                        <CardHeader>
+                            <CardTitle>Gestión Global de Miembros</CardTitle>
+                            <CardDescription>Visualiza y administra todos los miembros de todos los clubes registrados.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <MembersManagement />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
                 <TabsContent value="clubs" className="space-y-6">
                     {/* ... Stats cards already there ... */}

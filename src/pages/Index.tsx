@@ -61,7 +61,10 @@ function PricingPlans() {
 }
 
 export default function Index() {
-  const { session } = useAuth();
+  const { session, member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const dashboardPath = isSuperAdmin ? "/super-admin" : "/dashboard";
+
   const features = [
     { icon: Users, title: "Gestión de Miembros", desc: "Registra y administra los miembros de tu club con fichas completas." },
     { icon: Target, title: "Registro de Puntajes", desc: "Tarjeta de puntuación con 6 ends y 5 flechas por end." },
@@ -84,7 +87,7 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-3">
               {session ? (
-                <Link to="/dashboard">
+                <Link to={dashboardPath}>
                   <Button size="sm" className="gap-2">
                     <LayoutDashboard className="h-4 w-4" />
                     Dashboard
@@ -122,7 +125,7 @@ export default function Index() {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               {session ? (
-                <Link to="/dashboard">
+                <Link to={dashboardPath}>
                   <Button size="lg" className="gap-2">
                     Ir a mi Panel
                     <ArrowRight className="h-4 w-4" />
