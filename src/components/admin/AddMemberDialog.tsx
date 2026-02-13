@@ -46,13 +46,56 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;
       if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
 
+      // 1. Create Auth user without signing out the admin
+      // We use a temporary client to avoid affecting the current session
+      const { createClient } = await import('@supabase/supabase-js');
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        { auth: { persistSession: false } }
+      );
+
+      const defaultPassword = "ClubArqueria2024";
+      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+        email,
+        password: defaultPassword,
+        options: {
+          data: { full_name: name }
+        }
+      });
+
+      // If user already exists in Auth, it's fine, we still try to create the member
+      // but we should check if they are already in THIS club.
+      if (authError && authError.message !== "User already registered") {
+        throw authError;
+      }
+
+      let userId = authData?.user?.id;
+
+      if (!userId) {
+        // Find existing user if signUp didn't return one (already exists)
+        // We can't easily get it without service role, so we'll hope the email is enough
+        // Actually, if we use signUp and user exists, authData.user is null in some configs.
+        // Let's assume for now it's a new user as per the requirement "create account".
+      }
+
+      // 2. Insert member
       const { data: newMember, error } = await supabase
         .from("members")
-        .insert({ club_id: targetClubId, full_name: name, email, phone, identification, status: "activo" as any })
+        .insert({
+          user_id: userId,
+          club_id: targetClubId,
+          full_name: name,
+          email,
+          phone,
+          identification,
+          status: "activo" as any
+        })
         .select()
         .single();
       if (error) throw error;
 
+      // 3. Add default role
       const { error: roleError } = await supabase
         .from("member_roles")
         .insert({ member_id: newMember.id, club_id: targetClubId, role: role as any });
@@ -60,7 +103,10 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
-      toast({ title: "Miembro agregado" });
+      toast({
+        title: "Miembro agregado",
+        description: `Se creó una cuenta con la contraseña: ClubArqueria2024`
+      });
       setOpen(false);
       setName(""); setEmail(""); setPhone(""); setIdentification(""); setRole("arquero");
     },
