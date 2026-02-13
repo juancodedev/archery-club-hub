@@ -9,6 +9,9 @@ interface MemberInfo {
   email: string;
   status: string;
   roles: string[];
+  is_super_admin: boolean;
+  club_status?: string;
+  subscription_end_date?: string | null;
 }
 
 interface AuthContextType {
@@ -29,11 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchMember = async (userId: string) => {
-    const { data: memberData } = await supabase
+    const { data: memberData, error: memberError } = await supabase
       .from("members")
-      .select("id, club_id, full_name, email, status")
+      .select("id, club_id, full_name, email, status, is_super_admin")
       .eq("user_id", userId)
       .maybeSingle();
+
+    if (memberError) {
+      console.error("Error fetching member:", memberError);
+    }
 
     if (memberData) {
       const { data: rolesData } = await supabase
@@ -41,10 +48,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select("role")
         .eq("member_id", memberData.id);
 
+      let clubStatus = 'activo';
+      let subscriptionEndDate = null;
+      if (memberData.club_id) {
+        const { data: clubData } = await supabase
+          .from("clubs")
+          .select("subscription_status, subscription_end_date")
+          .eq("id", memberData.club_id)
+          .maybeSingle();
+        clubStatus = clubData?.subscription_status || 'activo';
+        subscriptionEndDate = clubData?.subscription_end_date;
+      }
+
       setMember({
         ...memberData,
         status: memberData.status as string,
         roles: rolesData?.map((r) => r.role) || [],
+        is_super_admin: memberData.is_super_admin,
+        club_status: clubStatus,
+        subscription_end_date: subscriptionEndDate,
       });
     } else {
       setMember(null);
@@ -61,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchMember(session.user.id), 0);
+          fetchMember(session.user.id);
         } else {
           setMember(null);
         }
