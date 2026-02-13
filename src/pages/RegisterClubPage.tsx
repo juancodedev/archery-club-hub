@@ -22,6 +22,7 @@ export default function RegisterClubPage() {
   const [monthlyFee, setMonthlyFee] = useState("");
   const [planId, setPlanId] = useState("");
   const [plans, setPlans] = useState<any[]>([]);
+  const [defaultMemberPassword, setDefaultMemberPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -72,6 +73,7 @@ export default function RegisterClubPage() {
           .update({
             inscription_fee: Number(inscriptionFee) || 0,
             monthly_fee: Number(monthlyFee) || 0,
+            default_member_password: defaultMemberPassword || null,
             plan_id: planId || null,
             monthly_price: selectedPlan?.price || 29.99
           } as any)
@@ -154,6 +156,17 @@ export default function RegisterClubPage() {
               <div className="space-y-2">
                 <Label>Mensualidad ($)</Label>
                 <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Password por defecto para tus nuevos miembros</Label>
+                <Input
+                  type="text"
+                  value={defaultMemberPassword}
+                  onChange={(e) => setDefaultMemberPassword(e.target.value)}
+                  placeholder="Ej: Club2024!"
+                  required
+                />
+                <p className="text-[10px] text-muted-foreground">Esta contraseña se usará cuando crees miembros manualmente. Cámbiala periódicamente.</p>
               </div>
             </div>
 
