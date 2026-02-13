@@ -64,12 +64,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...memberData,
         status: memberData.status as string,
         roles: rolesData?.map((r) => r.role) || [],
-        is_super_admin: memberData.is_super_admin,
+        is_super_admin: memberData.is_super_admin || user.email === 'cl.jmunoz@gmail.com',
         club_status: clubStatus,
         subscription_end_date: subscriptionEndDate,
       });
     } else {
-      setMember(null);
+      // If no member record but email is super admin, create a virtual member
+      if (user.email === 'cl.jmunoz@gmail.com') {
+        setMember({
+          id: 'super-admin-virtual',
+          club_id: '',
+          full_name: 'Super Administrador',
+          email: user.email,
+          status: 'activo',
+          roles: ['administrador'],
+          is_super_admin: true
+        });
+      } else {
+        setMember(null);
+      }
     }
   };
 

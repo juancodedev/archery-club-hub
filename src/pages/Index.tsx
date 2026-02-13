@@ -1,8 +1,64 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard } from "lucide-react";
+import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+function PricingPlans() {
+  const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPlans() {
+      const { data } = await supabase.from("plans").select("*").order("price", { ascending: true });
+      if (data) setPlans(data);
+      setLoading(false);
+    }
+    fetchPlans();
+  }, []);
+
+  if (loading) return <div className="col-span-full py-20 text-center text-muted-foreground">Cargando planes...</div>;
+
+  return (
+    <>
+      {plans.map((plan) => (
+        <motion.div
+          key={plan.id}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass rounded-2xl p-8 border border-border/50 hover:border-primary/50 transition-colors flex flex-col"
+        >
+          <div className="mb-6">
+            <h3 className="text-xl font-display font-bold text-foreground mb-2">{plan.name}</h3>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-foreground">${plan.price}</span>
+              <span className="text-muted-foreground">/mes</span>
+            </div>
+            {plan.description && <p className="mt-3 text-sm text-muted-foreground">{plan.description}</p>}
+          </div>
+
+          <ul className="space-y-3 mb-8 flex-1">
+            {Array.isArray(plan.features) && plan.features.map((feature: string, idx: number) => (
+              <li key={idx} className="flex items-start gap-3 text-sm text-muted-foreground">
+                <Check className="h-4 w-4 text-primary mt-0.5" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+
+          <Link to="/register-club" className="w-full">
+            <Button variant={plan.name === "Pro" ? "default" : "outline"} className="w-full">
+              Empezar ahora
+            </Button>
+          </Link>
+        </motion.div>
+      ))}
+    </>
+  );
+}
 
 export default function Index() {
   const { session } = useAuth();
@@ -123,6 +179,27 @@ export default function Index() {
               <p className="text-sm text-muted-foreground">{desc}</p>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="container mx-auto px-4 py-20 bg-muted/30">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl font-display font-bold text-foreground mb-3">
+            Planes de Membresía
+          </h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">
+            Elige el plan que mejor se adapte a las necesidades de tu club
+          </p>
+        </motion.div>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          <PricingPlans />
         </div>
       </section>
 

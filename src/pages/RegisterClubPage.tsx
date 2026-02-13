@@ -8,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Building2 } from "lucide-react";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
+
 export default function RegisterClubPage() {
   const [clubName, setClubName] = useState("");
   const [city, setCity] = useState("");
@@ -17,9 +20,22 @@ export default function RegisterClubPage() {
   const [password, setPassword] = useState("");
   const [inscriptionFee, setInscriptionFee] = useState("");
   const [monthlyFee, setMonthlyFee] = useState("");
+  const [planId, setPlanId] = useState("");
+  const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchPlans() {
+      const { data } = await supabase.from("plans").select("id, name, price").order("price", { ascending: true });
+      if (data) {
+        setPlans(data);
+        if (data.length > 0) setPlanId(data[0].id);
+      }
+    }
+    fetchPlans();
+  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,13 +64,16 @@ export default function RegisterClubPage() {
 
       if (rpcError) throw rpcError;
 
-      // 3. Update fees if provided
-      if (clubId && (inscriptionFee || monthlyFee)) {
+      // 3. Update fees and plan
+      if (clubId) {
+        const selectedPlan = plans.find(p => p.id === planId);
         await supabase
           .from("clubs")
           .update({
             inscription_fee: Number(inscriptionFee) || 0,
             monthly_fee: Number(monthlyFee) || 0,
+            plan_id: planId || null,
+            monthly_price: selectedPlan?.price || 29.99
           } as any)
           .eq("id", clubId);
       }
@@ -72,7 +91,7 @@ export default function RegisterClubPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -86,7 +105,7 @@ export default function RegisterClubPage() {
             </div>
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground">Registrar Club</h1>
-          <p className="text-muted-foreground">Crea tu club y comienza a gestionar tu equipo</p>
+          <p className="text-muted-foreground">Crea tu club y elige un plan SaaS</p>
         </div>
 
         <div className="glass rounded-xl p-6">
@@ -106,11 +125,30 @@ export default function RegisterClubPage() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Plan SaaS</Label>
+              <Select value={planId} onValueChange={setPlanId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} (${plan.price}/mes)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="border-t border-border my-4" />
-            <h3 className="font-display font-semibold text-foreground">Montos del Club</h3>
+            <h3 className="font-display font-semibold text-foreground">Montos de tu Club (Cobro a tus arqueros)</h3>
+            <div className="grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground mb-1">
+              Esto es lo que cobrarás internamente a tus miembros.
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Inscripción (única vez, $)</Label>
+                <Label>Inscripción ($)</Label>
                 <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
               </div>
               <div className="space-y-2">
