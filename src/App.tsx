@@ -14,6 +14,10 @@ import ProfilePage from "./pages/ProfilePage";
 import NewScorePage from "./pages/NewScorePage";
 import ScoresPage from "./pages/ScoresPage";
 import AdminPage from "./pages/AdminPage";
+import ReportsPage from "./pages/ReportsPage";
+import TrainingSessionsPage from "./pages/TrainingSessionsPage";
+import ClubSettingsPage from "./pages/ClubSettingsPage";
+import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,45 +33,38 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-club" element={<RegisterClubPage />} />
+            <Route path="/join" element={<InvitationRegisterPage />} />
             <Route
               path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <AppLayout><DashboardPage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/profile"
-              element={
-                <ProtectedRoute>
-                  <AppLayout><ProfilePage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/scores/new"
-              element={
-                <ProtectedRoute>
-                  <AppLayout><NewScorePage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><AppLayout><NewScorePage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/scores"
-              element={
-                <ProtectedRoute>
-                  <AppLayout><ScoresPage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><AppLayout><ScoresPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/training"
+              element={<ProtectedRoute><AppLayout><TrainingSessionsPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AppLayout><AdminPage /></AppLayout>
-                </ProtectedRoute>
-              }
+              element={<ProtectedRoute><AppLayout><AdminPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/reports"
+              element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/settings"
+              element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

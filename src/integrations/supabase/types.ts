@@ -21,6 +21,9 @@ export type Database = {
           country: string | null
           created_at: string
           id: string
+          inscription_fee: number | null
+          logo_url: string | null
+          monthly_fee: number | null
           name: string
         }
         Insert: {
@@ -29,6 +32,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           id?: string
+          inscription_fee?: number | null
+          logo_url?: string | null
+          monthly_fee?: number | null
           name: string
         }
         Update: {
@@ -37,9 +43,60 @@ export type Database = {
           country?: string | null
           created_at?: string
           id?: string
+          inscription_fee?: number | null
+          logo_url?: string | null
+          monthly_fee?: number | null
           name?: string
         }
         Relationships: []
+      }
+      member_invitations: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_invitations_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       member_roles: {
         Row: {
@@ -89,8 +146,12 @@ export type Database = {
           email: string
           enrollment_date: string
           full_name: string
+          guardian_email: string | null
+          guardian_name: string | null
+          guardian_phone: string | null
           id: string
           identification: string | null
+          medical_history: string | null
           member_type: string | null
           observations: string | null
           phone: string | null
@@ -106,8 +167,12 @@ export type Database = {
           email: string
           enrollment_date?: string
           full_name: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
           id?: string
           identification?: string | null
+          medical_history?: string | null
           member_type?: string | null
           observations?: string | null
           phone?: string | null
@@ -123,8 +188,12 @@ export type Database = {
           email?: string
           enrollment_date?: string
           full_name?: string
+          guardian_email?: string | null
+          guardian_name?: string | null
+          guardian_phone?: string | null
           id?: string
           identification?: string | null
+          medical_history?: string | null
           member_type?: string | null
           observations?: string | null
           phone?: string | null
@@ -202,6 +271,52 @@ export type Database = {
           },
           {
             foreignKeyName: "scores_training_session_id_fkey"
+            columns: ["training_session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_enrollments: {
+        Row: {
+          club_id: string
+          enrolled_at: string
+          id: string
+          member_id: string
+          training_session_id: string
+        }
+        Insert: {
+          club_id: string
+          enrolled_at?: string
+          id?: string
+          member_id: string
+          training_session_id: string
+        }
+        Update: {
+          club_id?: string
+          enrolled_at?: string
+          id?: string
+          member_id?: string
+          training_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_enrollments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_enrollments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_enrollments_training_session_id_fkey"
             columns: ["training_session_id"]
             isOneToOne: false
             referencedRelation: "training_sessions"
