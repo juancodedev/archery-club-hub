@@ -5,9 +5,10 @@ import { motion } from "framer-motion";
 import { Target, TrendingUp, Calendar, Award, BarChart3, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function DashboardPage() {
-  const { member } = useAuth();
+  const { member, memberships, setActiveMembership } = useAuth();
   const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
   const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador");
 
@@ -65,11 +66,31 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
-          ¡Hola, {member?.full_name?.split(" ")[0]}! 🏹
-        </h1>
-        <p className="text-muted-foreground mt-1">Bienvenido a tu panel de arquería</p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start flex-wrap gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+            ¡Hola, {member?.full_name?.split(" ")[0]}! 🏹
+          </h1>
+          <p className="text-muted-foreground mt-1">Bienvenido a tu panel de arquería</p>
+        </div>
+
+        {memberships.length > 1 && (
+          <div className="w-full sm:w-64">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Cambiar Club</label>
+            <Select value={member?.club_id} onValueChange={setActiveMembership}>
+              <SelectTrigger className="glass">
+                <SelectValue placeholder="Seleccionar Club" />
+              </SelectTrigger>
+              <SelectContent>
+                {memberships.map((m) => (
+                  <SelectItem key={m.club_id} value={m.club_id}>
+                    {m.club_name || "Club sin nombre"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </motion.div>
 
       {/* Stats */}

@@ -15,11 +15,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session, member } = useAuth();
+  const { session, member, isSuperAdminSubdomain } = useAuth();
 
   useEffect(() => {
     if (session && member) {
-      if (member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
+      if (isSuperAdminSubdomain || member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
         navigate("/super-admin");
       } else if (member.roles.includes('administrador') || member.roles.includes('presidente')) {
         navigate("/admin");
@@ -27,7 +27,7 @@ export default function LoginPage() {
         navigate("/dashboard");
       }
     }
-  }, [session, member, navigate]);
+  }, [session, member, navigate, isSuperAdminSubdomain]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +58,9 @@ export default function LoginPage() {
             Archery<span className="text-primary">Hub</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-sm">
-            La plataforma de gestión para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar.
+            {isSuperAdminSubdomain
+              ? "Panel de control maestro para la administración global de clubes de arquería."
+              : "La plataforma de gestión para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar."}
           </p>
         </motion.div>
       </div>
@@ -76,8 +78,12 @@ export default function LoginPage() {
               <Target className="h-7 w-7 text-primary" />
             </div>
           </div>
-          <h2 className="mb-2 text-2xl font-display font-bold text-foreground">Iniciar Sesión</h2>
-          <p className="mb-8 text-muted-foreground">Ingresa a tu cuenta del club</p>
+          <h2 className="mb-2 text-2xl font-display font-bold text-foreground">
+            {isSuperAdminSubdomain ? "Panel Central" : "Iniciar Sesión"}
+          </h2>
+          <p className="mb-8 text-muted-foreground">
+            {isSuperAdminSubdomain ? "Acceso exclusivo para administradores globales" : "Ingresa a tu cuenta del club"}
+          </p>
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
