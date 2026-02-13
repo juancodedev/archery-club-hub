@@ -31,6 +31,7 @@ export type Database = {
           plan_id: string | null
           trial_ends_at: string | null
           coupon_id: string | null
+          default_member_password: string | null
         }
         Insert: {
           city?: string | null
@@ -48,6 +49,7 @@ export type Database = {
           plan_id?: string | null
           trial_ends_at?: string | null
           coupon_id?: string | null
+          default_member_password?: string | null
         }
         Update: {
           city?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           plan_id?: string | null
           trial_ends_at?: string | null
           coupon_id?: string | null
+          default_member_password?: string | null
         }
         Relationships: [
           {
