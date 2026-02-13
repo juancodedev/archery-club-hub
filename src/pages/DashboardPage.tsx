@@ -2,12 +2,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Target, TrendingUp, Calendar, Award } from "lucide-react";
+import { Target, TrendingUp, Calendar, Award, BarChart3, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { member } = useAuth();
+  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
+  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador");
 
   const { data: scores } = useQuery({
     queryKey: ["my-scores", member?.id],
@@ -37,15 +39,28 @@ export default function DashboardPage() {
     enabled: !!member,
   });
 
+  const { data: sessionCount } = useQuery({
+    queryKey: ["session-count", member?.club_id],
+    queryFn: async () => {
+      if (!member) return 0;
+      const { count } = await supabase
+        .from("training_sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("club_id", member.club_id);
+      return count || 0;
+    },
+    enabled: !!member,
+  });
+
   const bestScore = scores?.length
     ? Math.max(...scores.map((s) => s.total_score))
     : 0;
 
   const statCards = [
-    { icon: Target, label: "Sesiones Registradas", value: totalScores || 0, color: "text-primary" },
-    { icon: TrendingUp, label: "Mejor Puntaje", value: bestScore, color: "text-accent" },
-    { icon: Calendar, label: "Estado", value: member?.status === "activo" ? "Activo" : "Inactivo", color: "text-primary" },
-    { icon: Award, label: "Rol Principal", value: member?.roles[0] || "—", color: "text-accent" },
+    { icon: Target, label: "Puntajes Tuyos", value: totalScores || 0, color: "text-primary", to: "/scores" },
+    { icon: TrendingUp, label: "Mejor Puntaje", value: bestScore, color: "text-accent", to: "/scores" },
+    { icon: Calendar, label: "Sesiones Club", value: sessionCount || 0, color: "text-primary", to: "/training" },
+    { icon: Award, label: "Rol Principal", value: member?.roles[0] || "—", color: "text-accent", to: "/profile" },
   ];
 
   return (
@@ -59,17 +74,18 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map(({ icon: Icon, label, value, color }, i) => (
+        {statCards.map(({ icon: Icon, label, value, color, to }, i) => (
           <motion.div
             key={label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="glass rounded-xl p-5"
           >
-            <Icon className={`h-5 w-5 mb-3 ${color}`} />
-            <p className="text-2xl font-display font-bold text-foreground capitalize">{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{label}</p>
+            <Link to={to} className="glass rounded-xl p-5 block hover:bg-muted/50 transition-colors">
+              <Icon className={`h-5 w-5 mb-3 ${color}`} />
+              <p className="text-2xl font-display font-bold text-foreground capitalize">{value}</p>
+              <p className="text-xs text-muted-foreground mt-1">{label}</p>
+            </Link>
           </motion.div>
         ))}
       </div>
@@ -82,12 +98,28 @@ export default function DashboardPage() {
             Registrar Puntaje
           </Button>
         </Link>
-        <Link to="/scores">
+        <Link to="/training">
           <Button variant="outline" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Ver Historial
+            Sesiones
           </Button>
         </Link>
+        {isPresidente && (
+          <Link to="/reports">
+            <Button variant="outline" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Reportes
+            </Button>
+          </Link>
+        )}
+        {isAdmin && (
+          <Link to="/admin">
+            <Button variant="outline" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Admin
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Recent Scores */}

@@ -20,13 +20,14 @@ export default function AddMemberDialog({ clubId }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [identification, setIdentification] = useState("");
   const [role, setRole] = useState<string>("arquero");
 
   const addMember = useMutation({
     mutationFn: async () => {
       const { data: newMember, error } = await supabase
         .from("members")
-        .insert({ club_id: clubId, full_name: name, email, phone, status: "activo" as any })
+        .insert({ club_id: clubId, full_name: name, email, phone, identification, status: "activo" as any })
         .select()
         .single();
       if (error) throw error;
@@ -40,7 +41,7 @@ export default function AddMemberDialog({ clubId }: Props) {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       toast({ title: "Miembro agregado" });
       setOpen(false);
-      setName(""); setEmail(""); setPhone(""); setRole("arquero");
+      setName(""); setEmail(""); setPhone(""); setIdentification(""); setRole("arquero");
     },
     onError: (e: any) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -66,6 +67,10 @@ export default function AddMemberDialog({ clubId }: Props) {
           <div className="space-y-2">
             <Label>Teléfono</Label>
             <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Identificación</Label>
+            <Input value={identification} onChange={(e) => setIdentification(e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Rol</Label>
