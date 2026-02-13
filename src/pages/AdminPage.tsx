@@ -2,16 +2,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal } from "lucide-react";
+import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import AddMemberDialog from "@/components/admin/AddMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
+import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialog";
 
 export default function AdminPage() {
   const { member } = useAuth();
@@ -23,6 +26,7 @@ export default function AdminPage() {
   const [editMember, setEditMember] = useState<any>(null);
   const [rolesMember, setRolesMember] = useState<any>(null);
   const [deleteMember, setDeleteMember] = useState<any>(null);
+  const [historyMember, setHistoryMember] = useState<any>(null);
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["club-members", member?.club_id],
@@ -74,82 +78,103 @@ export default function AdminPage() {
         <Input className="pl-10" placeholder="Buscar miembros..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      {/* Members list */}
+      {/* Members table */}
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <div key={i} className="glass rounded-lg p-4 h-16 animate-pulse" />)}
         </div>
       ) : (
-        <div className="space-y-2">
-          <div className="hidden sm:grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-muted-foreground">
-            <div className="col-span-3">Nombre</div>
-            <div className="col-span-3">Correo</div>
-            <div className="col-span-2">Rol</div>
-            <div className="col-span-1">Estado</div>
-            <div className="col-span-3 text-right">Acciones</div>
+        <div className="glass rounded-xl overflow-hidden border border-border/50">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-border/50">
+                  <TableHead className="font-bold text-foreground">Nombre</TableHead>
+                  <TableHead className="font-bold text-foreground">Identificación</TableHead>
+                  <TableHead className="font-bold text-foreground">Correo</TableHead>
+                  <TableHead className="font-bold text-foreground">Teléfono</TableHead>
+                  <TableHead className="font-bold text-foreground">Rol</TableHead>
+                  <TableHead className="font-bold text-foreground">Estado</TableHead>
+                  <TableHead className="font-bold text-foreground">Ingreso</TableHead>
+                  <TableHead className="text-right font-bold text-foreground">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered?.map((m) => {
+                  const roles = (m.member_roles as any[])?.map((r: any) => r.role) || [];
+                  return (
+                    <TableRow key={m.id} className="hover:bg-muted/30 border-border/30 transition-colors">
+                      <TableCell className="font-medium text-foreground whitespace-nowrap">
+                        {m.full_name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {m.identification || "—"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {m.email}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {m.phone || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {roles.map((role: string) => (
+                            <Badge key={role} variant="secondary" className="capitalize text-[10px] px-1.5 py-0">
+                              {role}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize">
+                          {m.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                        {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}
+                          >
+                            {m.status === "activo" ? "Desactivar" : "Activar"}
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setEditMember(m)}>
+                                <Pencil className="h-4 w-4 mr-2" />Editar datos
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
+                                <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setHistoryMember(m)}>
+                                <History className="h-4 w-4 mr-2" />Ver historial de puntajes
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
+                                <Trash2 className="h-4 w-4 mr-2" />Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
 
-          {filtered?.map((m, i) => {
-            const roles = (m.member_roles as any[])?.map((r: any) => r.role) || [];
-            return (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.02 }}
-                className="glass rounded-lg p-4 sm:grid sm:grid-cols-12 sm:gap-4 sm:items-center space-y-2 sm:space-y-0"
-              >
-                <div className="col-span-3">
-                  <p className="font-medium text-foreground">{m.full_name}</p>
-                </div>
-                <div className="col-span-3">
-                  <p className="text-sm text-muted-foreground truncate">{m.email}</p>
-                </div>
-                <div className="col-span-2">
-                  <div className="flex flex-wrap gap-1">
-                    {roles.map((role: string) => (
-                      <span key={role} className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary capitalize">
-                        {role}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="col-span-1">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                    m.status === "activo" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-                  }`}>
-                    {m.status}
-                  </span>
-                </div>
-                <div className="col-span-3 flex justify-end gap-1">
-                  <Button variant="outline" size="sm" onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
-                    {m.status === "activo" ? "Desactivar" : "Activar"}
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditMember(m)}>
-                        <Pencil className="h-4 w-4 mr-2" />Editar datos
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
-                        <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
-                        <Trash2 className="h-4 w-4 mr-2" />Eliminar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </motion.div>
-            );
-          })}
-
           {filtered?.length === 0 && (
-            <div className="glass rounded-xl p-8 text-center">
+            <div className="p-8 text-center bg-muted/10">
               <Users className="h-10 w-10 mx-auto mb-3 text-muted-foreground/40" />
               <p className="text-muted-foreground">No se encontraron miembros</p>
             </div>
@@ -178,6 +203,12 @@ export default function AdminPage() {
         memberName={deleteMember?.full_name ?? ""}
         open={!!deleteMember}
         onOpenChange={(open) => !open && setDeleteMember(null)}
+      />
+      <MemberScoreHistoryDialog
+        memberId={historyMember?.id ?? null}
+        memberName={historyMember?.full_name ?? ""}
+        open={!!historyMember}
+        onOpenChange={(open) => !open && setHistoryMember(null)}
       />
     </div>
   );

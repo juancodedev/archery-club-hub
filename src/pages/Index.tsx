@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Target, Users, TrendingUp, Shield, ArrowRight } from "lucide-react";
+import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
+  const { session } = useAuth();
   const features = [
     { icon: Users, title: "Gestión de Miembros", desc: "Registra y administra los miembros de tu club con fichas completas." },
     { icon: Target, title: "Registro de Puntajes", desc: "Tarjeta de puntuación con 6 ends y 5 flechas por end." },
@@ -25,12 +27,23 @@ export default function Index() {
               <span className="font-display font-bold text-lg text-foreground">ArcheryHub</span>
             </div>
             <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost" size="sm">Iniciar Sesión</Button>
-              </Link>
-              <Link to="/register-club">
-                <Button size="sm">Registrar Club</Button>
-              </Link>
+              {session ? (
+                <Link to="/dashboard">
+                  <Button size="sm" className="gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <Button variant="ghost" size="sm">Iniciar Sesión</Button>
+                  </Link>
+                  <Link to="/register-club">
+                    <Button size="sm">Registrar Club</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         </div>
@@ -52,15 +65,26 @@ export default function Index() {
               La plataforma SaaS diseñada para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/register-club">
-                <Button size="lg" className="gap-2">
-                  Comenzar Gratis
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/login">
-                <Button variant="outline" size="lg">Ya tengo cuenta</Button>
-              </Link>
+              {session ? (
+                <Link to="/dashboard">
+                  <Button size="lg" className="gap-2">
+                    Ir a mi Panel
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/register-club">
+                    <Button size="lg" className="gap-2">
+                      Comenzar Gratis
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/login">
+                    <Button variant="outline" size="lg">Ya tengo cuenta</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
