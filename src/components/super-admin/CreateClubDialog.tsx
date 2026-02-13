@@ -27,6 +27,7 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
     const [city, setCity] = useState("");
     const [country, setCountry] = useState("");
     const [email, setEmail] = useState("");
+    const [adminName, setAdminName] = useState("");
     const [planId, setPlanId] = useState("");
     const [trialDays, setTrialDays] = useState("30");
 
@@ -48,7 +49,8 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
             const trialEnds = new Date();
             trialEnds.setDate(trialEnds.getDate() + parseInt(trialDays));
 
-            const { data: club, error } = await supabase
+            // 1. Create Club
+            const { data: club, error: clubError } = await supabase
                 .from("clubs")
                 .insert({
                     name: clubName,
@@ -56,22 +58,48 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
                     country,
                     contact_email: email,
                     subscription_status: 'activo',
-                    plan_id: planId || null,
+                    plan_id: (planId && planId !== "null") ? planId : null,
                     monthly_price: selectedPlan?.price || 29.99,
-                    trial_ends_at: trialEnds.toISOString(),
                     subscription_end_date: trialEnds.toISOString().split('T')[0]
                 })
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (clubError) throw clubError;
 
-            toast.success("Club creado exitosamente con periodo de prueba");
+            // 2. Create the Admin Member for this club
+            const { data: member, error: memberError } = await supabase
+                .from("members")
+                .insert({
+                    club_id: club.id,
+                    full_name: adminName,
+                    email: email,
+                    status: 'activo'
+                })
+                .select()
+                .single();
+
+            if (memberError) {
+                console.error("Error creating admin member:", memberError);
+                toast.warning("Club creado pero hubo un error al crear el administrador.");
+            } else {
+                // 3. Assign Administrator Role
+                const { error: roleError } = await supabase
+                    .from("member_roles")
+                    .insert({
+                        member_id: member.id,
+                        club_id: club.id,
+                        role: 'administrador'
+                    });
+                if (roleError) console.error("Error assigning admin role:", roleError);
+            }
+
+            toast.success("Club y Administrador creados exitosamente");
             setOpen(false);
             onSuccess();
 
             // Reset form
-            setClubName(""); setCity(""); setCountry(""); setEmail(""); setPlanId("");
+            setClubName(""); setCity(""); setCountry(""); setEmail(""); setAdminName(""); setPlanId("");
         } catch (error: any) {
             toast.error("Error al crear el club: " + error.message);
         } finally {
@@ -114,9 +142,15 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label>Email de Contacto / Admin</Label>
-                        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="admin@club.com" />
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Nombre completo del Administrador</Label>
+                            <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} required placeholder="Ej: Juan Pérez" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Email del Administrador (Contacto)</Label>
+                            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="admin@club.com" />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -26,34 +26,64 @@ const COLORS = [
   "hsl(340, 75%, 55%)",
 ];
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
 export default function ReportsPage() {
   const { member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+
+  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("all");
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchClubs();
+    } else if (member?.club_id) {
+      setSelectedClubId(member.club_id);
+    }
+  }, [member, isSuperAdmin]);
+
+  const fetchClubs = async () => {
+    const { data } = await supabase.from("clubs").select("id, name").order("name");
+    if (data) setClubs(data);
+  };
 
   const { data: scores } = useQuery({
-    queryKey: ["club-scores-report", member?.club_id],
+    queryKey: ["club-scores-report", selectedClubId, startDate, endDate, selectedMemberId],
     queryFn: async () => {
-      if (!member) return [];
-      const { data } = await supabase
+      if (!selectedClubId || selectedClubId === "null") return [];
+      let query = supabase
         .from("scores")
         .select("*, members!inner(full_name)")
-        .eq("club_id", member.club_id)
-        .order("score_date", { ascending: true });
+        .eq("club_id", selectedClubId);
+
+      if (startDate) query = query.gte("score_date", startDate);
+      if (endDate) query = query.lte("score_date", endDate);
+      if (selectedMemberId && selectedMemberId !== "all") query = query.eq("member_id", selectedMemberId);
+
+      const { data } = await query.order("score_date", { ascending: true });
       return data || [];
     },
-    enabled: !!member,
+    enabled: !!selectedClubId,
   });
 
-  const { data: members } = useQuery({
-    queryKey: ["club-members-report", member?.club_id],
+  const { data: membersList } = useQuery({
+    queryKey: ["club-members-report", selectedClubId],
     queryFn: async () => {
-      if (!member) return [];
+      if (!selectedClubId || selectedClubId === "null") return [];
       const { data } = await supabase
         .from("members")
         .select("id, full_name, status, member_roles(role)")
-        .eq("club_id", member.club_id);
+        .eq("club_id", selectedClubId);
       return data || [];
     },
-    enabled: !!member,
+    enabled: !!selectedClubId,
   });
 
   // Chart data: Average score per member (top 10)
@@ -87,11 +117,11 @@ export default function ReportsPage() {
       .map(([month, v]) => ({ mes: month, promedio: Math.round(v.total / v.count) }));
   })();
 
-  // Pie: member status distribution
+  // Pie: member distribution
   const statusDist = (() => {
-    if (!members?.length) return [];
-    const active = members.filter((m) => m.status === "activo").length;
-    const inactive = members.filter((m) => m.status !== "activo").length;
+    if (!membersList?.length) return [];
+    const active = membersList.filter((m) => m.status === "activo").length;
+    const inactive = membersList.filter((m) => m.status !== "activo").length;
     return [
       { name: "Activos", value: active },
       { name: "Inactivos", value: inactive },
@@ -100,9 +130,9 @@ export default function ReportsPage() {
 
   // Pie: role distribution
   const roleDist = (() => {
-    if (!members?.length) return [];
+    if (!membersList?.length) return [];
     const map: Record<string, number> = {};
-    members.forEach((m: any) => {
+    membersList.forEach((m: any) => {
       (m.member_roles as any[])?.forEach((r: any) => {
         map[r.role] = (map[r.role] || 0) + 1;
       });
@@ -110,7 +140,7 @@ export default function ReportsPage() {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   })();
 
-  const totalMembers = members?.length || 0;
+  const totalMembers = membersList?.length || 0;
   const totalScores = scores?.length || 0;
   const avgScore = totalScores > 0
     ? Math.round(scores!.reduce((s, sc) => s + sc.total_score, 0) / totalScores)
@@ -131,9 +161,44 @@ export default function ReportsPage() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
           <BarChart3 className="h-6 w-6 text-primary" />
-          Reportes del Club
+          Reportes de Actividad
         </h1>
         <p className="text-muted-foreground">Análisis de rendimiento y estadísticas</p>
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {isSuperAdmin && (
+            <div className="space-y-2">
+              <Label>Club</Label>
+              <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                <SelectContent>
+                  {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label>Arquero</Label>
+            <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+              <SelectTrigger><SelectValue placeholder="Todos los arqueros" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los arqueros</SelectItem>
+                {membersList?.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Desde</Label>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Hasta</Label>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+        </div>
       </motion.div>
 
       {/* Stats cards */}

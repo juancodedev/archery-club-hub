@@ -10,11 +10,45 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
+
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
+
+  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [clubs, setClubs] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchClubs();
+    } else if (member?.club_id) {
+      setSelectedClubId(member.club_id);
+    }
+  }, [member, isSuperAdmin]);
+
+  const fetchClubs = async () => {
+    const { data } = await supabase.from("clubs").select("id, name").order("name");
+    if (data) setClubs(data);
+  };
+
+  const { data: sessions, isLoading } = useQuery({
+    queryKey: ["training-sessions", selectedClubId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
+      const { data } = await supabase
+        .from("training_sessions")
+        .select("*, training_enrollments(id, member_id, members(full_name))")
+        .eq("club_id", selectedClubId)
+        .order("event_date", { ascending: false });
+      return data || [];
+    },
+    enabled: !!selectedClubId,
+  });
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
@@ -23,26 +57,12 @@ export default function TrainingSessionsPage() {
   const [targetType, setTargetType] = useState("");
   const [detail, setDetail] = useState("");
 
-  const { data: sessions, isLoading } = useQuery({
-    queryKey: ["training-sessions", member?.club_id],
-    queryFn: async () => {
-      if (!member) return [];
-      const { data } = await supabase
-        .from("training_sessions")
-        .select("*, training_enrollments(id, member_id, members(full_name))")
-        .eq("club_id", member.club_id)
-        .order("event_date", { ascending: false });
-      return data || [];
-    },
-    enabled: !!member,
-  });
-
   const createSession = useMutation({
     mutationFn: async () => {
-      if (!member) throw new Error("No member");
+      if (!selectedClubId) throw new Error("No club selected");
       const { error } = await supabase.from("training_sessions").insert({
-        club_id: member.club_id,
-        created_by: member.id,
+        club_id: selectedClubId,
+        created_by: member?.id,
         name,
         event_date: eventDate,
         division: division || null,
@@ -69,7 +89,7 @@ export default function TrainingSessionsPage() {
       const { error } = await supabase.from("training_enrollments").insert({
         training_session_id: sessionId,
         member_id: member.id,
-        club_id: member.club_id,
+        club_id: selectedClubId,
       });
       if (error) throw error;
     },
@@ -110,7 +130,19 @@ export default function TrainingSessionsPage() {
           </h1>
           <p className="text-muted-foreground">Sesiones de entrenamiento del club</p>
         </div>
-        {isAdmin && (
+
+        {isSuperAdmin && (
+          <div className="w-full md:w-64">
+            <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+              <SelectContent>
+                {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {(isAdmin || isSuperAdmin) && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2"><Plus className="h-4 w-4" />Nueva Sesión</Button>
