@@ -127,9 +127,10 @@ export default function MembersManagement() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
+                                        <SuperAdminEditMemberDialog
+                                            member={m}
+                                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["all-members"] })}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -173,7 +174,6 @@ function SuperAdminAddMemberDialog({ onSuccess }: { onSuccess: () => void }) {
 
         try {
             setLoading(true);
-            // 1. Create the member
             const { data: member, error: memberError } = await supabase
                 .from("members")
                 .insert({
@@ -187,7 +187,6 @@ function SuperAdminAddMemberDialog({ onSuccess }: { onSuccess: () => void }) {
 
             if (memberError) throw memberError;
 
-            // 2. Assign the role
             const { error: roleError } = await supabase
                 .from("member_roles")
                 .insert({
@@ -283,3 +282,106 @@ function SuperAdminAddMemberDialog({ onSuccess }: { onSuccess: () => void }) {
         </Dialog>
     );
 }
+
+function SuperAdminEditMemberDialog({ member, onSuccess }: { member: Member, onSuccess: () => void }) {
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState(member.status);
+    const [selectedRoles, setSelectedRoles] = useState<string[]>(member.member_roles.map(r => r.role));
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+
+            // 1. Update status
+            const { error: statusError } = await supabase
+                .from("members")
+                .update({ status: status as any })
+                .eq("id", member.id);
+            if (statusError) throw statusError;
+
+            // 2. Manage roles (Nuclear approach: delete all and re-add for simplicity in this helper)
+            await supabase.from("member_roles").delete().eq("member_id", member.id);
+
+            const roleInserts = selectedRoles.map(role => ({
+                member_id: member.id,
+                club_id: member.club_id,
+                role: role as any
+            }));
+
+            if (roleInserts.length > 0) {
+                const { error: roleError } = await supabase.from("member_roles").insert(roleInserts);
+                if (roleError) throw roleError;
+            }
+
+            toast.success("Miembro actualizado correctamente");
+            onSuccess();
+            setOpen(false);
+        } catch (error: any) {
+            toast.error("Error al actualizar: " + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const rolesList = ["administrador", "presidente", "entrenador", "arquero", "socio"];
+
+    const toggleRole = (role: string) => {
+        if (selectedRoles.includes(role)) {
+            setSelectedRoles(selectedRoles.filter(r => r !== role));
+        } else {
+            setSelectedRoles([...selectedRoles, role]);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Editar Miembro {member.full_name}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                    <div className="space-y-2">
+                        <Label>Estado</Label>
+                        <Select value={status} onValueChange={setStatus}>
+                            <SelectTrigger>
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="activo">Activo</SelectItem>
+                                <SelectItem value="inactivo">Inactivo</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Label>Roles en el Club</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {rolesList.map(role => (
+                                <Badge
+                                    key={role}
+                                    variant={selectedRoles.includes(role) ? "default" : "outline"}
+                                    className="cursor-pointer capitalize px-3 py-1"
+                                    onClick={() => toggleRole(role)}
+                                >
+                                    {role}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Guardando..." : "Guardar Cambios"}
+                    </Button>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
