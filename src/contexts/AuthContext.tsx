@@ -32,50 +32,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchMember = async (userId: string) => {
-    const { data: memberData, error: memberError } = await supabase
-      .from("members")
-      .select("id, club_id, full_name, email, status, is_super_admin")
-      .eq("user_id", userId)
-      .maybeSingle();
+    try {
+      // Get auth user session directly to be safe from state race conditions
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const userEmail = authUser?.email;
 
-    if (memberError) {
-      console.error("Error fetching member:", memberError);
-    }
+      const { data: memberData, error: memberError } = await supabase
+        .from("members")
+        .select("id, club_id, full_name, email, status, is_super_admin")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (memberData) {
-      const { data: rolesData } = await supabase
-        .from("member_roles")
-        .select("role")
-        .eq("member_id", memberData.id);
-
-      let clubStatus = 'activo';
-      let subscriptionEndDate = null;
-      if (memberData.club_id) {
-        const { data: clubData } = await supabase
-          .from("clubs")
-          .select("subscription_status, subscription_end_date")
-          .eq("id", memberData.club_id)
-          .maybeSingle();
-        clubStatus = clubData?.subscription_status || 'activo';
-        subscriptionEndDate = clubData?.subscription_end_date;
+      if (memberError) {
+        console.error("Error fetching member:", memberError);
       }
 
-      setMember({
-        ...memberData,
-        status: memberData.status as string,
-        roles: rolesData?.map((r) => r.role) || [],
-        is_super_admin: memberData.is_super_admin || user.email === 'cl.jmunoz@gmail.com',
-        club_status: clubStatus,
-        subscription_end_date: subscriptionEndDate,
-      });
-    } else {
-      // If no member record but email is super admin, create a virtual member
-      if (user.email === 'cl.jmunoz@gmail.com') {
+      if (memberData) {
+        const { data: rolesData } = await supabase
+          .from("member_roles")
+          .select("role")
+          .eq("member_id", memberData.id);
+
+        let clubStatus = 'activo';
+        let subscriptionEndDate = null;
+
+        if (memberData.club_id) {
+          const { data: clubData } = await supabase
+            .from("clubs")
+            .select("subscription_status, subscription_end_date")
+            .eq("id", memberData.club_id)
+            .maybeSingle();
+          clubStatus = clubData?.subscription_status || 'activo';
+          subscriptionEndDate = clubData?.subscription_end_date;
+        }
+
+        setMember({
+          ...memberData,
+          status: memberData.status as string,
+          roles: rolesData?.map((r) => r.role) || [],
+          is_super_admin: memberData.is_super_admin || userEmail === 'cl.jmunoz@gmail.com',
+          club_status: clubStatus,
+          subscription_end_date: subscriptionEndDate,
+        });
+      } else if (userEmail === 'cl.jmunoz@gmail.com') {
+        // Virtual member for Super Admin if no member record exists yet
         setMember({
           id: 'super-admin-virtual',
-          club_id: '',
+          club_id: null as any,
           full_name: 'Super Administrador',
-          email: user.email,
+          email: userEmail,
           status: 'activo',
           roles: ['administrador'],
           is_super_admin: true
@@ -83,10 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setMember(null);
       }
+    } catch (e) {
+      console.error("Auth error:", e);
+      setMember(null);
     }
   };
 
   const refreshMember = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) await fetchMember(user.id);
   };
 
@@ -94,9 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchMember(session.user.id);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          fetchMember(currentUser.id);
         } else {
           setMember(null);
         }
@@ -106,9 +116,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchMember(session.user.id);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        fetchMember(currentUser.id);
       }
       setLoading(false);
     });
@@ -118,6 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setMember(null);
   };
 
