@@ -380,6 +380,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_invitation_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          club_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          used_at: string
+        }[]
+      }
       get_member_for_user: {
         Args: { p_user_id: string }
         Returns: {
