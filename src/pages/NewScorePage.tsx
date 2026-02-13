@@ -16,8 +16,13 @@ function createEmptyEnds() {
   return Array.from({ length: ENDS_COUNT }, () => Array(ARROWS_PER_END).fill(""));
 }
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
+
 export default function NewScorePage() {
   const { member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const [eventName, setEventName] = useState("");
@@ -28,9 +33,42 @@ export default function NewScorePage() {
   const [ends, setEnds] = useState<string[][]>(createEmptyEnds());
   const [loading, setLoading] = useState(false);
 
+  // For SuperAdmin/Admin
+  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchClubs();
+    } else if (member?.club_id) {
+      setSelectedClubId(member.club_id);
+      fetchMembers(member.club_id);
+    }
+
+    if (member?.id && !isSuperAdmin) {
+      setSelectedMemberId(member.id);
+    }
+  }, [member, isSuperAdmin]);
+
+  const fetchClubs = async () => {
+    const { data } = await supabase.from("clubs").select("id, name").order("name");
+    if (data) setClubs(data);
+  };
+
+  const fetchMembers = async (clubId: string) => {
+    if (!clubId || clubId === "null" || clubId === "00000000-0000-0000-0000-000000000000") return;
+    const { data } = await supabase
+      .from("members")
+      .select("id, full_name")
+      .eq("club_id", clubId)
+      .order("full_name");
+    if (data) setMembers(data);
+  };
+
   const updateArrow = (endIdx: number, arrowIdx: number, value: string) => {
     const v = value.toUpperCase();
-    // Allow X, M, 0-10
     if (v !== "" && v !== "X" && v !== "M" && (isNaN(Number(v)) || Number(v) < 0 || Number(v) > 10)) return;
     const newEnds = ends.map((end, i) =>
       i === endIdx ? end.map((a, j) => (j === arrowIdx ? v : a)) : end
@@ -51,13 +89,16 @@ export default function NewScorePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!member) return;
+    if (!selectedMemberId || selectedMemberId === "null") {
+      toast({ title: "Error", description: "Selecciona un arquero", variant: "destructive" });
+      return;
+    }
     setLoading(true);
 
     try {
       const { error } = await supabase.from("scores").insert({
-        member_id: member.id,
-        club_id: member.club_id,
+        member_id: selectedMemberId,
+        club_id: selectedClubId,
         event_name: eventName || "Entrenamiento",
         score_date: scoreDate,
         division,
@@ -84,10 +125,43 @@ export default function NewScorePage() {
           <Crosshair className="h-6 w-6 text-primary" />
           Registrar Puntaje
         </h1>
-        <p className="text-muted-foreground">Ingresa tu tarjeta de puntuación</p>
+        <p className="text-muted-foreground">Ingresa la tarjeta de puntuación</p>
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Selection for Admin/SuperAdmin */}
+        {(isSuperAdmin || member?.roles.includes('administrador')) && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
+            <h3 className="font-display font-semibold text-foreground mb-4">Selección de Arquero</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {isSuperAdmin && (
+                <div className="space-y-2">
+                  <Label>Club</Label>
+                  <Select value={selectedClubId} onValueChange={(val) => {
+                    setSelectedClubId(val);
+                    setSelectedMemberId("");
+                    fetchMembers(val);
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                    <SelectContent>
+                      {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Arquero</Label>
+                <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar arquero" /></SelectTrigger>
+                  <SelectContent>
+                    {members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Event info */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5">
           <h3 className="font-display font-semibold text-foreground mb-4">Información del Evento</h3>
