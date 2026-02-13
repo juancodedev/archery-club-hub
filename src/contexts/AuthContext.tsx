@@ -76,11 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
         // Virtual member for Super Admin if no member record exists yet
+        // Use a valid UUID format for the virtual ID to avoid 22P02 errors
         setMember({
-          id: 'super-admin-virtual',
+          id: '00000000-0000-0000-0000-000000000000',
           club_id: null as any,
           full_name: 'Super Administrador',
-          email: userEmail,
+          email: userEmail || '',
           status: 'activo',
           roles: ['administrador'],
           is_super_admin: true

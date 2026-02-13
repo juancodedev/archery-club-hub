@@ -9,19 +9,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect } from "react";
+
 export default function ClubSettingsPage() {
   const { member } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [selectedClubId, setSelectedClubId] = useState<string>("");
+  const [clubs, setClubs] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchClubs();
+    } else if (member?.club_id) {
+      setSelectedClubId(member.club_id);
+    }
+  }, [member, isSuperAdmin]);
+
+  const fetchClubs = async () => {
+    const { data } = await supabase.from("clubs").select("id, name").order("name");
+    if (data) setClubs(data);
+  };
+
   const { data: club } = useQuery({
-    queryKey: ["club-settings", member?.club_id],
+    queryKey: ["club-settings", selectedClubId],
     queryFn: async () => {
-      if (!member) return null;
-      const { data } = await supabase.from("clubs").select("*").eq("id", member.club_id).single();
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return null;
+      const { data } = await supabase.from("clubs").select("*").eq("id", selectedClubId).single();
       return data;
     },
-    enabled: !!member,
+    enabled: !!selectedClubId,
   });
 
   const [inscriptionFee, setInscriptionFee] = useState("");
@@ -37,14 +57,14 @@ export default function ClubSettingsPage() {
 
   const updateFees = useMutation({
     mutationFn: async () => {
-      if (!member) throw new Error("No member");
+      if (!selectedClubId) throw new Error("No club selected");
       const { error } = await supabase
         .from("clubs")
         .update({
           inscription_fee: Number(inscriptionFee) || 0,
           monthly_fee: Number(monthlyFee) || 0,
         } as any)
-        .eq("id", member.club_id);
+        .eq("id", selectedClubId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -56,29 +76,29 @@ export default function ClubSettingsPage() {
 
   // Invitations
   const { data: invitations } = useQuery({
-    queryKey: ["invitations", member?.club_id],
+    queryKey: ["invitations", selectedClubId],
     queryFn: async () => {
-      if (!member) return [];
+      if (!selectedClubId || selectedClubId === "null") return [];
       const { data } = await supabase
         .from("member_invitations")
         .select("*")
-        .eq("club_id", member.club_id)
+        .eq("club_id", selectedClubId)
         .order("created_at", { ascending: false })
         .limit(20);
       return data || [];
     },
-    enabled: !!member,
+    enabled: !!selectedClubId,
   });
 
   const [invEmail, setInvEmail] = useState("");
 
   const createInvitation = useMutation({
     mutationFn: async () => {
-      if (!member) throw new Error("No member");
+      if (!selectedClubId) throw new Error("No club selected");
       const { error } = await supabase.from("member_invitations").insert({
-        club_id: member.club_id,
+        club_id: selectedClubId,
         email: invEmail || null,
-        created_by: member.id,
+        created_by: member?.id,
       });
       if (error) throw error;
     },
@@ -105,6 +125,18 @@ export default function ClubSettingsPage() {
         </h1>
         <p className="text-muted-foreground">Montos, invitaciones y más</p>
       </motion.div>
+
+      {isSuperAdmin && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
+          <h3 className="font-display font-semibold text-foreground mb-4">Seleccionar Club para Configurar</h3>
+          <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+            <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+            <SelectContent>
+              {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </motion.div>
+      )}
 
       {/* Fees */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 space-y-4">
