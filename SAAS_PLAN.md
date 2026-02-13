@@ -122,6 +122,7 @@ CREATE TABLE public.training_enrollments (
   member_id uuid NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
   club_id uuid NOT NULL REFERENCES public.clubs(id) ON DELETE CASCADE,
   enrolled_at timestamp with time zone NOT NULL DEFAULT now(),
+  attended BOOLEAN DEFAULT false,
   UNIQUE(training_session_id, member_id)
 );
 
