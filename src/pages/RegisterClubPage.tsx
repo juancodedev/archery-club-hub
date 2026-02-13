@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Target, Building2 } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 export default function RegisterClubPage() {
   const [clubName, setClubName] = useState("");
@@ -15,6 +15,8 @@ export default function RegisterClubPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [adminName, setAdminName] = useState("");
   const [password, setPassword] = useState("");
+  const [inscriptionFee, setInscriptionFee] = useState("");
+  const [monthlyFee, setMonthlyFee] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,7 +37,7 @@ export default function RegisterClubPage() {
       if (!authData.user) throw new Error("No se pudo crear el usuario");
 
       // 2. Call register_club function
-      const { error: rpcError } = await supabase.rpc("register_club", {
+      const { data: clubId, error: rpcError } = await supabase.rpc("register_club", {
         p_club_name: clubName,
         p_city: city,
         p_country: country,
@@ -45,6 +47,17 @@ export default function RegisterClubPage() {
       });
 
       if (rpcError) throw rpcError;
+
+      // 3. Update fees if provided
+      if (clubId && (inscriptionFee || monthlyFee)) {
+        await supabase
+          .from("clubs")
+          .update({
+            inscription_fee: Number(inscriptionFee) || 0,
+            monthly_fee: Number(monthlyFee) || 0,
+          } as any)
+          .eq("id", clubId);
+      }
 
       toast({
         title: "¡Club registrado!",
@@ -90,6 +103,19 @@ export default function RegisterClubPage() {
               <div className="space-y-2">
                 <Label>País</Label>
                 <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Chile" />
+              </div>
+            </div>
+
+            <div className="border-t border-border my-4" />
+            <h3 className="font-display font-semibold text-foreground">Montos del Club</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Inscripción (única vez, $)</Label>
+                <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
+              </div>
+              <div className="space-y-2">
+                <Label>Mensualidad ($)</Label>
+                <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
               </div>
             </div>
 
