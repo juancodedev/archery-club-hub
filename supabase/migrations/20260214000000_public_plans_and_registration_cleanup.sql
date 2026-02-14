@@ -38,7 +38,9 @@ CREATE OR REPLACE FUNCTION public.register_club(
   p_country TEXT,
   p_contact_email TEXT,
   p_admin_name TEXT,
-  p_user_id UUID
+  p_user_id UUID,
+  p_plan_id UUID DEFAULT NULL,
+  p_monthly_price DECIMAL DEFAULT 29.99
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -49,20 +51,21 @@ DECLARE
   v_club_id UUID;
   v_member_id UUID;
   v_caller UUID := auth.uid();
+  v_final_user_id UUID;
 BEGIN
-  IF v_caller IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-  IF p_user_id != v_caller THEN
-    RAISE EXCEPTION 'User ID mismatch';
+  -- If we have auth.uid(), use it. If not, trust the p_user_id (needed if confirmation is ON)
+  v_final_user_id := COALESCE(v_caller, p_user_id);
+
+  IF v_final_user_id IS NULL THEN
+    RAISE EXCEPTION 'User ID is required';
   END IF;
 
-  INSERT INTO public.clubs (name, city, country, contact_email)
-  VALUES (trim(p_club_name), trim(p_city), trim(p_country), trim(p_contact_email))
+  INSERT INTO public.clubs (name, city, country, contact_email, plan_id, monthly_price)
+  VALUES (trim(p_club_name), trim(p_city), trim(p_country), trim(p_contact_email), p_plan_id, p_monthly_price)
   RETURNING id INTO v_club_id;
 
   INSERT INTO public.members (user_id, club_id, full_name, email, status)
-  VALUES (v_caller, v_club_id, trim(p_admin_name), trim(p_contact_email), 'activo')
+  VALUES (v_final_user_id, v_club_id, trim(p_admin_name), trim(p_contact_email), 'activo')
   RETURNING id INTO v_member_id;
 
   INSERT INTO public.member_roles (member_id, club_id, role)
@@ -72,7 +75,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.register_club(text, text, text, text, text, uuid) TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.register_club(text, text, text, text, text, uuid, uuid, decimal) TO authenticated, anon;
 
 -- 6. Recargar caché de PostgREST
 NOTIFY pgrst, 'reload schema';
