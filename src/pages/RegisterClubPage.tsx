@@ -110,16 +110,16 @@ export default function RegisterClubPage() {
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label>Nombre del club</Label>
-                <Input value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="Club de Arquería..." required />
+                <Label htmlFor="clubName">Nombre del club</Label>
+                <Input id="clubName" value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="Club de Arquería..." required />
               </div>
               <div className="space-y-2">
-                <Label>Ciudad</Label>
-                <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Santiago" />
+                <Label htmlFor="city">Ciudad</Label>
+                <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Santiago" />
               </div>
               <div className="space-y-2">
-                <Label>País</Label>
-                <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Chile" />
+                <Label htmlFor="country">País</Label>
+                <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Chile" />
               </div>
             </div>
 
@@ -146,16 +146,16 @@ export default function RegisterClubPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Nombre completo</Label>
-                <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="Juan Pérez" required />
+                <Label htmlFor="adminName">Nombre completo</Label>
+                <Input id="adminName" value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="Juan Pérez" required />
               </div>
               <div className="space-y-2">
-                <Label>Correo electrónico</Label>
-                <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="admin@club.com" required />
+                <Label htmlFor="adminEmail">Correo electrónico</Label>
+                <Input id="adminEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="admin@club.com" required />
               </div>
               <div className="space-y-2">
-                <Label>Contraseña</Label>
-                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
+                <Label htmlFor="password">Contraseña</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
               </div>
             </div>
 
