@@ -32,11 +32,15 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    console.log("Iniciando sesión para:", email);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
-      setLoading(false);
       toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
     }
+    // No ponemos setLoading(false) aquí si es exitoso para evitar parpadeos si redirige rápido,
+    // pero lo haremos al final del bloque o si el componente sigue montado.
+    setLoading(false);
   };
 
   return (
