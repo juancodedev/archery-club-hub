@@ -40,10 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [memberships, setMemberships] = useState<MemberInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMember = async (userId: string) => {
+  const fetchMember = async (userId: string, userEmail?: string) => {
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      const userEmail = authUser?.email;
+      console.log("Cargando membresías para userId:", userId);
 
       const { data: membersData, error: membersError } = await supabase
         .from("members")
@@ -54,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId);
 
       if (membersError) {
-        console.error("Error fetching memberships:", membersError);
+        console.error("Error al obtener membresías:", membersError);
       }
+
+      console.log("Datos de membresía recibidos:", membersData);
 
       if (membersData && membersData.length > 0) {
         const allMemberships: MemberInfo[] = await Promise.all(
@@ -92,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setMember(allMemberships[0]);
           localStorage.setItem("activeClubId", allMemberships[0].club_id);
         }
+        console.log("Miembro activo establecido:", restored || allMemberships[0]);
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
+        console.log("Usuario es Super Admin de respaldo");
         const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
           club_id: null as any,
@@ -105,11 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMemberships([adminMember]);
         setMember(adminMember);
       } else {
+        console.warn("No se encontraron membresías para este usuario.");
         setMemberships([]);
         setMember(null);
       }
+      console.log("fetchMember finalizado.");
     } catch (e) {
-      console.error("Auth error:", e);
+      console.error("Error crítico en AuthContext:", e);
       setMemberships([]);
       setMember(null);
     }
@@ -135,7 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          await fetchMember(currentUser.id);
+          await fetchMember(currentUser.id, currentUser.email);
         } else {
           setMember(null);
           setMemberships([]);
@@ -146,12 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        const currentUser = session?.user ?? null;
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        const currentUser = initialSession?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          await fetchMember(currentUser.id);
+          await fetchMember(currentUser.id, currentUser.email);
         }
       } catch (err) {
         console.error("Error initializing session:", err);
