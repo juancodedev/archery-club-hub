@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 export default function ScoresPage() {
   const { member } = useAuth();
   const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
+  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedClubId, setSelectedClubId] = useState<string>("");
@@ -250,9 +250,9 @@ export default function ScoresPage() {
                               {end.map((arrow, j) => (
                                 <td key={j} className="py-2.5 px-1 text-center font-mono">
                                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-sm text-xs ${arrow === "X" || arrow === "10" ? "bg-yellow-500/20 text-yellow-500 font-bold" :
-                                      ["9", "8"].includes(arrow) ? "bg-red-500/20 text-red-400" :
-                                        ["7", "6"].includes(arrow) ? "bg-blue-500/20 text-blue-400" :
-                                          arrow === "M" ? "text-muted-foreground/50" : "text-foreground/70"
+                                    ["9", "8"].includes(arrow) ? "bg-red-500/20 text-red-400" :
+                                      ["7", "6"].includes(arrow) ? "bg-blue-500/20 text-blue-400" :
+                                        arrow === "M" ? "text-muted-foreground/50" : "text-foreground/70"
                                     }`}>
                                     {arrow || "—"}
                                   </span>

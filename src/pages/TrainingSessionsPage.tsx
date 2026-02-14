@@ -40,7 +40,7 @@ export default function TrainingSessionsPage() {
   const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
+  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [clubs, setClubs] = useState<any[]>([]);
