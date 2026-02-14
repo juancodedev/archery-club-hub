@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2 } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ const navItems = [
 
 const adminItems = [
   { to: "/admin", icon: Users, label: "Miembros" },
+  { to: "/billing", icon: CreditCard, label: "Planes y Créditos" },
   { to: "/settings", icon: Settings, label: "Configuración" },
 ];
 
