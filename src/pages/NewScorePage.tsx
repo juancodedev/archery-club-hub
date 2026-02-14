@@ -129,8 +129,8 @@ export default function NewScorePage() {
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Selection for Admin/SuperAdmin */}
-        {(isSuperAdmin || member?.roles.includes('administrador')) && (
+        {/* Scorecard selection (for owners/trainers) */}
+        {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
             <h3 className="font-display font-semibold text-foreground mb-4">Selección de Arquero</h3>
             <div className="grid gap-4 sm:grid-cols-2">

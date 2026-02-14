@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function DashboardPage() {
   const { member, memberships, setActiveMembership } = useAuth();
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || member?.roles.includes("entrenador");
-  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador");
+  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
+  const isPresidente = member?.roles?.includes("presidente") || member?.roles?.includes("administrador");
 
   const { data: scores } = useQuery({
     queryKey: ["my-scores", member?.id],
