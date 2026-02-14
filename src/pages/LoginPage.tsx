@@ -21,7 +21,7 @@ export default function LoginPage() {
     if (session && member) {
       if (isSuperAdminSubdomain || member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
         navigate("/super-admin");
-      } else if (member.roles.includes('administrador') || member.roles.includes('presidente')) {
+      } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
         navigate("/admin");
       } else {
         navigate("/dashboard");
