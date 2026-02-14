@@ -152,13 +152,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if (currentUser) {
-          // No bloqueamos el hilo principal, lo enviamos al fondo
           fetchMember(currentUser.id, currentUser.email);
         } else {
           setMember(null);
           setMemberships([]);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
