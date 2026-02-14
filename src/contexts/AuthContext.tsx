@@ -42,29 +42,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchMember = async (userId: string, userEmail?: string) => {
     try {
-      console.log("Cargando membresías para userId:", userId);
+      console.log("🔍 [AuthContext] Iniciando fetchMember para:", userId);
 
+      // 1. Obtener datos básicos del miembro
       const { data: membersData, error: membersError } = await supabase
         .from("members")
-        .select(`
-          id, club_id, full_name, email, status, is_super_admin,
-          clubs (name, subscription_status, subscription_end_date)
-        `)
+        .select(`id, club_id, full_name, email, status, is_super_admin`)
         .eq("user_id", userId);
 
       if (membersError) {
-        console.error("Error al obtener membresías:", membersError);
+        console.error("❌ [AuthContext] Error en query de members:", membersError);
       }
 
-      console.log("Datos de membresía recibidos:", membersData);
+      console.log("📋 [AuthContext] Miembros encontrados:", membersData?.length || 0, membersData);
 
       if (membersData && membersData.length > 0) {
         const allMemberships: MemberInfo[] = await Promise.all(
           membersData.map(async (m: any) => {
-            const { data: rolesData } = await supabase
+            // 2. Obtener roles
+            const { data: rolesData, error: rolesError } = await supabase
               .from("member_roles")
               .select("role")
               .eq("member_id", m.id);
+
+            if (rolesError) console.error("❌ Error en roles:", rolesError);
+
+            // 3. Obtener info del club (separado para evitar joins complejos)
+            const { data: clubData, error: clubError } = await supabase
+              .from("clubs")
+              .select("name, subscription_status, subscription_end_date")
+              .eq("id", m.club_id)
+              .single();
+
+            if (clubError) console.error("❌ Error en club:", clubError);
 
             return {
               id: m.id,
@@ -74,28 +84,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               status: m.status,
               roles: rolesData?.map((r) => r.role) || [],
               is_super_admin: m.is_super_admin || userEmail === 'cl.jmunoz@gmail.com',
-              club_status: m.clubs?.subscription_status || 'activo',
-              subscription_end_date: m.clubs?.subscription_end_date,
-              club_name: m.clubs?.name
+              club_status: clubData?.subscription_status || 'activo',
+              subscription_end_date: clubData?.subscription_end_date,
+              club_name: clubData?.name
             };
           })
         );
 
         setMemberships(allMemberships);
 
-        // Try to restore previous active club
         const savedClubId = localStorage.getItem("activeClubId");
         const restored = savedClubId ? allMemberships.find(m => m.club_id === savedClubId) : null;
+        const finalMember = restored || allMemberships[0];
 
-        if (restored) {
-          setMember(restored);
-        } else if (allMemberships.length > 0) {
-          setMember(allMemberships[0]);
-          localStorage.setItem("activeClubId", allMemberships[0].club_id);
+        setMember(finalMember);
+        if (finalMember) {
+          localStorage.setItem("activeClubId", finalMember.club_id);
+          console.log("✅ [AuthContext] Miembro establecido con éxito:", finalMember.full_name);
         }
-        console.log("Miembro activo establecido:", restored || allMemberships[0]);
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
-        console.log("Usuario es Super Admin de respaldo");
+        console.log("👑 [AuthContext] Usuario es Super Admin de emergencia");
         const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
           club_id: null as any,
@@ -108,15 +116,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setMemberships([adminMember]);
         setMember(adminMember);
       } else {
-        console.warn("No se encontraron membresías para este usuario.");
+        console.error("⚠️ [AuthContext] No se encontró ningún registro en la tabla 'members' para este usuario.");
         setMemberships([]);
         setMember(null);
       }
-      console.log("fetchMember finalizado.");
     } catch (e) {
-      console.error("Error crítico en AuthContext:", e);
+      console.error("💥 [AuthContext] Error crítico en fetchMember:", e);
       setMemberships([]);
       setMember(null);
+    } finally {
+      setLoading(false);
+      console.log("🏁 [AuthContext] fetchMember finalizado.");
     }
   };
 
