@@ -22,6 +22,7 @@ import SuperAdminPage from "./pages/SuperAdminPage";
 import NotFound from "./pages/NotFound";
 
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
+import BillingPage from "./pages/BillingPage";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,10 @@ const App = () => (
             <Route
               path="/settings"
               element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/billing"
+              element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/super-admin/*"
