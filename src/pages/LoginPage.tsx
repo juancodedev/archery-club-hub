@@ -18,13 +18,29 @@ export default function LoginPage() {
   const { session, member, isSuperAdminSubdomain } = useAuth();
 
   useEffect(() => {
-    if (session && member) {
-      if (isSuperAdminSubdomain || member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
-        navigate("/super-admin");
-      } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
-        navigate("/admin");
+    if (session) {
+      if (member) {
+        console.log("🎯 [LoginPage] Miembro cargado, redirigiendo...");
+        if (isSuperAdminSubdomain || member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
+          navigate("/super-admin");
+        } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
-        navigate("/dashboard");
+        // Si tenemos sesión pero después de 5s no hay miembro, algo anda mal en la DB
+        const timer = setTimeout(() => {
+          if (session && !member) {
+            console.error("🚨 [LoginPage] Tiempo de espera agotado para cargar el perfil del miembro.");
+            toast({
+              title: "Error de Perfil",
+              description: "Tu cuenta de usuario existe, pero no encontramos tu perfil de miembro en este club. Contacta al soporte.",
+              variant: "destructive"
+            });
+          }
+        }, 5000);
+        return () => clearTimeout(timer);
       }
     }
   }, [session, member, navigate, isSuperAdminSubdomain]);
