@@ -18,11 +18,8 @@ export default function RegisterClubPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [adminName, setAdminName] = useState("");
   const [password, setPassword] = useState("");
-  const [inscriptionFee, setInscriptionFee] = useState("");
-  const [monthlyFee, setMonthlyFee] = useState("");
   const [planId, setPlanId] = useState("");
   const [plans, setPlans] = useState<any[]>([]);
-  const [defaultMemberPassword, setDefaultMemberPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -65,15 +62,12 @@ export default function RegisterClubPage() {
 
       if (rpcError) throw rpcError;
 
-      // 3. Update fees and plan
+      // 3. Update plan
       if (clubId) {
         const selectedPlan = plans.find(p => p.id === planId);
         await supabase
           .from("clubs")
           .update({
-            inscription_fee: Number(inscriptionFee) || 0,
-            monthly_fee: Number(monthlyFee) || 0,
-            default_member_password: defaultMemberPassword || null,
             plan_id: planId || null,
             monthly_price: selectedPlan?.price || 29.99
           } as any)
@@ -143,32 +137,7 @@ export default function RegisterClubPage() {
               </Select>
             </div>
 
-            <div className="border-t border-border my-4" />
-            <h3 className="font-display font-semibold text-foreground">Montos de tu Club (Cobro a tus arqueros)</h3>
-            <div className="grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground mb-1">
-              Esto es lo que cobrarás internamente a tus miembros.
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Inscripción ($)</Label>
-                <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Mensualidad ($)</Label>
-                <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label>Password por defecto para tus nuevos miembros</Label>
-                <Input
-                  type="text"
-                  value={defaultMemberPassword}
-                  onChange={(e) => setDefaultMemberPassword(e.target.value)}
-                  placeholder="Ej: Club2024!"
-                  required
-                />
-                <p className="text-[10px] text-muted-foreground">Esta contraseña se usará cuando crees miembros manualmente. Cámbiala periódicamente.</p>
-              </div>
-            </div>
+
 
             <div className="border-t border-border my-4" />
             <h3 className="font-display font-semibold text-foreground">Cuenta del Administrador</h3>
