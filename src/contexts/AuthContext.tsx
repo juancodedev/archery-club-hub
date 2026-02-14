@@ -140,17 +140,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshMember = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) await fetchMember(user.id);
+    if (user) fetchMember(user.id);
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        console.log("🔔 [AuthContext] Auth session changed:", event);
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+
         if (currentUser) {
-          await fetchMember(currentUser.id, currentUser.email);
+          // No bloqueamos el hilo principal, lo enviamos al fondo
+          fetchMember(currentUser.id, currentUser.email);
         } else {
           setMember(null);
           setMemberships([]);
@@ -165,12 +168,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(initialSession);
         const currentUser = initialSession?.user ?? null;
         setUser(currentUser);
+
+        setLoading(false); // Liberamos la UI de inmediato
+
         if (currentUser) {
-          await fetchMember(currentUser.id, currentUser.email);
+          fetchMember(currentUser.id, currentUser.email);
         }
       } catch (err) {
         console.error("Error initializing session:", err);
-      } finally {
         setLoading(false);
       }
     };

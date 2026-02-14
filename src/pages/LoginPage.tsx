@@ -31,16 +31,25 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    console.log("Iniciando sesión para:", email);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (loading) return;
 
-    if (error) {
-      toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
+    setLoading(true);
+    try {
+      console.log("🚀 [LoginPage] Intentando signIn para:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        console.error("❌ [LoginPage] Error de auth:", error.message);
+        toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
+      } else if (data.session) {
+        console.log("✅ [LoginPage] Sesión iniciada con éxito para UID:", data.session.user.id);
+      }
+    } catch (err: any) {
+      console.error("💥 [LoginPage] Error inesperado:", err);
+      toast({ title: "Error inesperado", description: "Ocurrió un error al procesar tu solicitud.", variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-    // No ponemos setLoading(false) aquí si es exitoso para evitar parpadeos si redirige rápido,
-    // pero lo haremos al final del bloque o si el componente sigue montado.
-    setLoading(false);
   };
 
   return (
