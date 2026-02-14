@@ -206,32 +206,32 @@ export default function InvitationRegisterPage() {
             <h3 className="font-display font-semibold text-foreground">Datos Personales</h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label>Nombre completo *</Label>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                <Label htmlFor="fullName">Nombre completo *</Label>
+                <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>Fecha de nacimiento *</Label>
-                <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
+                <Label htmlFor="dateOfBirth">Fecha de nacimiento *</Label>
+                <Input id="dateOfBirth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
               </div>
               <div className="space-y-2">
-                <Label>RUT / RUN</Label>
-                <Input value={identification} onChange={(e) => setIdentification(e.target.value)} placeholder="12.345.678-9" />
+                <Label htmlFor="identification">RUT / RUN</Label>
+                <Input id="identification" value={identification} onChange={(e) => setIdentification(e.target.value)} placeholder="12.345.678-9" />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Dirección particular</Label>
-                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+                <Label htmlFor="address">Dirección particular</Label>
+                <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Teléfono</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <Label htmlFor="phone">Teléfono</Label>
+                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Label htmlFor="email">Email *</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label>Antecedentes médicos relevantes</Label>
-                <Textarea value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} placeholder="Alergias, condiciones, etc." rows={3} />
+                <Label htmlFor="medicalHistory">Antecedentes médicos relevantes</Label>
+                <Textarea id="medicalHistory" value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} placeholder="Alergias, condiciones, etc." rows={3} />
               </div>
             </div>
           </div>
@@ -242,16 +242,16 @@ export default function InvitationRegisterPage() {
               <h3 className="font-display font-semibold text-foreground">Datos del Tutor (menor de 18 años)</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
-                  <Label>Nombre del tutor *</Label>
-                  <Input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} required />
+                  <Label htmlFor="guardianName">Nombre del tutor *</Label>
+                  <Input id="guardianName" value={guardianName} onChange={(e) => setGuardianName(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Teléfono contacto/emergencias *</Label>
-                  <Input value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} required />
+                  <Label htmlFor="guardianPhone">Teléfono contacto/emergencias *</Label>
+                  <Input id="guardianPhone" value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email del tutor *</Label>
-                  <Input type="email" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} required />
+                  <Label htmlFor="guardianEmail">Email del tutor *</Label>
+                  <Input id="guardianEmail" type="email" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} required />
                 </div>
               </div>
             </motion.div>
@@ -295,8 +295,8 @@ export default function InvitationRegisterPage() {
           <div className="glass rounded-xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground">Crear Cuenta</h3>
             <div className="space-y-2">
-              <Label>Contraseña *</Label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
+              <Label htmlFor="memberPassword">Contraseña *</Label>
+              <Input id="memberPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
             </div>
           </div>
 
