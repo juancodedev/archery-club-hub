@@ -45,19 +45,15 @@ CREATE OR REPLACE FUNCTION public.register_club(
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, auth
 AS $$
 DECLARE
   v_club_id UUID;
   v_member_id UUID;
-  v_caller UUID := auth.uid();
-  v_final_user_id UUID;
 BEGIN
-  -- If we have auth.uid(), use it. If not, trust the p_user_id (needed if confirmation is ON)
-  v_final_user_id := COALESCE(v_caller, p_user_id);
-
-  IF v_final_user_id IS NULL THEN
-    RAISE EXCEPTION 'User ID is required';
+  -- Verify user exists in auth.users
+  IF NOT EXISTS (SELECT 1 FROM auth.users WHERE id = p_user_id) THEN
+    RAISE EXCEPTION 'User ID % does not exist', p_user_id;
   END IF;
 
   INSERT INTO public.clubs (name, city, country, contact_email, plan_id, monthly_price)
@@ -65,7 +61,7 @@ BEGIN
   RETURNING id INTO v_club_id;
 
   INSERT INTO public.members (user_id, club_id, full_name, email, status)
-  VALUES (v_final_user_id, v_club_id, trim(p_admin_name), trim(p_contact_email), 'activo')
+  VALUES (p_user_id, v_club_id, trim(p_admin_name), trim(p_contact_email), 'activo')
   RETURNING id INTO v_member_id;
 
   INSERT INTO public.member_roles (member_id, club_id, role)
