@@ -148,7 +148,10 @@ export default function TrainingSessionsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      setQrSession(sessions?.find(s => s.id === data.sessionId));
+      const currentSession = sessions?.find(s => s.id === data.sessionId);
+      if (currentSession) {
+        setQrSession({ ...currentSession, attendance_token: data.token });
+      }
       toast({ title: "Código QR generado", description: "Válido por 24 horas." });
     },
   });
