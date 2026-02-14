@@ -50,27 +50,50 @@ export default function InvitationRegisterPage() {
 
   useEffect(() => {
     async function loadInvitation() {
-      if (!token) { setExpired(true); setLoadingInv(false); return; }
-      const { data: invRows } = await supabase
-        .rpc("get_invitation_by_token", { p_token: token });
-      const inv = invRows && invRows.length > 0 ? invRows[0] : null;
-
-      if (!inv || inv.used_at || new Date(inv.expires_at) < new Date()) {
+      if (!token) {
+        console.error("No token provided");
         setExpired(true);
-        // Still load club for logo if possible
-        if (inv) {
-          const { data: c } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
-          setClub(c);
-        }
         setLoadingInv(false);
         return;
       }
 
-      setInvitation(inv);
-      if (inv.email) setEmail(inv.email);
-      const { data: c } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
-      setClub(c);
-      setLoadingInv(false);
+      try {
+        const { data: invRows, error: invError } = await supabase
+          .rpc("get_invitation_by_token", { p_token: token });
+
+        if (invError) {
+          console.error("Error loading invitation:", invError);
+          setExpired(true);
+          setLoadingInv(false);
+          return;
+        }
+
+        const inv = invRows && invRows.length > 0 ? invRows[0] : null;
+
+        if (!inv || inv.used_at || new Date(inv.expires_at) < new Date()) {
+          console.log("Invitation invalid or expired:", inv);
+          setExpired(true);
+          // Still load club for logo if possible
+          if (inv) {
+            const { data: c } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
+            setClub(c);
+          }
+          setLoadingInv(false);
+          return;
+        }
+
+        setInvitation(inv);
+        if (inv.email) setEmail(inv.email);
+
+        const { data: c, error: clubError } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
+        if (clubError) console.error("Error loading club:", clubError);
+        setClub(c);
+      } catch (err) {
+        console.error("Unexpected error loading invitation:", err);
+        setExpired(true);
+      } finally {
+        setLoadingInv(false);
+      }
     }
     loadInvitation();
   }, [token]);
