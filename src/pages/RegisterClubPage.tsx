@@ -50,7 +50,8 @@ export default function RegisterClubPage() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("No se pudo crear el usuario");
 
-      // 2. Call register_club function
+      // 2. Call register_club function (Atomic: includes plan and price)
+      const selectedPlan = plans.find(p => p.id === planId);
       const { data: clubId, error: rpcError } = await supabase.rpc("register_club", {
         p_club_name: clubName,
         p_city: city,
@@ -58,21 +59,11 @@ export default function RegisterClubPage() {
         p_contact_email: contactEmail,
         p_admin_name: adminName,
         p_user_id: authData.user.id,
+        p_plan_id: planId || null,
+        p_monthly_price: selectedPlan?.price || 29.99
       });
 
       if (rpcError) throw rpcError;
-
-      // 3. Update plan
-      if (clubId) {
-        const selectedPlan = plans.find(p => p.id === planId);
-        await supabase
-          .from("clubs")
-          .update({
-            plan_id: planId || null,
-            monthly_price: selectedPlan?.price || 29.99
-          } as any)
-          .eq("id", clubId);
-      }
 
       toast({
         title: "¡Club registrado!",

@@ -96,7 +96,10 @@ describe("RegisterClubPage", () => {
 
         await waitFor(() => {
             expect(supabase.auth.signUp).toHaveBeenCalled();
-            expect(supabase.rpc).toHaveBeenCalledWith("register_club", expect.anything());
+            expect(supabase.rpc).toHaveBeenCalledWith("register_club", expect.objectContaining({
+                p_user_id: "user123",
+                p_club_name: "Test Club"
+            }));
         });
     });
 });
