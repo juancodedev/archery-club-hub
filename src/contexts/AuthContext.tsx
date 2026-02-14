@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          fetchMember(currentUser.id);
+          await fetchMember(currentUser.id);
         } else {
           setMember(null);
           setMemberships([]);
@@ -144,15 +144,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        fetchMember(currentUser.id);
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          await fetchMember(currentUser.id);
+        }
+      } catch (err) {
+        console.error("Error initializing session:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    initSession();
 
     return () => subscription.unsubscribe();
   }, []);

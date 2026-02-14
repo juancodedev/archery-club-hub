@@ -30,8 +30,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { member, signOut, isSuperAdminSubdomain } = useAuth();
   const location = useLocation();
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
-  const isAdmin = member?.roles.includes("administrador") || member?.roles.includes("presidente") || isSuperAdmin;
-  const isPresidente = member?.roles.includes("presidente") || member?.roles.includes("administrador") || isSuperAdmin;
+  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || isSuperAdmin;
+  const isPresidente = member?.roles?.includes("presidente") || member?.roles?.includes("administrador") || isSuperAdmin;
 
   const allAdminItems = [
     ...(isSuperAdmin ? superAdminItems : []),
