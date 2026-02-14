@@ -76,9 +76,11 @@ export default function RegisterClubPage() {
 
       toast({
         title: "¡Club registrado!",
-        description: "Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.",
+        description: "Configurando tu sesión...",
       });
-      navigate("/login");
+
+      // Ir directamente al dashboard
+      navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
