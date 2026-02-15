@@ -83,7 +83,7 @@ export default function Index() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                 <Target className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-display font-bold text-lg text-foreground">ArcheryHub</span>
+              <span className="font-display font-bold text-lg text-foreground">QuiverApp</span>
             </div>
             <div className="flex items-center gap-3">
               {session ? (
@@ -235,9 +235,9 @@ export default function Index() {
         <div className="container mx-auto px-4 flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-primary" />
-            <span className="font-display font-semibold">ArcheryHub</span>
+            <span className="font-display font-semibold">QuiverApp</span>
           </div>
-          <p>© {new Date().getFullYear()} ArcheryHub</p>
+          <p>© {new Date().getFullYear()} QuiverApp</p>
         </div>
       </footer>
     </div>
