@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Target className="h-5 w-5 text-primary" />
           </div>
           <span className="font-display font-bold text-foreground">
-            {isSuperAdminSubdomain ? "Archery Central" : "ArcheryHub"}
+            {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
           </span>
         </div>
 
@@ -96,7 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
             <span className="font-display font-bold text-foreground">
-              {isSuperAdminSubdomain ? "Archery Central" : "ArcheryHub"}
+              {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
             </span>
           </div>
           <Button variant="ghost" size="sm" onClick={signOut}>

@@ -1,6 +1,6 @@
-# Plan de Implementación SaaS y Multi-tenant: ArcheryHub
+# Plan de Implementación SaaS y Multi-tenant: QuiverApp
 
-Este documento detalla la arquitectura, el esquema de base de datos y la configuración necesaria para el funcionamiento del modelo SaaS de ArcheryHub.
+Este documento detalla la arquitectura, el esquema de base de datos y la configuración necesaria para el funcionamiento del modelo SaaS de QuiverApp.
 
 ## 1. Arquitectura del Sistema
 El sistema utiliza un modelo **Multi-tenant con Esquema Compartido**. Cada club reside en la misma base de datos pero está aislado mediante **Row Level Security (RLS)**.
