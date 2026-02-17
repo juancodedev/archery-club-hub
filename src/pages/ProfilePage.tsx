@@ -189,9 +189,9 @@ export default function ProfilePage() {
       </motion.div>
 
       {isSuperAdmin && !isEditing && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 space-y-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
           <Label>Ver perfil de otro miembro (Super Admin)</Label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Select value={selectedClubId} onValueChange={(val) => {
               setSelectedClubId(val);
               setSelectedMemberId("");
@@ -213,9 +213,9 @@ export default function ProfilePage() {
       )}
 
       {/* Avatar Section */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-6 flex flex-col items-center gap-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4">
         <div className="relative group">
-          <div className="h-24 w-24 rounded-full bg-muted overflow-hidden border-2 border-primary/20">
+          <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted overflow-hidden border-2 border-primary/20">
             {formData.avatar_url ? (
               <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
             ) : (
@@ -272,7 +272,7 @@ export default function ProfilePage() {
 
         {isEditing ? (
           <div className="space-y-4 pt-2">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nombre Completo</Label>
                 <Input value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
@@ -304,7 +304,7 @@ export default function ProfilePage() {
               <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <Heart className="h-4 w-4 text-destructive" /> Contacto de Emergencia
               </h4>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Nombre del contacto</Label>
                   <Input value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
@@ -319,7 +319,7 @@ export default function ProfilePage() {
             {!(formData as any).roles?.includes("alumno") && (
               <div className="pt-4 border-t border-border">
                 <h4 className="text-sm font-semibold mb-3">Tabla de Tallas</h4>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Talla Polera</Label>
                     <Select value={formData.shirt_size} onValueChange={(val) => setFormData({ ...formData, shirt_size: val })}>
@@ -346,7 +346,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t border-border">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 pt-4 border-t border-border">
               <div className="space-y-2">
                 <Label>Nombre del Tutor (menores)</Label>
                 <Input value={formData.guardian_name} onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })} />
@@ -357,12 +357,12 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button onClick={() => updateProfile.mutate()} className="flex-1 gap-2">
-                <Save className="h-4 w-4" /> Guardar Cambios
-              </Button>
-              <Button variant="ghost" onClick={() => setIsEditing(false)} className="gap-2">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
+              <Button variant="ghost" onClick={() => setIsEditing(false)} className="gap-2 w-full sm:w-auto">
                 <X className="h-4 w-4" /> Cancelar
+              </Button>
+              <Button onClick={() => updateProfile.mutate()} className="flex-1 gap-2 w-full sm:flex-auto">
+                <Save className="h-4 w-4" /> Guardar Cambios
               </Button>
             </div>
           </div>
