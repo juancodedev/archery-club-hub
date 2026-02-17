@@ -14,6 +14,8 @@ import ProfilePage from "./pages/ProfilePage";
 import NewScorePage from "./pages/NewScorePage";
 import ScoresPage from "./pages/ScoresPage";
 import AdminPage from "./pages/AdminPage";
+import DivisionsAdminPage from "./pages/DivisionsAdminPage";
+import TournamentTypesAdminPage from "./pages/TournamentTypesAdminPage";
 import ReportsPage from "./pages/ReportsPage";
 import TrainingSessionsPage from "./pages/TrainingSessionsPage";
 import ClubSettingsPage from "./pages/ClubSettingsPage";
@@ -66,6 +68,14 @@ const App = () => (
             <Route
               path="/reports"
               element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/divisions"
+              element={<ProtectedRoute><AppLayout><DivisionsAdminPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/tournament-types"
+              element={<ProtectedRoute><AppLayout><TournamentTypesAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/settings"
