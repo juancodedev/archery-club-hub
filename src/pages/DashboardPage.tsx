@@ -43,14 +43,14 @@ export default function DashboardPage() {
   const { data: sessionCount } = useQuery({
     queryKey: ["session-count", member?.club_id],
     queryFn: async () => {
-      if (!member) return 0;
+      if (!member || !member.club_id) return 0;
       const { count } = await supabase
         .from("training_sessions")
         .select("*", { count: "exact", head: true })
         .eq("club_id", member.club_id);
       return count || 0;
     },
-    enabled: !!member,
+    enabled: !!member && !!member.club_id,
   });
 
   const bestScore = scores?.length
