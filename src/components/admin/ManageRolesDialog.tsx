@@ -7,13 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
-const ALL_ROLES = ["arquero", "socio", "entrenador", "presidente", "administrador"] as const;
+const ALL_ROLES = ["arquero", "socio", "entrenador", "presidente", "administrador", "secretaria", "tesorero", "alumno"] as const;
 const ROLE_LABELS: Record<string, string> = {
   arquero: "Arquero",
   socio: "Socio",
   entrenador: "Entrenador",
   presidente: "Presidente",
   administrador: "Administrador",
+  secretaria: "Secretaria",
+  tesorero: "Tesorero",
+  alumno: "Alumno",
 };
 
 interface Props {

@@ -68,7 +68,7 @@ export default function ProfilePage() {
       if (!selectedMemberId || selectedMemberId === "null" || selectedMemberId === "00000000-0000-0000-0000-000000000000") return null;
       const { data } = await supabase
         .from("members")
-        .select("*")
+        .select("*, member_roles(role)")
         .eq("id", selectedMemberId)
         .single();
 
@@ -86,8 +86,9 @@ export default function ProfilePage() {
           shirt_size: (data as any).shirt_size || "",
           windbreaker_size: (data as any).windbreaker_size || "",
           display_name: (data as any).display_name || "",
-          avatar_url: (data as any).avatar_url || ""
-        });
+          avatar_url: (data as any).avatar_url || "",
+          roles: (data as any).member_roles?.map((r: any) => r.role) || []
+        } as any);
       }
       return data;
     },
@@ -315,33 +316,35 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-border">
-              <h4 className="text-sm font-semibold mb-3">Tabla de Tallas</h4>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Talla Polera</Label>
-                  <Select value={formData.shirt_size} onValueChange={(val) => setFormData({ ...formData, shirt_size: val })}>
-                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>
-                      {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                        <SelectItem key={size} value={size}>{size}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Talla Cortavientos</Label>
-                  <Select value={formData.windbreaker_size} onValueChange={(val) => setFormData({ ...formData, windbreaker_size: val })}>
-                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>
-                      {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                        <SelectItem key={size} value={size}>{size}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {!(formData as any).roles?.includes("alumno") && (
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm font-semibold mb-3">Tabla de Tallas</h4>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Talla Polera</Label>
+                    <Select value={formData.shirt_size} onValueChange={(val) => setFormData({ ...formData, shirt_size: val })}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                          <SelectItem key={size} value={size}>{size}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Talla Cortavientos</Label>
+                    <Select value={formData.windbreaker_size} onValueChange={(val) => setFormData({ ...formData, windbreaker_size: val })}>
+                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                      <SelectContent>
+                        {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                          <SelectItem key={size} value={size}>{size}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t border-border">
               <div className="space-y-2">
@@ -375,16 +378,18 @@ export default function ProfilePage() {
               </div>
             ))}
 
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Talla Polera</p>
-                <p className="text-sm font-medium text-foreground">{formData.shirt_size || "—"}</p>
+            {!(formData as any).roles?.includes("alumno") && (
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Talla Polera</p>
+                  <p className="text-sm font-medium text-foreground">{formData.shirt_size || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Talla Cortavientos</p>
+                  <p className="text-sm font-medium text-foreground">{formData.windbreaker_size || "—"}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Talla Cortavientos</p>
-                <p className="text-sm font-medium text-foreground">{formData.windbreaker_size || "—"}</p>
-              </div>
-            </div>
+            )}
 
             {fullMember?.medical_history && (
               <div className="pt-4 border-t border-border">
