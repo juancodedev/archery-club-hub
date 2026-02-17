@@ -4,6 +4,7 @@ import { Session, User } from "@supabase/supabase-js";
 
 interface MemberInfo {
   id: string;
+  user_id: string;
   club_id: string;
   full_name: string;
   email: string;
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: membersData, error: membersError } = await supabase
         .from("members")
         .select(`
-          id, club_id, full_name, email, status, is_super_admin,
+          id, user_id, club_id, full_name, email, status, is_super_admin,
           clubs (name, subscription_status, subscription_end_date)
         `)
         .eq("user_id", userId);
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             return {
               id: m.id,
+              user_id: m.user_id,
               club_id: m.club_id,
               full_name: m.full_name,
               email: m.email,
@@ -98,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Usuario es Super Admin de respaldo");
         const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
+          user_id: userId,
           club_id: null as any,
           full_name: 'Super Administrador',
           email: userEmail || '',
