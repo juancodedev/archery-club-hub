@@ -8,6 +8,7 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,10 @@ interface Plan {
     name: string;
     description: string | null;
     price: number;
+    price_annual: number | null;
+    student_limit: number;
     features: string[];
+    is_active: boolean;
 }
 
 export default function PlansManagement() {
@@ -56,7 +60,10 @@ export default function PlansManagement() {
             name: editingPlan.name,
             description: editingPlan.description,
             price: editingPlan.price,
+            price_annual: editingPlan.price_annual,
+            student_limit: editingPlan.student_limit || 100,
             features: editingPlan.features || [],
+            is_active: editingPlan.is_active ?? true,
         };
 
         let error;
@@ -119,13 +126,33 @@ export default function PlansManagement() {
                                     onChange={e => setEditingPlan(prev => ({ ...prev, description: e.target.value }))}
                                 />
                             </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Precio Mensual</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={editingPlan?.price || 0}
+                                        onChange={e => setEditingPlan(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                                        required
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Precio Anual</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={editingPlan?.price_annual || 0}
+                                        onChange={e => setEditingPlan(prev => ({ ...prev, price_annual: parseFloat(e.target.value) }))}
+                                    />
+                                </div>
+                            </div>
                             <div className="space-y-2">
-                                <Label>Precio Mensual</Label>
+                                <Label>Límite de Alumnos</Label>
                                 <Input
                                     type="number"
-                                    step="0.01"
-                                    value={editingPlan?.price || 0}
-                                    onChange={e => setEditingPlan(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                                    value={editingPlan?.student_limit || 0}
+                                    onChange={e => setEditingPlan(prev => ({ ...prev, student_limit: parseInt(e.target.value) }))}
                                     required
                                 />
                             </div>
@@ -135,6 +162,16 @@ export default function PlansManagement() {
                                     placeholder="Característica 1&#10;Característica 2"
                                     value={editingPlan?.features?.join("\n") || ""}
                                     onChange={e => setEditingPlan(prev => ({ ...prev, features: e.target.value.split("\n").filter(f => f.trim() !== "") }))}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 py-2">
+                                <Label className="cursor-pointer" htmlFor="is_active">Plan Activo (Visible en landing)</Label>
+                                <input
+                                    id="is_active"
+                                    type="checkbox"
+                                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    checked={editingPlan?.is_active ?? true}
+                                    onChange={e => setEditingPlan(prev => ({ ...prev, is_active: e.target.checked }))}
                                 />
                             </div>
                             <Button type="submit" className="w-full">Guardar Plan</Button>
@@ -148,8 +185,10 @@ export default function PlansManagement() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nombre</TableHead>
-                            <TableHead>Precio</TableHead>
-                            <TableHead>Características</TableHead>
+                            <TableHead>Mensual</TableHead>
+                            <TableHead>Anual</TableHead>
+                            <TableHead>Alumnos</TableHead>
+                            <TableHead>Estado</TableHead>
                             <TableHead className="text-right">Acciones</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -158,10 +197,12 @@ export default function PlansManagement() {
                             <TableRow key={plan.id}>
                                 <TableCell className="font-medium">{plan.name}</TableCell>
                                 <TableCell>${plan.price}/mes</TableCell>
+                                <TableCell>${plan.price_annual ? `${plan.price_annual}/año` : "-"}</TableCell>
+                                <TableCell>{plan.student_limit}</TableCell>
                                 <TableCell>
-                                    <div className="text-xs text-muted-foreground">
-                                        {plan.features.length} características
-                                    </div>
+                                    <Badge variant={plan.is_active ? "default" : "secondary"}>
+                                        {plan.is_active ? "Activo" : "Oculto"}
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="text-right space-x-2">
                                     <Button variant="ghost" size="icon" onClick={() => { setEditingPlan(plan); setIsDialogOpen(true); }}>
