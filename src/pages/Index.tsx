@@ -12,7 +12,7 @@ function PricingPlans() {
 
   useEffect(() => {
     async function fetchPlans() {
-      const { data } = await supabase.from("plans").select("*").order("price", { ascending: true });
+      const { data } = await supabase.from("plans").select("*").eq("is_active", true).order("price", { ascending: true });
       if (data) setPlans(data);
       setLoading(false);
     }
