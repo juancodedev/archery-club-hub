@@ -2,18 +2,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, DollarSign, Link as LinkIcon, Copy, Plus } from "lucide-react";
-import { useState } from "react";
+import { Settings, DollarSign, Link as LinkIcon, Copy, Plus, Trophy, Target, QrCode } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeCanvas } from "qrcode.react";
-import { useEffect } from "react";
-import { QrCode } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DivisionsManager from "@/components/admin/DivisionsManager";
+import TournamentTypesManager from "@/components/admin/TournamentTypesManager";
 
 export default function ClubSettingsPage() {
   const { member } = useAuth();
@@ -54,12 +54,14 @@ export default function ClubSettingsPage() {
   const [feeInit, setFeeInit] = useState(false);
 
   // Init form values when club loads
-  if (club && !feeInit) {
-    setInscriptionFee(String(club.inscription_fee || 0));
-    setMonthlyFee(String(club.monthly_fee || 0));
-    setDefaultPassword(club.default_member_password);
-    setFeeInit(true);
-  }
+  useEffect(() => {
+    if (club) {
+      setInscriptionFee(String(club.inscription_fee || 0));
+      setMonthlyFee(String(club.monthly_fee || 0));
+      setDefaultPassword(club.default_member_password || "");
+      setFeeInit(true);
+    }
+  }, [club]);
 
   const updateSettings = useMutation({
     mutationFn: async () => {
@@ -128,20 +130,20 @@ export default function ClubSettingsPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-2xl">
+    <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex-1">
+        <div className="flex-1 text-left">
           <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
             <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Configuración del Club
           </h1>
-          <p className="text-sm text-muted-foreground">Montos, invitaciones y más</p>
+          <p className="text-sm text-muted-foreground">Administra montos, categorías y formatos de torneo</p>
         </div>
       </motion.div>
 
       {isSuperAdmin && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
-          <h3 className="font-display font-semibold text-foreground mb-4">Seleccionar Club para Configurar</h3>
+          <h3 className="font-display font-semibold text-foreground mb-4 text-left">Seleccionar Club para Configurar</h3>
           <Select value={selectedClubId} onValueChange={setSelectedClubId}>
             <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
             <SelectContent>
@@ -151,94 +153,125 @@ export default function ClubSettingsPage() {
         </motion.div>
       )}
 
-      {/* Fees */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
-        <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-          <DollarSign className="h-4 w-4 text-accent" />
-          Montos del Club
-        </h3>
-        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Inscripción (única vez)</Label>
-            <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
-          </div>
-          <div className="space-y-2">
-            <Label>Mensualidad</Label>
-            <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label className="flex items-center gap-1">
-              Password por defecto para nuevos miembros
-              <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              type="text"
-              value={defaultPassword}
-              onChange={(e) => setDefaultPassword(e.target.value)}
-              placeholder="Establece una contraseña segura"
-              required
-            />
-            <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
-          </div>
-        </div>
-        <Button
-          onClick={() => {
-            if (!defaultPassword) {
-              toast({ title: "Error", description: "La contraseña por defecto es obligatoria", variant: "destructive" });
-              return;
-            }
-            updateSettings.mutate();
-          }}
-          disabled={updateSettings.isPending}
-          className="w-full sm:w-auto"
-        >
-          {updateSettings.isPending ? "Guardando..." : "Guardar Configuración"}
-        </Button>
-      </motion.div>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid grid-cols-3 w-full sm:w-[500px] mb-6">
+          <TabsTrigger value="general" className="gap-2">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">General</span>
+          </TabsTrigger>
+          <TabsTrigger value="divisions" className="gap-2">
+            <Trophy className="h-4 w-4" />
+            <span className="hidden sm:inline">Divisiones</span>
+          </TabsTrigger>
+          <TabsTrigger value="tournaments" className="gap-2">
+            <Target className="h-4 w-4" />
+            <span className="hidden sm:inline">Torneos</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Invitations */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
-        <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
-          <LinkIcon className="h-4 w-4 text-primary" />
-          Enlaces de Invitación
-        </h3>
-        <p className="text-sm text-muted-foreground">Crea enlaces de registro para nuevos miembros. Cada enlace expira en 48 horas.</p>
-        <div className="flex flex-col xs:flex-row gap-2">
-          <Input value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="Email del invitado (opcional)" className="flex-1" />
-          <Button onClick={() => createInvitation.mutate()} disabled={createInvitation.isPending} className="gap-1 w-full xs:w-auto">
-            <Plus className="h-4 w-4" />Crear
-          </Button>
-        </div>
+        <TabsContent value="general" className="space-y-6">
+          {/* Fees */}
+          <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2 text-left">
+              <DollarSign className="h-4 w-4 text-accent" />
+              Montos y Seguridad
+            </h3>
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 text-left">
+              <div className="space-y-2">
+                <Label>Inscripción (única vez)</Label>
+                <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
+              </div>
+              <div className="space-y-2">
+                <Label>Mensualidad</Label>
+                <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="flex items-center gap-1">
+                  Password por defecto para nuevos miembros
+                  <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  value={defaultPassword}
+                  onChange={(e) => setDefaultPassword(e.target.value)}
+                  placeholder="Establece una contraseña segura"
+                  required
+                />
+                <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
+              </div>
+            </div>
+            <div className="pt-2 text-left">
+              <Button onClick={() => updateSettings.mutate()} disabled={updateSettings.isPending} className="w-full sm:w-auto">
+                {updateSettings.isPending ? "Guardando..." : "Guardar Configuración General"}
+              </Button>
+            </div>
+          </div>
 
-        {invitations && invitations.length > 0 && (
-          <div className="space-y-2 mt-4">
-            {invitations.map((inv: any) => {
-              const isExpired = new Date(inv.expires_at) < new Date();
-              const isUsed = !!inv.used_at;
-              return (
-                <div key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{inv.email || "Sin email"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {isUsed ? "✓ Usado" : isExpired ? "✕ Expirado" : `Expira: ${new Date(inv.expires_at).toLocaleString("es-CL")}`}
-                    </p>
-                  </div>
-                  {!isUsed && !isExpired && (
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => setQrToken(inv.token)} title="Ver QR">
-                        <QrCode className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => copyLink(inv.token)} title="Copiar enlace">
-                        <Copy className="h-4 w-4" />
-                      </Button>
+          {/* Invitations */}
+          <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2 text-left">
+              <LinkIcon className="h-4 w-4 text-primary" />
+              Enlaces de Invitación
+            </h3>
+            <p className="text-sm text-muted-foreground text-left">Crea enlaces de registro para nuevos miembros. Cada enlace expira en 48 horas.</p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="Email del invitado (opcional)" className="flex-1" />
+              <Button onClick={() => createInvitation.mutate()} disabled={createInvitation.isPending} className="gap-1 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />Crear
+              </Button>
+            </div>
+
+            {invitations && invitations.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                {invitations.map((inv: any) => {
+                  const isExpired = new Date(inv.expires_at) < new Date();
+                  const isUsed = !!inv.used_at;
+                  return (
+                    <div key={inv.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-left">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{inv.email || "Sin email"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isUsed ? "✓ Usado" : isExpired ? "✕ Expirado" : `Expira: ${new Date(inv.expires_at).toLocaleString("es-CL")}`}
+                        </p>
+                      </div>
+                      {!isUsed && !isExpired && (
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => setQrToken(inv.token)} title="Ver QR">
+                            <QrCode className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => copyLink(inv.token)} title="Copiar enlace">
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
-      </motion.div>
+        </TabsContent>
+
+        <TabsContent value="divisions">
+          <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
+            <div className="text-left">
+              <h3 className="font-display font-semibold text-foreground">Gestión de Divisiones</h3>
+              <p className="text-sm text-muted-foreground">Categorías configurables para los torneos del club</p>
+            </div>
+            {selectedClubId && <DivisionsManager clubId={selectedClubId} isSuperAdmin={isSuperAdmin} />}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="tournaments">
+          <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
+            <div className="text-left">
+              <h3 className="font-display font-semibold text-foreground">Tipos de Torneo</h3>
+              <p className="text-sm text-muted-foreground">Define los formatos de competencia (distancia, flechas, etc.)</p>
+            </div>
+            {selectedClubId && <TournamentTypesManager clubId={selectedClubId} isSuperAdmin={isSuperAdmin} />}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* QR Code Dialog */}
       <Dialog open={!!qrToken} onOpenChange={(open) => !open && setQrToken(null)}>
