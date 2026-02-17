@@ -315,7 +315,10 @@ export type Database = {
           club_id: string
           created_at: string
           date_of_birth: string | null
+          display_name: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           enrollment_date: string
           full_name: string
           guardian_email: string | null
@@ -327,9 +330,11 @@ export type Database = {
           member_type: string | null
           observations: string | null
           phone: string | null
+          shirt_size: string | null
           status: Database["public"]["Enums"]["member_status"]
           updated_at: string
           user_id: string | null
+          windbreaker_size: string | null
           is_super_admin: boolean
         }
         Insert: {
@@ -337,7 +342,10 @@ export type Database = {
           club_id: string
           created_at?: string
           date_of_birth?: string | null
+          display_name?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           enrollment_date?: string
           full_name: string
           guardian_email?: string | null
@@ -349,9 +357,11 @@ export type Database = {
           member_type?: string | null
           observations?: string | null
           phone?: string | null
+          shirt_size?: string | null
           status?: Database["public"]["Enums"]["member_status"]
           updated_at?: string
           user_id?: string | null
+          windbreaker_size?: string | null
           is_super_admin?: boolean
         }
         Update: {
@@ -359,7 +369,10 @@ export type Database = {
           club_id?: string
           created_at?: string
           date_of_birth?: string | null
+          display_name?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           enrollment_date?: string
           full_name?: string
           guardian_email?: string | null
@@ -371,9 +384,11 @@ export type Database = {
           member_type?: string | null
           observations?: string | null
           phone?: string | null
+          shirt_size?: string | null
           status?: Database["public"]["Enums"]["member_status"]
           updated_at?: string
           user_id?: string | null
+          windbreaker_size?: string | null
           is_super_admin?: boolean
         }
         Relationships: [
@@ -600,6 +615,29 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      create_member_account_by_admin: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_full_name: string
+          p_club_id: string
+          p_role?: Database["public"]["Enums"]["club_role"]
+          p_phone?: string | null
+          p_date_of_birth?: string | null
+          p_identification?: string | null
+          p_address?: string | null
+          p_medical_history?: string | null
+          p_emergency_contact_name?: string | null
+          p_emergency_contact_phone?: string | null
+          p_shirt_size?: string | null
+          p_windbreaker_size?: string | null
+          p_display_name?: string | null
+          p_guardian_name?: string | null
+          p_guardian_phone?: string | null
+          p_guardian_email?: string | null
+        }
+        Returns: Json
       }
     }
     Enums: {
