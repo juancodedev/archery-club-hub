@@ -106,7 +106,12 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
   }
 }
@@ -115,20 +120,35 @@
   .glass {
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
+
   .glass-dark {
     @apply bg-background/60 backdrop-blur-xl border border-border/30;
   }
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
+
   .glow-primary {
     box-shadow: var(--shadow-glow);
+  }
+
+  .bg-superadmin {
+    @apply bg-slate-50/50 dark:bg-[#020617];
+    background-image:
+      radial-gradient(circle at 0% 0%, hsl(230 100% 67% / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, hsl(260 100% 67% / 0.05) 0%, transparent 50%);
+  }
+
+  .glass-superadmin {
+    @apply bg-slate-900/40 backdrop-blur-xl border border-indigo-500/20 shadow-indigo-500/10;
   }
 
   /* Hide scrollbar */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

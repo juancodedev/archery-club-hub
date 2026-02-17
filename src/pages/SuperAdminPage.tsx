@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CreditCard, CheckCircle2, XCircle, Search, Building2 } from "lucide-react";
+import { CreditCard, CheckCircle2, XCircle, Search, Building2, Settings, BarChart3, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,8 @@ import PlansManagement from "@/components/super-admin/PlansManagement";
 import ExtraChargesDialog from "@/components/super-admin/ExtraChargesDialog";
 import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign, Users as UsersIcon } from "lucide-react";
 import MembersManagement from "@/components/super-admin/MembersManagement";
+import IntegrationsSettings from "@/components/super-admin/IntegrationsSettings";
+import ContactRequests from "@/components/super-admin/ContactRequests";
 import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 interface Club {
     id: string;
@@ -100,21 +102,26 @@ export default function SuperAdminPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-display font-bold text-foreground">Panel de Control Central</h1>
-                    <p className="text-muted-foreground">Administración global de clientes y suscripciones SaaS.</p>
+                <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
+                        <Shield className="h-8 w-8 text-yellow-500 fill-yellow-500/20" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-display font-bold text-foreground">Panel de Control Central</h1>
+                        <p className="text-muted-foreground">Administración global de clientes y suscripciones SaaS.</p>
+                    </div>
                 </div>
                 <SuperAdminCreateClubDialog onSuccess={fetchClubs} />
             </div>
 
             <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
                 <TabsList className="bg-muted/50 overflow-x-auto h-auto p-1">
-                    <TabsTrigger value="clubs" className="gap-2"><Building2 className="h-4 w-4" /> Clubes</TabsTrigger>
-                    <TabsTrigger value="members" className="gap-2"><UsersIcon className="h-4 w-4" /> Miembros</TabsTrigger>
-                    <TabsTrigger value="plans" className="gap-2"><Layers className="h-4 w-4" /> Planes SaaS</TabsTrigger>
-                    <TabsTrigger value="coupons" className="gap-2"><TicketPercent className="h-4 w-4" /> Cupones</TabsTrigger>
-                    <TabsTrigger value="tournaments" className="gap-2"><Trophy className="h-4 w-4" /> Torneos</TabsTrigger>
-                    <TabsTrigger value="practices" className="gap-2"><CalendarDays className="h-4 w-4" /> Prácticas</TabsTrigger>
+                    <TabsTrigger value="clubs" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><Building2 className="h-4 w-4" /> Clubes</TabsTrigger>
+                    <TabsTrigger value="members" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><UsersIcon className="h-4 w-4" /> Miembros</TabsTrigger>
+                    <TabsTrigger value="finances" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><DollarSign className="h-4 w-4" /> Finanzas</TabsTrigger>
+                    <TabsTrigger value="plans" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><CreditCard className="h-4 w-4" /> Planes y alumnos</TabsTrigger>
+                    <TabsTrigger value="settings" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><Settings className="h-4 w-4" /> Configuración</TabsTrigger>
+                    <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><BarChart3 className="h-4 w-4" /> Reportes</TabsTrigger>
                 </TabsList>
 
                 <Routes>
@@ -144,12 +151,12 @@ export default function SuperAdminPage() {
                                     </CardHeader>
                                     <CardContent><div className="text-2xl font-bold text-destructive">{stats.blocked}</div></CardContent>
                                 </Card>
-                                <Card className="glass shadow-sm border-l-4 border-l-primary">
+                                <Card className="glass shadow-sm border-l-4 border-l-indigo-500">
                                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium">Ingresos Est.</CardTitle>
-                                        <CreditCard className="h-4 w-4 text-primary" />
+                                        <CreditCard className="h-4 w-4 text-indigo-400" />
                                     </CardHeader>
-                                    <CardContent><div className="text-2xl font-bold text-primary">${stats.revenue.toFixed(2)}</div></CardContent>
+                                    <CardContent><div className="text-2xl font-bold text-indigo-400">${stats.revenue.toFixed(2)}</div></CardContent>
                                 </Card>
                             </div>
 
@@ -246,38 +253,42 @@ export default function SuperAdminPage() {
                         </Card>
                     } />
 
-                    <Route path="coupons" element={
+                    <Route path="finances" element={
                         <Card className="glass">
                             <CardHeader>
-                                <CardTitle>Cupones de Descuento</CardTitle>
-                                <CardDescription>Capa de cupones para atraer nuevos clubes.</CardDescription>
+                                <CardTitle>Ingresos Globales</CardTitle>
+                                <CardDescription>Vista general de la facturación de todos los clubes.</CardDescription>
                             </CardHeader>
                             <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
-                                Módulo de cupones en desarrollo...
+                                Gráficos de facturación mensual y anual en desarrollo...
                             </CardContent>
                         </Card>
                     } />
 
-                    <Route path="tournaments" element={
+                    <Route path="settings" element={
                         <Card className="glass">
                             <CardHeader>
-                                <CardTitle>Torneos Globales</CardTitle>
-                                <CardDescription>Vista general de todos los eventos deportivos en el sistema.</CardDescription>
+                                <CardTitle>Configuración Global</CardTitle>
+                                <CardDescription>Configura pasarelas de pago, parámetros globales y solicitudes.</CardDescription>
                             </CardHeader>
-                            <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
-                                Listado global de torneos en desarrollo... (SuperAdmin puede ver todo)
+                            <CardContent className="space-y-6">
+                                <IntegrationsSettings />
+                                <div className="pt-6 border-t border-border/50">
+                                    <h4 className="text-sm font-bold mb-4 uppercase tracking-wider text-muted-foreground">Solicitudes de Soporte</h4>
+                                    <ContactRequests />
+                                </div>
                             </CardContent>
                         </Card>
                     } />
 
-                    <Route path="practices" element={
+                    <Route path="reports" element={
                         <Card className="glass">
                             <CardHeader>
-                                <CardTitle>Entrenamientos Globales</CardTitle>
-                                <CardDescription>Monitorización de la actividad en todos los clubes.</CardDescription>
+                                <CardTitle>Reportes Consolidados</CardTitle>
+                                <CardDescription>Estadísticas de uso, torneos y prácticas a nivel global.</CardDescription>
                             </CardHeader>
                             <CardContent className="h-40 flex items-center justify-center text-muted-foreground italic">
-                                Monitorización global de prácticas en desarrollo...
+                                Reportes avanzados de IA y exportación CSV en desarrollo...
                             </CardContent>
                         </Card>
                     } />
