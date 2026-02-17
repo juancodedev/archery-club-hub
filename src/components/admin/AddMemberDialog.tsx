@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { formatRUT } from "@/lib/rut";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
@@ -26,9 +28,30 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [identification, setIdentification] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [address, setAddress] = useState("");
+  const [medicalHistory, setMedicalHistory] = useState("");
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [shirtSize, setShirtSize] = useState("");
+  const [windbreakerSize, setWindbreakerSize] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
   const [clubs, setClubs] = useState<any[]>([]);
+
+  const isMinor = useMemo(() => {
+    if (!dateOfBirth) return false;
+    const birth = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+    return age < 18;
+  }, [dateOfBirth]);
 
   useEffect(() => {
     if (isSuperAdmin && open) {
@@ -46,15 +69,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;
       if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
 
-      // 1. Create Auth user without signing out the admin
-      // We use a temporary client to avoid affecting the current session
-      const { createClient } = await import('@supabase/supabase-js');
-      const tempSupabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        { auth: { persistSession: false } }
-      );
-
+      // Get default password from club
       const { data: clubData } = await supabase
         .from("clubs")
         .select("default_member_password")
@@ -67,61 +82,57 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         throw new Error("El club no ha configurado una contraseña por defecto. Por favor, ve a Configuración del Club y establécela.");
       }
 
-      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
-        email,
-        password: defaultPassword,
-        options: {
-          data: { full_name: name }
-        }
-      });
+      // Use RPC function to create member account with auto-confirmed email
+      const { data, error } = await supabase.rpc('create_member_account_by_admin', {
+        p_email: email,
+        p_password: defaultPassword,
+        p_full_name: name,
+        p_phone: phone || null,
+        p_date_of_birth: dateOfBirth || null,
+        p_identification: identification || null,
+        p_address: address || null,
+        p_medical_history: medicalHistory || null,
+        p_emergency_contact_name: emergencyContactName || null,
+        p_emergency_contact_phone: emergencyContactPhone || null,
+        p_shirt_size: shirtSize || null,
+        p_windbreaker_size: windbreakerSize || null,
+        p_display_name: displayName || null,
+        p_guardian_name: isMinor ? guardianName : null,
+        p_guardian_phone: isMinor ? guardianPhone : null,
+        p_guardian_email: isMinor ? guardianEmail : null,
+        p_club_id: targetClubId,
+        p_role: role
+      }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: any };
 
-      // If user already exists in Auth, it's fine, we still try to create the member
-      // but we should check if they are already in THIS club.
-      if (authError && authError.message !== "User already registered") {
-        throw authError;
-      }
-
-      let userId = authData?.user?.id;
-
-      if (!userId) {
-        // Find existing user if signUp didn't return one (already exists)
-        // We can't easily get it without service role, so we'll hope the email is enough
-        // Actually, if we use signUp and user exists, authData.user is null in some configs.
-        // Let's assume for now it's a new user as per the requirement "create account".
-      }
-
-      // 2. Insert member
-      const { data: newMember, error } = await supabase
-        .from("members")
-        .insert({
-          user_id: userId,
-          club_id: targetClubId,
-          full_name: name,
-          email,
-          phone,
-          identification,
-          status: "activo" as any
-        })
-        .select()
-        .single();
       if (error) throw error;
-
-      // 3. Add default role
-      const { error: roleError } = await supabase
-        .from("member_roles")
-        .insert({ member_id: newMember.id, club_id: targetClubId, role: role as any });
-      if (roleError) throw roleError;
+      if (!data?.success) throw new Error("No se pudo crear el miembro");
 
       return { defaultPassword };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       toast({
-        title: "Miembro agregado",
-        description: `Se creó una cuenta con la contraseña: ${data.defaultPassword}`
+        title: "✅ Miembro agregado exitosamente",
+        description: `La cuenta está lista para usar inmediatamente con la contraseña: ${data.defaultPassword} (sin necesidad de validar el correo electrónico)`
       });
       setOpen(false);
-      setName(""); setEmail(""); setPhone(""); setIdentification(""); setRole("arquero");
+      // Reset all fields
+      setName("");
+      setEmail("");
+      setPhone("");
+      setIdentification("");
+      setDateOfBirth("");
+      setAddress("");
+      setMedicalHistory("");
+      setEmergencyContactName("");
+      setEmergencyContactPhone("");
+      setShirtSize("");
+      setWindbreakerSize("");
+      setDisplayName("");
+      setGuardianName("");
+      setGuardianPhone("");
+      setGuardianEmail("");
+      setRole("arquero");
     },
     onError: (e: any) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -133,7 +144,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       <DialogTrigger asChild>
         <Button className="gap-2"><UserPlus className="h-4 w-4" />Agregar Miembro</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="font-display">Nuevo Miembro</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); addMember.mutate(); }} className="space-y-4">
           {isSuperAdmin && (
@@ -147,22 +158,127 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
               </Select>
             </div>
           )}
-          <div className="space-y-2">
-            <Label>Nombre completo</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} required />
+
+          {/* Datos Personales */}
+          <div className="glass rounded-xl p-4 space-y-4">
+            <h3 className="font-display font-semibold text-foreground">Datos Personales</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Nombre completo *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Fecha de nacimiento *</Label>
+                <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label>RUT / RUN</Label>
+                <Input
+                  value={identification}
+                  onChange={(e) => setIdentification(formatRUT(e.target.value))}
+                  placeholder="12.345.678-9"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Dirección particular</Label>
+                <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Teléfono</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Correo electrónico *</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Nombre en Polera (Pila)</Label>
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ej: Juanito" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Antecedentes médicos relevantes</Label>
+                <Textarea
+                  value={medicalHistory}
+                  onChange={(e) => setMedicalHistory(e.target.value)}
+                  placeholder="Alergias, condiciones, etc."
+                  rows={3}
+                />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Correo electrónico</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+
+          {/* Contacto de Emergencia */}
+          <div className="glass rounded-xl p-4 space-y-4">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4 text-destructive" /> Contacto de Emergencia
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Nombre del contacto *</Label>
+                <Input value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Teléfono del contacto *</Label>
+                <Input value={emergencyContactPhone} onChange={(e) => setEmergencyContactPhone(e.target.value)} required />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Teléfono</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+          {/* Tallas */}
+          <div className="glass rounded-xl p-4 space-y-4">
+            <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Talla Polera</Label>
+                <Select value={shirtSize} onValueChange={setShirtSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Talla Cortavientos</Label>
+                <Select value={windbreakerSize} onValueChange={setWindbreakerSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Identificación</Label>
-            <Input value={identification} onChange={(e) => setIdentification(e.target.value)} />
-          </div>
+
+          {/* Datos del Tutor (si es menor) */}
+          {isMinor && (
+            <div className="glass rounded-xl p-4 space-y-4 border-l-4 border-accent">
+              <h3 className="font-display font-semibold text-foreground">Datos del Tutor (menor de 18 años)</h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Nombre del tutor *</Label>
+                  <Input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Teléfono contacto/emergencias *</Label>
+                  <Input value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email del tutor *</Label>
+                  <Input type="email" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} required />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Rol */}
           <div className="space-y-2">
             <Label>Rol</Label>
             <Select value={role} onValueChange={setRole}>
@@ -176,6 +292,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
               </SelectContent>
             </Select>
           </div>
+
           <Button type="submit" className="w-full" disabled={addMember.isPending}>
             {addMember.isPending ? "Agregando..." : "Agregar"}
           </Button>
