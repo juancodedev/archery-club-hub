@@ -29,15 +29,26 @@ const superAdminItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { member, signOut, isSuperAdminSubdomain } = useAuth();
   const location = useLocation();
+
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
-  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || isSuperAdmin;
-  const isPresidente = member?.roles?.includes("presidente") || member?.roles?.includes("administrador") || isSuperAdmin;
+
+  const roles = member?.roles || [];
+  const isAdmin = roles.includes("administrador") || roles.includes("presidente") || roles.includes("secretaria") || isSuperAdmin;
+  const isPresidente = roles.includes("presidente") || roles.includes("administrador") || isSuperAdmin;
+  const isTesorero = roles.includes("tesorero") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
+  const isSecretaria = roles.includes("secretaria") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
 
   const allAdminItems = [
     ...(isSuperAdmin ? superAdminItems : []),
-    ...adminItems,
+    ...(isSecretaria ? [{ to: "/admin", icon: Users, label: "Miembros" }] : []),
+    ...(isTesorero ? [{ to: "/billing", icon: CreditCard, label: "Planes y Créditos" }] : []),
+    ...(isPresidente ? [{ to: "/settings", icon: Settings, label: "Configuración" }] : []),
     ...(isPresidente ? presidenteItems : []),
   ];
+
+  // Remove duplicates and ensure order
+  const uniqueItems = Array.from(new Map(allAdminItems.map(item => [item.to, item])).values());
+
 
   const renderLink = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => (
     <Link
@@ -73,7 +84,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border" />
-              {allAdminItems.map(renderLink)}
+              {uniqueItems.map(renderLink)}
             </>
           )}
         </nav>
@@ -106,7 +117,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         <nav className="flex md:hidden border-b border-border bg-card overflow-x-auto">
-          {[...navItems, ...(isAdmin ? allAdminItems : [])].map(({ to, icon: Icon, label }) => (
+          {[...navItems, ...(isAdmin ? uniqueItems : [])].map(({ to, icon: Icon, label }) => (
             <Link
               key={to}
               to={to}
