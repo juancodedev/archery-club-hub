@@ -89,16 +89,16 @@ export default function ScoresPage() {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <History className="h-6 w-6 text-primary" />
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+            <History className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Historial de Puntajes
           </h1>
-          <p className="text-muted-foreground">Dashboard de rendimiento y registros</p>
+          <p className="text-sm text-muted-foreground">Dashboard de rendimiento y registros</p>
         </div>
-        <Link to="/scores/new">
-          <Button className="gap-2">
+        <Link to="/scores/new" className="w-full sm:w-auto">
+          <Button className="gap-2 w-full sm:w-auto">
             <Target className="h-4 w-4" />
             Nuevo Registro
           </Button>
@@ -106,11 +106,11 @@ export default function ScoresPage() {
       </motion.div>
 
       {/* FILTERS PANEL */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
         <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
           <Filter className="h-4 w-4 text-primary" /> Filtros del Dashboard
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {isSuperAdmin && (
             <div className="space-y-2">
               <Label className="text-xs">Club</Label>

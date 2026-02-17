@@ -103,7 +103,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile header */}
       <div className="flex flex-1 flex-col">
-        <header className="flex md:hidden items-center justify-between border-b border-border p-4 bg-card">
+        <header className="flex md:hidden items-center justify-between border-b border-border p-3 bg-card">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
             <span className="font-display font-bold text-foreground">
@@ -116,25 +116,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Mobile nav */}
-        <nav className="flex md:hidden border-b border-border bg-card overflow-x-auto">
+        <nav className="flex md:hidden border-b border-border bg-card overflow-x-auto scrollbar-hide">
           {[...navItems, ...(isAdmin ? uniqueItems : [])].map(({ to, icon: Icon, label }) => (
             <Link
               key={to}
               to={to}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors",
+                "flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium whitespace-nowrap transition-colors min-w-[72px]",
                 location.pathname === to
                   ? "text-primary border-b-2 border-primary"
                   : "text-muted-foreground"
               )}
             >
-              <Icon className="h-4 w-4" />
-              {label}
+              <Icon className="h-5 w-5" />
+              <span className="text-[10px]">{label}</span>
             </Link>
           ))}
         </nav>
 
-        <main className="flex-1 p-4 md:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto">{children}</main>
       </div>
     </div>
   );

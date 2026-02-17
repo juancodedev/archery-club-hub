@@ -196,18 +196,71 @@ export default function TrainingSessionsPage() {
   const qrUrl = qrSession ? `${window.location.origin}/attendance/${qrSession.id}?token=${qrSession.attendance_token}` : "";
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Calendar className="h-6 w-6 text-primary" />
-            Entrenamientos
-          </h1>
-          <p className="text-muted-foreground">Sesiones de entrenamiento del club</p>
+    <div className="space-y-4 sm:space-y-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              Entrenamientos
+            </h1>
+            <p className="text-sm text-muted-foreground">Sesiones de entrenamiento del club</p>
+          </div>
+
+          {(isAdmin || isSuperAdmin) && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 w-full sm:w-auto"><Plus className="h-4 w-4" />Nueva Sesión</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="font-display">Crear Sesión de Entrenamiento</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={(e) => { e.preventDefault(); createSession.mutate(); }} className="space-y-4 pt-4">
+                  {isSuperAdmin && (
+                    <div className="space-y-2">
+                      <Label>Club para el entrenamiento</Label>
+                      <Select value={dialogClubId} onValueChange={setDialogClubId}>
+                        <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                        <SelectContent>
+                          {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label>Nombre</Label>
+                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Entrenamiento semanal" required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Fecha</Label>
+                    <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-2">
+                      <Label>División</Label>
+                      <Input value={division} onChange={(e) => setDivision(e.target.value)} placeholder="Recurvo..." />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Target</Label>
+                      <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="40cm..." />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Detalle</Label>
+                    <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={createSession.isPending}>
+                    {createSession.isPending ? "Creando..." : "Crear Sesión"}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {isSuperAdmin && (
-          <div className="w-full md:w-64">
+          <div className="w-full sm:max-w-xs">
             <Select value={selectedClubId} onValueChange={setSelectedClubId}>
               <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
               <SelectContent>
@@ -215,59 +268,7 @@ export default function TrainingSessionsPage() {
               </SelectContent>
             </Select>
           </div>
-        )}
-
-        {(isAdmin || isSuperAdmin) && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2"><Plus className="h-4 w-4" />Nueva Sesión</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="font-display">Crear Sesión de Entrenamiento</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={(e) => { e.preventDefault(); createSession.mutate(); }} className="space-y-4 pt-4">
-                {isSuperAdmin && (
-                  <div className="space-y-2">
-                    <Label>Club para el entrenamiento</Label>
-                    <Select value={dialogClubId} onValueChange={setDialogClubId}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
-                      <SelectContent>
-                        {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label>Nombre</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Entrenamiento semanal" required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Fecha</Label>
-                  <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>División</Label>
-                    <Input value={division} onChange={(e) => setDivision(e.target.value)} placeholder="Recurvo..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Target</Label>
-                    <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="40cm..." />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Detalle</Label>
-                  <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." />
-                </div>
-                <Button type="submit" className="w-full" disabled={createSession.isPending}>
-                  {createSession.isPending ? "Creando..." : "Crear Sesión"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
-      </motion.div>
+        )}      </motion.div>
 
       {isLoading ? (
         <div className="space-y-3">
