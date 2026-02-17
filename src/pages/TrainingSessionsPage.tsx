@@ -70,7 +70,7 @@ export default function TrainingSessionsPage() {
         .order("event_date", { ascending: false });
       return data || [];
     },
-    enabled: !!selectedClubId,
+    enabled: !!selectedClubId && selectedClubId !== "null" && selectedClubId !== "00000000-0000-0000-0000-000000000000",
   });
 
   const [dialogOpen, setDialogOpen] = useState(false);
