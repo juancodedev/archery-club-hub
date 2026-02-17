@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -8,16 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { Crosshair } from "lucide-react";
-
-const ENDS_COUNT = 6;
-const ARROWS_PER_END = 5;
-
-function createEmptyEnds() {
-  return Array.from({ length: ENDS_COUNT }, () => Array(ARROWS_PER_END).fill(""));
-}
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect } from "react";
+import DivisionSelect from "@/components/scores/DivisionSelect";
+import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
+import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
+
+function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
+  return Array.from({ length: endsCount }, () => Array(arrowsPerEnd).fill(""));
+}
 
 export default function NewScorePage() {
   const { member } = useAuth();
@@ -27,11 +25,17 @@ export default function NewScorePage() {
   const { toast } = useToast();
   const [eventName, setEventName] = useState("");
   const [scoreDate, setScoreDate] = useState(new Date().toISOString().split("T")[0]);
-  const [division, setDivision] = useState("");
-  const [targetType, setTargetType] = useState("");
+  const [divisionId, setDivisionId] = useState("");
+  const [tournamentTypeId, setTournamentTypeId] = useState("");
   const [detail, setDetail] = useState("");
-  const [ends, setEnds] = useState<string[][]>(createEmptyEnds());
   const [loading, setLoading] = useState(false);
+
+  // Tournament type configuration
+  const [arrowsPerEnd, setArrowsPerEnd] = useState(5);
+  const [endsCount, setEndsCount] = useState(6);
+  const [isIndoor, setIsIndoor] = useState(false);
+
+  const [ends, setEnds] = useState<string[][]>(createEmptyEnds(5, 6));
 
   // For SuperAdmin/Admin
   const [selectedClubId, setSelectedClubId] = useState<string>("");
@@ -67,30 +71,49 @@ export default function NewScorePage() {
     if (data) setMembers(data);
   };
 
+  // Handle tournament type change
+  const handleTournamentTypeChange = (type: any) => {
+    if (type) {
+      setArrowsPerEnd(type.arrows_per_end);
+      setEndsCount(type.ends_per_round);
+      setIsIndoor(type.is_indoor);
+      // Recreate ends array with new dimensions
+      setEnds(createEmptyEnds(type.arrows_per_end, type.ends_per_round));
+    }
+  };
+
   const updateArrow = (endIdx: number, arrowIdx: number, value: string) => {
     const v = value.toUpperCase();
-    if (v !== "" && v !== "X" && v !== "M" && (isNaN(Number(v)) || Number(v) < 0 || Number(v) > 10)) return;
+    if (!validateArrowValue(v)) return;
     const newEnds = ends.map((end, i) =>
       i === endIdx ? end.map((a, j) => (j === arrowIdx ? v : a)) : end
     );
     setEnds(newEnds);
   };
 
-  const arrowValue = (v: string): number => {
-    if (v === "X") return 10;
-    if (v === "M" || v === "") return 0;
-    return Number(v);
+  // Calculate score using new utilities
+  const scoreResult = calculateTotalScore(ends, isIndoor);
+  const grandTotal = scoreResult.score;
+  const xCount = scoreResult.xCount;
+
+  const endTotal = (end: string[]) => {
+    const result = calculateTotalScore([end], isIndoor);
+    return result.score;
   };
 
-  const endTotal = (end: string[]) => end.reduce((sum, a) => sum + arrowValue(a), 0);
-  const grandTotal = ends.reduce((sum, end) => sum + endTotal(end), 0);
-  const runningTotal = (upTo: number) =>
-    ends.slice(0, upTo + 1).reduce((sum, end) => sum + endTotal(end), 0);
+  const runningTotal = (upTo: number) => {
+    const result = calculateTotalScore(ends.slice(0, upTo + 1), isIndoor);
+    return result.score;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMemberId || selectedMemberId === "null") {
       toast({ title: "Error", description: "Selecciona un arquero", variant: "destructive" });
+      return;
+    }
+    if (!divisionId) {
+      toast({ title: "Error", description: "Selecciona una división", variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -101,15 +124,19 @@ export default function NewScorePage() {
         club_id: selectedClubId,
         event_name: eventName || "Entrenamiento",
         score_date: scoreDate,
-        division,
-        target_type: targetType,
+        division_id: divisionId || null,
+        tournament_type_id: tournamentTypeId || null,
         detail,
         ends: ends as any,
         total_score: grandTotal,
+        x_count: xCount,
       });
 
       if (error) throw error;
-      toast({ title: "¡Puntaje registrado!", description: `Total: ${grandTotal} puntos` });
+      toast({
+        title: "¡Puntaje registrado!",
+        description: `Total: ${grandTotal} puntos${xCount > 0 ? ` (${xCount}X)` : ''}`
+      });
       navigate("/scores");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -177,12 +204,20 @@ export default function NewScorePage() {
               <Input type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>División</Label>
-              <Input value={division} onChange={(e) => setDivision(e.target.value)} placeholder="Recurvo, Compuesto..." />
+              <DivisionSelect
+                value={divisionId}
+                onChange={setDivisionId}
+                memberId={selectedMemberId}
+                placeholder="Recurvo, Compuesto..."
+              />
             </div>
             <div className="space-y-2">
-              <Label>Tipo de Target</Label>
-              <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="40cm, 80cm..." />
+              <TournamentTypeSelect
+                value={tournamentTypeId}
+                onChange={setTournamentTypeId}
+                onTypeChange={handleTournamentTypeChange}
+                placeholder="Indoor 18m, Outdoor 70m..."
+              />
             </div>
             <div className="space-y-2 sm:col-span-2 lg:col-span-2">
               <Label>Detalle</Label>
@@ -198,7 +233,7 @@ export default function NewScorePage() {
             <thead>
               <tr className="border-b border-border">
                 <th className="py-2 px-2 text-left text-muted-foreground font-medium">End</th>
-                {Array.from({ length: ARROWS_PER_END }, (_, i) => (
+                {Array.from({ length: arrowsPerEnd }, (_, i) => (
                   <th key={i} className="py-2 px-1 text-center text-muted-foreground font-medium">F{i + 1}</th>
                 ))}
                 <th className="py-2 px-2 text-center text-muted-foreground font-medium">Total</th>

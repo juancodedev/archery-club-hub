@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -77,6 +78,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="font-display font-bold text-foreground">
             {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
           </span>
+          <div className="ml-auto">
+            <DivisionChangeNotifications />
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -110,9 +114,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
             </span>
           </div>
-          <Button variant="ghost" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <DivisionChangeNotifications />
+            <Button variant="ghost" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
 
         {/* Mobile nav */}
