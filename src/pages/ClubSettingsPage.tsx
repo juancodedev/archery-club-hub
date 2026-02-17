@@ -14,6 +14,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DivisionsManager from "@/components/admin/DivisionsManager";
 import TournamentTypesManager from "@/components/admin/TournamentTypesManager";
+import { Switch } from "@/components/ui/switch";
 
 export default function ClubSettingsPage() {
   const { member } = useAuth();
@@ -51,6 +52,7 @@ export default function ClubSettingsPage() {
   const [inscriptionFee, setInscriptionFee] = useState("");
   const [monthlyFee, setMonthlyFee] = useState("");
   const [defaultPassword, setDefaultPassword] = useState("");
+  const [allowSuperAdminFinances, setAllowSuperAdminFinances] = useState(false);
   const [feeInit, setFeeInit] = useState(false);
 
   // Init form values when club loads
@@ -59,6 +61,7 @@ export default function ClubSettingsPage() {
       setInscriptionFee(String(club.inscription_fee || 0));
       setMonthlyFee(String(club.monthly_fee || 0));
       setDefaultPassword(club.default_member_password || "");
+      setAllowSuperAdminFinances(club.allow_superadmin_finances || false);
       setFeeInit(true);
     }
   }, [club]);
@@ -72,6 +75,7 @@ export default function ClubSettingsPage() {
           inscription_fee: Number(inscriptionFee) || 0,
           monthly_fee: Number(monthlyFee) || 0,
           default_member_password: defaultPassword,
+          allow_superadmin_finances: allowSuperAdminFinances,
         } as any)
         .eq("id", selectedClubId);
       if (error) throw error;
@@ -198,6 +202,21 @@ export default function ClubSettingsPage() {
                   required
                 />
                 <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
+              </div>
+
+              <div className="space-y-4 sm:col-span-2 pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Privacidad de Finanzas</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Permitir que el Soporte Técnico (SuperAdmin) visualice los registros financieros de este club.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={allowSuperAdminFinances}
+                    onCheckedChange={setAllowSuperAdminFinances}
+                  />
+                </div>
               </div>
             </div>
             <div className="pt-2 text-left">

@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
@@ -42,7 +42,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const allAdminItems = [
     ...(isSuperAdmin ? superAdminItems : []),
     ...(isSecretaria ? [{ to: "/admin", icon: Users, label: "Miembros" }] : []),
-    ...(isTesorero ? [{ to: "/billing", icon: CreditCard, label: "Planes y Créditos" }] : []),
+    ...(isTesorero ? [
+      { to: "/admin/finances", icon: DollarSign, label: "Finanzas" },
+      { to: "/billing", icon: CreditCard, label: "Planes y Créditos" }
+    ] : []),
     ...(isPresidente ? [{ to: "/settings", icon: Settings, label: "Configuración" }] : []),
     ...(isPresidente ? presidenteItems : []),
   ];
