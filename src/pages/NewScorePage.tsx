@@ -119,21 +119,23 @@ export default function NewScorePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-          <Crosshair className="h-6 w-6 text-primary" />
-          Registrar Puntaje
-        </h1>
-        <p className="text-muted-foreground">Ingresa la tarjeta de puntuación</p>
+    <div className="space-y-4 sm:space-y-6 max-w-4xl">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+            <Crosshair className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            Registrar Puntaje
+          </h1>
+          <p className="text-sm text-muted-foreground">Ingresa la tarjeta de puntuación</p>
+        </div>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Scorecard selection (for owners/trainers) */}
         {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
             <h3 className="font-display font-semibold text-foreground mb-4">Selección de Arquero</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
               {isSuperAdmin && (
                 <div className="space-y-2">
                   <Label>Club</Label>
@@ -163,9 +165,9 @@ export default function NewScorePage() {
         )}
 
         {/* Event info */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-4 sm:p-5">
           <h3 className="font-display font-semibold text-foreground mb-4">Información del Evento</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2">
               <Label>Evento / Entrenamiento</Label>
               <Input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Entrenamiento libre" />
@@ -190,7 +192,7 @@ export default function NewScorePage() {
         </motion.div>
 
         {/* Scorecard */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-5 overflow-x-auto">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-4 sm:p-5 overflow-x-auto">
           <h3 className="font-display font-semibold text-foreground mb-4">Tarjeta de Puntuación</h3>
           <table className="w-full text-sm">
             <thead>
@@ -233,11 +235,11 @@ export default function NewScorePage() {
           </div>
         </motion.div>
 
-        <div className="flex gap-3 justify-end">
-          <Button type="button" variant="outline" onClick={() => navigate("/scores")}>
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end">
+          <Button type="button" variant="outline" onClick={() => navigate("/scores")} className="w-full sm:w-auto">
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Guardando..." : "Guardar Puntaje"}
           </Button>
         </div>

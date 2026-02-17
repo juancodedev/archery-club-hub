@@ -128,17 +128,19 @@ export default function ClubSettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-          <Settings className="h-6 w-6 text-primary" />
-          Configuración del Club
-        </h1>
-        <p className="text-muted-foreground">Montos, invitaciones y más</p>
+    <div className="space-y-4 sm:space-y-6 max-w-2xl">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            Configuración del Club
+          </h1>
+          <p className="text-sm text-muted-foreground">Montos, invitaciones y más</p>
+        </div>
       </motion.div>
 
       {isSuperAdmin && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
           <h3 className="font-display font-semibold text-foreground mb-4">Seleccionar Club para Configurar</h3>
           <Select value={selectedClubId} onValueChange={setSelectedClubId}>
             <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
@@ -150,12 +152,12 @@ export default function ClubSettingsPage() {
       )}
 
       {/* Fees */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
         <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-accent" />
           Montos del Club
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Inscripción (única vez)</Label>
             <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
@@ -188,21 +190,22 @@ export default function ClubSettingsPage() {
             updateSettings.mutate();
           }}
           disabled={updateSettings.isPending}
+          className="w-full sm:w-auto"
         >
           {updateSettings.isPending ? "Guardando..." : "Guardar Configuración"}
         </Button>
       </motion.div>
 
       {/* Invitations */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
         <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
           <LinkIcon className="h-4 w-4 text-primary" />
           Enlaces de Invitación
         </h3>
         <p className="text-sm text-muted-foreground">Crea enlaces de registro para nuevos miembros. Cada enlace expira en 48 horas.</p>
-        <div className="flex gap-2">
+        <div className="flex flex-col xs:flex-row gap-2">
           <Input value={invEmail} onChange={(e) => setInvEmail(e.target.value)} placeholder="Email del invitado (opcional)" className="flex-1" />
-          <Button onClick={() => createInvitation.mutate()} disabled={createInvitation.isPending} className="gap-1">
+          <Button onClick={() => createInvitation.mutate()} disabled={createInvitation.isPending} className="gap-1 w-full xs:w-auto">
             <Plus className="h-4 w-4" />Crear
           </Button>
         </div>

@@ -86,7 +86,7 @@ export default function BillingPage() {
             </motion.div>
 
             {/* Usage Overview Section */}
-            <div className="grid gap-6 md:grid-cols-12">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-12">
                 <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -147,7 +147,7 @@ export default function BillingPage() {
             </div>
 
             {/* Pricing Grid */}
-            <div className="grid gap-6 lg:grid-cols-3 pt-6">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-4 sm:pt-6">
                 {plans.map((plan, index) => (
                     <motion.div
                         key={plan.name}
@@ -155,7 +155,7 @@ export default function BillingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * index }}
                         className={cn(
-                            "flex flex-col relative rounded-[2rem] p-8 border bg-card/20 backdrop-blur-md hover:bg-card/40 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group",
+                            "flex flex-col relative rounded-[2rem] p-6 sm:p-7 md:p-8 border bg-card/20 backdrop-blur-md hover:bg-card/40 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 group",
                             plan.border,
                             index === 0 && "lg:scale-[1.02] z-10 border-primary/30"
                         )}
