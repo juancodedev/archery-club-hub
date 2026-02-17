@@ -66,16 +66,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-foreground">
             ¡Hola, {member?.full_name?.split(" ")[0]}! 🏹
           </h1>
-          <p className="text-muted-foreground mt-1">Bienvenido a tu panel de arquería</p>
+          <p className="text-sm text-muted-foreground mt-1">Bienvenido a tu panel de arquería</p>
         </div>
 
         {memberships.length > 1 && (
-          <div className="w-full sm:w-64">
+          <div className="w-full sm:w-auto sm:min-w-[240px]">
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Cambiar Club</label>
             <Select value={member?.club_id} onValueChange={setActiveMembership}>
               <SelectTrigger className="glass">
@@ -94,7 +94,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map(({ icon: Icon, label, value, color, to }, i) => (
           <motion.div
             key={label}
@@ -102,40 +102,40 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Link to={to} className="glass rounded-xl p-5 block hover:bg-muted/50 transition-colors">
-              <Icon className={`h-5 w-5 mb-3 ${color}`} />
-              <p className="text-2xl font-display font-bold text-foreground capitalize">{value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{label}</p>
+            <Link to={to} className="glass rounded-xl p-4 sm:p-5 block hover:bg-muted/50 transition-colors">
+              <Icon className={`h-5 w-5 mb-2 sm:mb-3 ${color}`} />
+              <p className="text-xl sm:text-2xl font-display font-bold text-foreground capitalize">{value}</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">{label}</p>
             </Link>
           </motion.div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Link to="/scores/new">
-          <Button className="gap-2">
+      <div className="flex flex-col xs:flex-row flex-wrap gap-2 sm:gap-3">
+        <Link to="/scores/new" className="w-full xs:w-auto">
+          <Button className="gap-2 w-full xs:w-auto">
             <Target className="h-4 w-4" />
             Registrar Puntaje
           </Button>
         </Link>
-        <Link to="/training">
-          <Button variant="outline" className="gap-2">
+        <Link to="/training" className="w-full xs:w-auto">
+          <Button variant="outline" className="gap-2 w-full xs:w-auto">
             <Calendar className="h-4 w-4" />
             Sesiones
           </Button>
         </Link>
         {isPresidente && (
-          <Link to="/reports">
-            <Button variant="outline" className="gap-2">
+          <Link to="/reports" className="w-full xs:w-auto">
+            <Button variant="outline" className="gap-2 w-full xs:w-auto">
               <BarChart3 className="h-4 w-4" />
               Reportes
             </Button>
           </Link>
         )}
         {isAdmin && (
-          <Link to="/admin">
-            <Button variant="outline" className="gap-2">
+          <Link to="/admin" className="w-full xs:w-auto">
+            <Button variant="outline" className="gap-2 w-full xs:w-auto">
               <Shield className="h-4 w-4" />
               Admin
             </Button>

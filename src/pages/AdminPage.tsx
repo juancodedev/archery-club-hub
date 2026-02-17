@@ -78,18 +78,25 @@ export default function AdminPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
-            Gestión de Miembros
-          </h1>
-          <p className="text-muted-foreground">Administra los miembros y colaboradores de tu club</p>
+    <div className="space-y-4 sm:space-y-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              Gestión de Miembros
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">Administra los miembros y colaboradores de tu club</p>
+          </div>
+
+          <div className="flex gap-2">
+            {selectedClubId && <InviteMemberDialog clubId={selectedClubId} />}
+            {selectedClubId && <AddMemberDialog clubId={selectedClubId} />}
+          </div>
         </div>
 
         {isSuperAdmin && (
-          <div className="w-full md:w-64">
+          <div className="w-full sm:max-w-xs">
             <Select value={selectedClubId} onValueChange={setSelectedClubId}>
               <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
               <SelectContent>
@@ -98,15 +105,10 @@ export default function AdminPage() {
             </Select>
           </div>
         )}
-
-        <div className="flex gap-2">
-          {selectedClubId && <InviteMemberDialog clubId={selectedClubId} />}
-          {selectedClubId && <AddMemberDialog clubId={selectedClubId} />}
-        </div>
       </motion.div>
 
       {/* Search */}
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input className="pl-10" placeholder="Buscar miembros..." value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
@@ -114,7 +116,7 @@ export default function AdminPage() {
       {/* Members table */}
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => <div key={i} className="glass rounded-lg p-4 h-16 animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="glass rounded-lg p-3 sm:p-4 h-16 animate-pulse" />)}
         </div>
       ) : (
         <div className="glass rounded-xl overflow-hidden border border-border/50">
@@ -167,11 +169,11 @@ export default function AdminPage() {
                         {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex flex-col xs:flex-row justify-end gap-1 sm:gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-8 text-xs"
+                            className="h-8 text-xs w-full xs:w-auto"
                             onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}
                           >
                             {m.status === "activo" ? "Desactivar" : "Activar"}

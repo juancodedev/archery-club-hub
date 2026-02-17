@@ -158,17 +158,19 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-8">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-primary" />
-          Reportes de Actividad
-        </h1>
-        <p className="text-muted-foreground">Análisis de rendimiento y estadísticas</p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            Reportes de Actividad
+          </h1>
+          <p className="text-sm text-muted-foreground">Análisis de rendimiento y estadísticas</p>
+        </div>
       </motion.div>
 
       {/* Filters */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {isSuperAdmin && (
             <div className="space-y-2">
               <Label>Club</Label>
@@ -219,9 +221,9 @@ export default function ReportsPage() {
       </div>
 
       {/* Charts grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
         {/* Bar: avg per member */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-5">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-4 sm:p-5">
           <h3 className="font-display font-semibold text-foreground mb-4">Promedio por Arquero</h3>
           {memberAvgs.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
