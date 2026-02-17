@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { formatRUT } from "@/lib/rut";
 
 interface MemberData {
   id: string;
@@ -16,6 +17,11 @@ interface MemberData {
   identification: string | null;
   date_of_birth: string | null;
   observations: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  shirt_size: string | null;
+  windbreaker_size: string | null;
+  display_name: string | null;
 }
 
 interface Props {
@@ -34,6 +40,11 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
   const [identification, setIdentification] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [observations, setObservations] = useState("");
+  const [emergencyName, setEmergencyName] = useState("");
+  const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [shirtSize, setShirtSize] = useState("");
+  const [windbreakerSize, setWindbreakerSize] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     if (member) {
@@ -44,6 +55,11 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       setIdentification(member.identification || "");
       setDateOfBirth(member.date_of_birth || "");
       setObservations(member.observations || "");
+      setEmergencyName(member.emergency_contact_name || "");
+      setEmergencyPhone(member.emergency_contact_phone || "");
+      setShirtSize(member.shirt_size || "");
+      setWindbreakerSize(member.windbreaker_size || "");
+      setDisplayName(member.display_name || "");
     }
   }, [member]);
 
@@ -60,7 +76,12 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
           identification: identification || null,
           date_of_birth: dateOfBirth || null,
           observations: observations || null,
-        })
+          emergency_contact_name: emergencyName || null,
+          emergency_contact_phone: emergencyPhone || null,
+          shirt_size: shirtSize || null,
+          windbreaker_size: windbreakerSize || null,
+          display_name: displayName || null,
+        } as any)
         .eq("id", member.id);
       if (error) throw error;
     },
@@ -85,6 +106,10 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
               <Input value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-2">
+              <Label>Nombre en Polera (Pila)</Label>
+              <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
               <Label>Correo electrónico</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
@@ -94,7 +119,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             </div>
             <div className="space-y-2">
               <Label>Identificación</Label>
-              <Input value={identification} onChange={(e) => setIdentification(e.target.value)} />
+              <Input value={identification} onChange={(e) => setIdentification(formatRUT(e.target.value))} />
             </div>
             <div className="space-y-2">
               <Label>Fecha de nacimiento</Label>
@@ -103,6 +128,22 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             <div className="space-y-2">
               <Label>Dirección</Label>
               <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Contacto Emergencia</Label>
+              <Input value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Tel. Emergencia</Label>
+              <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Talla Polera</Label>
+              <Input value={shirtSize} onChange={(e) => setShirtSize(e.target.value)} placeholder="Ej: M" />
+            </div>
+            <div className="space-y-2">
+              <Label>Talla Cortavientos</Label>
+              <Input value={windbreakerSize} onChange={(e) => setWindbreakerSize(e.target.value)} placeholder="Ej: L" />
             </div>
           </div>
           <div className="space-y-2">

@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Target, AlertTriangle } from "lucide-react";
+import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, Calendar, Heart, GraduationCap, Info } from "lucide-react";
+import { formatRUT } from "@/lib/rut";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function InvitationRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -32,6 +34,13 @@ export default function InvitationRegisterPage() {
   const [email, setEmail] = useState("");
   const [medicalHistory, setMedicalHistory] = useState("");
   const [password, setPassword] = useState("");
+
+  // New fields
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [shirtSize, setShirtSize] = useState("");
+  const [windbreakerSize, setWindbreakerSize] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   // Guardian fields
   const [guardianName, setGuardianName] = useState("");
@@ -113,44 +122,32 @@ export default function InvitationRegisterPage() {
       if (authError) throw authError;
       if (!authData.user) throw new Error("No se pudo crear el usuario");
 
-      // 2. Insert member
-      const { data: newMember, error: memberError } = await supabase
-        .from("members")
-        .insert({
-          user_id: authData.user.id,
-          club_id: invitation.club_id,
-          full_name: fullName,
-          email,
-          phone: phone || null,
-          date_of_birth: dateOfBirth || null,
-          identification: identification || null,
-          address: address || null,
-          medical_history: medicalHistory || null,
-          guardian_name: isMinor ? guardianName : null,
-          guardian_phone: isMinor ? guardianPhone : null,
-          guardian_email: isMinor ? guardianEmail : null,
-          status: "activo" as any,
-        })
-        .select()
-        .single();
-      if (memberError) throw memberError;
-
-      // 3. Add default role
-      await supabase.from("member_roles").insert({
-        member_id: newMember.id,
-        club_id: invitation.club_id,
-        role: "arquero" as any,
+      // 2. Complete registration via RPC (to bypass RLS issues during signup)
+      const { error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
+        p_token: token,
+        p_user_id: authData.user.id,
+        p_full_name: fullName,
+        p_email: email,
+        p_phone: phone || null,
+        p_date_of_birth: dateOfBirth || null,
+        p_identification: identification || null,
+        p_address: address || null,
+        p_medical_history: medicalHistory || null,
+        p_emergency_contact_name: emergencyContactName,
+        p_emergency_contact_phone: emergencyContactPhone,
+        p_shirt_size: shirtSize || null,
+        p_windbreaker_size: windbreakerSize || null,
+        p_display_name: displayName || null,
+        p_guardian_name: isMinor ? guardianName : null,
+        p_guardian_phone: isMinor ? guardianPhone : null,
+        p_guardian_email: isMinor ? guardianEmail : null,
       });
 
-      // 4. Mark invitation used
-      await supabase
-        .from("member_invitations")
-        .update({ used_at: new Date().toISOString() })
-        .eq("id", invitation.id);
+      if (rpcError) throw rpcError;
 
       toast({
         title: "¡Registro exitoso!",
-        description: "Revisa tu correo para confirmar tu cuenta.",
+        description: "IMPORTANTE: Debes validar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.",
       });
       navigate("/login");
     } catch (error: any) {
@@ -159,6 +156,7 @@ export default function InvitationRegisterPage() {
       setLoading(false);
     }
   };
+
 
   if (loadingInv) {
     return (
@@ -215,7 +213,12 @@ export default function InvitationRegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="identification">RUT / RUN</Label>
-                <Input id="identification" value={identification} onChange={(e) => setIdentification(e.target.value)} placeholder="12.345.678-9" />
+                <Input
+                  id="identification"
+                  value={identification}
+                  onChange={(e) => setIdentification(formatRUT(e.target.value))}
+                  placeholder="12.345.678-9"
+                />
               </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="address">Dirección particular</Label>
@@ -230,8 +233,62 @@ export default function InvitationRegisterPage() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="displayName">Nombre en Polera (Pila)</Label>
+                <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ej: Juanito" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="medicalHistory">Antecedentes médicos relevantes</Label>
                 <Textarea id="medicalHistory" value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} placeholder="Alergias, condiciones, etc." rows={3} />
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4 text-destructive" /> Contacto de Emergencia
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">Nombre del contacto *</Label>
+                <Input id="emergencyContactName" value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactPhone">Teléfono del contacto *</Label>
+                <Input id="emergencyContactPhone" value={emergencyContactPhone} onChange={(e) => setEmergencyContactPhone(e.target.value)} required />
+              </div>
+            </div>
+          </div>
+
+          {/* Sizes */}
+          <div className="glass rounded-xl p-5 space-y-4">
+            <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Talla Polera</Label>
+                <Select value={shirtSize} onValueChange={setShirtSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Talla Cortavientos</Label>
+                <Select value={windbreakerSize} onValueChange={setWindbreakerSize}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

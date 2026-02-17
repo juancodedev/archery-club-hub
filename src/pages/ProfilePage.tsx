@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, Shield } from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, Shield, Heart, Save, Pencil, X } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
@@ -11,10 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Save, Pencil, X } from "lucide-react";
+import { formatRUT } from "@/lib/rut";
 
 export default function ProfilePage() {
-  const { member } = useAuth();
+  const { member, user } = useAuth();
   const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
   const queryClient = useQueryClient();
 
@@ -33,7 +33,13 @@ export default function ProfilePage() {
     identification: "",
     medical_history: "",
     guardian_name: "",
-    guardian_phone: ""
+    guardian_phone: "",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
+    shirt_size: "",
+    windbreaker_size: "",
+    display_name: "",
+    avatar_url: ""
   });
 
   useEffect(() => {
@@ -68,13 +74,19 @@ export default function ProfilePage() {
 
       if (data) {
         setFormData({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          identification: data.identification || "",
-          medical_history: data.medical_history || "",
-          guardian_name: data.guardian_name || "",
-          guardian_phone: data.guardian_phone || ""
+          full_name: (data as any).full_name || "",
+          phone: (data as any).phone || "",
+          address: (data as any).address || "",
+          identification: (data as any).identification || "",
+          medical_history: (data as any).medical_history || "",
+          guardian_name: (data as any).guardian_name || "",
+          guardian_phone: (data as any).guardian_phone || "",
+          emergency_contact_name: (data as any).emergency_contact_name || "",
+          emergency_contact_phone: (data as any).emergency_contact_phone || "",
+          shirt_size: (data as any).shirt_size || "",
+          windbreaker_size: (data as any).windbreaker_size || "",
+          display_name: (data as any).display_name || "",
+          avatar_url: (data as any).avatar_url || ""
         });
       }
       return data;
@@ -95,6 +107,43 @@ export default function ProfilePage() {
     },
     enabled: !!selectedClubId,
   });
+
+  const uploadAvatar = async (file: File) => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para cambiar tu foto");
+      return;
+    }
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+
+      if (selectedMemberId) {
+        await supabase
+          .from("members")
+          .update({ avatar_url: publicUrl } as any)
+          .eq("id", selectedMemberId);
+        toast.success("Foto de perfil actualizada");
+        queryClient.invalidateQueries({ queryKey: ["member-profile", selectedMemberId] });
+      }
+    } catch (error: any) {
+      toast.error("Error al subir imagen: " + error.message);
+    }
+  };
 
   const updateProfile = useMutation({
     mutationFn: async () => {
@@ -119,6 +168,8 @@ export default function ProfilePage() {
       { icon: Phone, label: "Teléfono", value: fullMember.phone || "—", key: "phone" },
       { icon: Shield, label: "Identificación", value: fullMember.identification || "—", key: "identification" },
       { icon: MapPin, label: "Dirección", value: fullMember.address || "—", key: "address" },
+      { icon: Heart, label: "Contacto Emergencia", value: (fullMember as any).emergency_contact_name || "—", key: "emergency_contact_name" },
+      { icon: Phone, label: "Tel. Emergencia", value: (fullMember as any).emergency_contact_phone || "—", key: "emergency_contact_phone" },
     ]
     : [];
 
@@ -160,6 +211,39 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
+      {/* Avatar Section */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-6 flex flex-col items-center gap-4">
+        <div className="relative group">
+          <div className="h-24 w-24 rounded-full bg-muted overflow-hidden border-2 border-primary/20">
+            {formData.avatar_url ? (
+              <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center bg-primary/10">
+                <User className="h-10 w-10 text-primary/40" />
+              </div>
+            )}
+          </div>
+          <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+            <span className="text-xs font-medium">Cambiar</span>
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadAvatar(file);
+              }}
+            />
+          </label>
+        </div>
+        {!isEditing && (
+          <div className="text-center">
+            <h2 className="text-xl font-display font-bold text-foreground">{formData.full_name}</h2>
+            <p className="text-sm text-muted-foreground">{formData.display_name ? `"${formData.display_name}"` : ""}</p>
+          </div>
+        )}
+      </motion.div>
+
       {/* Club info */}
       {club && !isEditing && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5">
@@ -168,7 +252,7 @@ export default function ProfilePage() {
             {[club.city, club.country].filter(Boolean).join(", ") || "Sin ubicación"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {fullMember?.member_roles?.map((r: any) => (
+            {(fullMember as any)?.member_roles?.map((r: any) => (
               <span key={r.role} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
                 {r.role}
               </span>
@@ -194,7 +278,7 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label>Identificación (RUT/DNI)</Label>
-                <Input value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: e.target.value })} />
+                <Input value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: formatRUT(e.target.value) })} />
               </div>
               <div className="space-y-2">
                 <Label>Teléfono</Label>
@@ -204,6 +288,10 @@ export default function ProfilePage() {
                 <Label>Dirección</Label>
                 <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
               </div>
+              <div className="space-y-2">
+                <Label>Nombre en Polera (Pila)</Label>
+                <Input value={formData.display_name} onChange={(e) => setFormData({ ...formData, display_name: e.target.value })} placeholder="Ej: Juanito" />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -211,9 +299,53 @@ export default function ProfilePage() {
               <Input value={formData.medical_history} onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })} />
             </div>
 
+            <div className="pt-4 border-t border-border">
+              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <Heart className="h-4 w-4 text-destructive" /> Contacto de Emergencia
+              </h4>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Nombre del contacto</Label>
+                  <Input value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Teléfono del contacto</Label>
+                  <Input value={formData.emergency_contact_phone} onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })} />
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <h4 className="text-sm font-semibold mb-3">Tabla de Tallas</h4>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Talla Polera</Label>
+                  <Select value={formData.shirt_size} onValueChange={(val) => setFormData({ ...formData, shirt_size: val })}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>
+                      {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                        <SelectItem key={size} value={size}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Talla Cortavientos</Label>
+                  <Select value={formData.windbreaker_size} onValueChange={(val) => setFormData({ ...formData, windbreaker_size: val })}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>
+                      {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                        <SelectItem key={size} value={size}>{size}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2 pt-4 border-t border-border">
               <div className="space-y-2">
-                <Label>Nombre del Tutor (opcional)</Label>
+                <Label>Nombre del Tutor (menores)</Label>
                 <Input value={formData.guardian_name} onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })} />
               </div>
               <div className="space-y-2">
@@ -243,6 +375,17 @@ export default function ProfilePage() {
               </div>
             ))}
 
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <p className="text-xs text-muted-foreground">Talla Polera</p>
+                <p className="text-sm font-medium text-foreground">{formData.shirt_size || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Talla Cortavientos</p>
+                <p className="text-sm font-medium text-foreground">{formData.windbreaker_size || "—"}</p>
+              </div>
+            </div>
+
             {fullMember?.medical_history && (
               <div className="pt-4 border-t border-border">
                 <p className="text-xs text-muted-foreground mb-1">Información Médica</p>
@@ -258,13 +401,13 @@ export default function ProfilePage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Estado de membresía</span>
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${fullMember.status === "activo" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${(fullMember as any).status === "activo" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
               }`}>
-              {fullMember.status === "activo" ? "✓ Activo" : "✕ Inactivo"}
+              {(fullMember as any).status === "activo" ? "✓ Activo" : "✕ Inactivo"}
             </span>
           </div>
-          {fullMember.observations && (
-            <p className="mt-3 text-sm text-muted-foreground">{fullMember.observations}</p>
+          {(fullMember as any).observations && (
+            <p className="mt-3 text-sm text-muted-foreground">{(fullMember as any).observations}</p>
           )}
         </motion.div>
       )}
