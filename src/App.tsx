@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
 import BillingPage from "./pages/BillingPage";
+import FinancePage from "./pages/FinancePage";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,10 @@ const App = () => (
             <Route
               path="/billing"
               element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/finances"
+              element={<ProtectedRoute><AppLayout><FinancePage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/super-admin/*"
