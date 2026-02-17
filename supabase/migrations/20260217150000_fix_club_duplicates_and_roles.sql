@@ -135,13 +135,17 @@ END;
 $$;
 
 -- 4. Update helper functions to include new roles if necessary
+-- Note: We use ::text comparison to avoid "New enum values must be committed before they can be used" error
 CREATE OR REPLACE FUNCTION public.is_club_admin(p_user_id UUID, p_club_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.member_roles mr
     JOIN public.members m ON m.id = mr.member_id
-    WHERE m.user_id = p_user_id AND mr.club_id = p_club_id AND mr.role IN ('administrador', 'presidente', 'secretaria', 'tesorero')
+    WHERE m.user_id = p_user_id 
+      AND mr.club_id = p_club_id 
+      AND mr.role::text IN ('administrador', 'presidente', 'secretaria', 'tesorero')
   );
 $$;
+
 
