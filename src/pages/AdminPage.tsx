@@ -18,7 +18,8 @@ import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
 import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialog";
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
-import { Trophy } from "lucide-react";
+import { Trophy, Wallet } from "lucide-react";
+import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
 
 export default function AdminPage() {
   const { member } = useAuth();
@@ -34,6 +35,7 @@ export default function AdminPage() {
   const [rolesMember, setRolesMember] = useState<any>(null);
   const [deleteMember, setDeleteMember] = useState<any>(null);
   const [historyMember, setHistoryMember] = useState<any>(null);
+  const [paymentsMember, setPaymentsMember] = useState<any>(null);
   const [divisionsMember, setDivisionsMember] = useState<any>(null);
 
   useEffect(() => {
@@ -197,6 +199,9 @@ export default function AdminPage() {
                               <DropdownMenuItem onClick={() => setHistoryMember(m)}>
                                 <History className="h-4 w-4 mr-2" />Ver historial de puntajes
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setPaymentsMember(m)}>
+                                <Wallet className="h-4 w-4 mr-2" />Ver historial de pagos
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
                                 <Trophy className="h-4 w-4 mr-2" />Gestionar divisiones
                               </DropdownMenuItem>
@@ -251,6 +256,15 @@ export default function AdminPage() {
         open={!!historyMember}
         onOpenChange={(open) => !open && setHistoryMember(null)}
       />
+      {paymentsMember && selectedClubId && (
+        <MemberPaymentHistoryDialog
+          memberId={paymentsMember.id}
+          memberName={paymentsMember.full_name}
+          clubId={selectedClubId}
+          open={!!paymentsMember}
+          onOpenChange={(open) => !open && setPaymentsMember(null)}
+        />
+      )}
       <MemberDivisionsDialog
         member={divisionsMember}
         open={!!divisionsMember}
