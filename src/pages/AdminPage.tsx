@@ -17,6 +17,8 @@ import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
 import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialog";
+import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
+import { Trophy } from "lucide-react";
 
 export default function AdminPage() {
   const { member } = useAuth();
@@ -32,6 +34,7 @@ export default function AdminPage() {
   const [rolesMember, setRolesMember] = useState<any>(null);
   const [deleteMember, setDeleteMember] = useState<any>(null);
   const [historyMember, setHistoryMember] = useState<any>(null);
+  const [divisionsMember, setDivisionsMember] = useState<any>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -194,6 +197,9 @@ export default function AdminPage() {
                               <DropdownMenuItem onClick={() => setHistoryMember(m)}>
                                 <History className="h-4 w-4 mr-2" />Ver historial de puntajes
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
+                                <Trophy className="h-4 w-4 mr-2" />Gestionar divisiones
+                              </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
                                 <Trash2 className="h-4 w-4 mr-2" />Eliminar
                               </DropdownMenuItem>
@@ -244,6 +250,11 @@ export default function AdminPage() {
         memberName={historyMember?.full_name ?? ""}
         open={!!historyMember}
         onOpenChange={(open) => !open && setHistoryMember(null)}
+      />
+      <MemberDivisionsDialog
+        member={divisionsMember}
+        open={!!divisionsMember}
+        onOpenChange={(open) => !open && setDivisionsMember(null)}
       />
     </div>
   );
