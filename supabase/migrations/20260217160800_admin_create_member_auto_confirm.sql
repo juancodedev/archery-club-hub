@@ -1,3 +1,6 @@
+-- Enable pgcrypto extension for password hashing
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- Function to create a member account by admin (email auto-confirmed, no verification needed)
 CREATE OR REPLACE FUNCTION create_member_account_by_admin(
   -- Required parameters (no defaults)
@@ -24,7 +27,7 @@ CREATE OR REPLACE FUNCTION create_member_account_by_admin(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_user_id uuid;
