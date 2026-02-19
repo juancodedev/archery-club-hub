@@ -84,7 +84,7 @@ export default function InvitationRegisterPage() {
           setExpired(true);
           // Still load club for logo if possible
           if (inv) {
-            const { data: c } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
+            const { data: c } = await supabase.from("public_clubs_view" as any).select("*").eq("id", inv.club_id).single();
             setClub(c);
           }
           setLoadingInv(false);
@@ -94,7 +94,7 @@ export default function InvitationRegisterPage() {
         setInvitation(inv);
         if (inv.email) setEmail(inv.email);
 
-        const { data: c, error: clubError } = await supabase.from("clubs").select("*").eq("id", inv.club_id).single();
+        const { data: c, error: clubError } = await supabase.from("public_clubs_view" as any).select("*").eq("id", inv.club_id).single();
         if (clubError) console.error("Error loading club:", clubError);
         setClub(c);
       } catch (err) {
