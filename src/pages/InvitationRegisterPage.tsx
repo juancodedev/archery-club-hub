@@ -47,6 +47,8 @@ export default function InvitationRegisterPage() {
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
 
+  const [noEmail, setNoEmail] = useState(false);
+
   const isMinor = useMemo(() => {
     if (!dateOfBirth) return false;
     const birth = new Date(dateOfBirth);
@@ -113,21 +115,28 @@ export default function InvitationRegisterPage() {
     setLoading(true);
 
     try {
-      // 1. Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
-      });
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("No se pudo crear el usuario");
+      let finalUserId = null;
+      let finalEmail = email.trim() !== "" ? email.trim() : null;
 
-      // 2. Complete registration via RPC (to bypass RLS issues during signup)
-      const { error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
+      // 1. Create auth user only if email is provided
+      if (!noEmail && finalEmail) {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: finalEmail,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("No se pudo crear el usuario");
+        finalUserId = authData.user.id;
+      }
+
+      // 2. Complete registration via RPC
+      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
         p_token: token,
-        p_user_id: authData.user.id,
+        p_user_id: finalUserId,
+        p_password: password || null,
         p_full_name: fullName,
-        p_email: email,
+        p_email: finalEmail,
         p_phone: phone || null,
         p_date_of_birth: dateOfBirth || null,
         p_identification: identification || null,
@@ -145,10 +154,17 @@ export default function InvitationRegisterPage() {
 
       if (rpcError) throw rpcError;
 
-      toast({
-        title: "¡Registro exitoso!",
-        description: "IMPORTANTE: Debes validar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.",
-      });
+      if (noEmail) {
+        toast({
+          title: "¡Inscripción completada!",
+          description: "Tu registro ha sido procesado exitosamente por el club.",
+        });
+      } else {
+        toast({
+          title: "¡Registro exitoso!",
+          description: "IMPORTANTE: Debes validar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.",
+        });
+      }
       navigate("/login");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -228,10 +244,31 @@ export default function InvitationRegisterPage() {
                 <Label htmlFor="phone">Teléfono</Label>
                 <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
+              {!noEmail && (
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+              )}
+              {isMinor && (
+                <div className="space-y-3 sm:col-span-2">
+                  <div className="flex items-center space-x-2 bg-accent/10 p-3 rounded-lg border border-accent/20">
+                    <Checkbox id="noEmail" checked={noEmail} onCheckedChange={(v) => {
+                      const checked = v === true;
+                      setNoEmail(checked);
+                      if (checked) setEmail("");
+                    }} />
+                    <Label htmlFor="noEmail" className="text-sm cursor-pointer leading-tight">
+                      No tengo correo electrónico propio (menor de edad)
+                    </Label>
+                  </div>
+                  {noEmail && (
+                    <p className="text-xs text-muted-foreground italic pl-1">
+                      * Se utilizará el correo del tutor para las comunicaciones del club.
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="displayName">Nombre en Polera (Pila)</Label>
                 <Input id="displayName" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ej: Juanito" />
@@ -349,13 +386,15 @@ export default function InvitationRegisterPage() {
           )}
 
           {/* Password */}
-          <div className="glass rounded-xl p-5 space-y-4">
-            <h3 className="font-display font-semibold text-foreground">Crear Cuenta</h3>
-            <div className="space-y-2">
-              <Label htmlFor="memberPassword">Contraseña *</Label>
-              <Input id="memberPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
+          {!noEmail && (
+            <div className="glass rounded-xl p-5 space-y-4">
+              <h3 className="font-display font-semibold text-foreground">Crear Cuenta</h3>
+              <div className="space-y-2">
+                <Label htmlFor="memberPassword">Contraseña *</Label>
+                <Input id="memberPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
+              </div>
             </div>
-          </div>
+          )}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading || !accepted}>
             {loading ? "Registrando..." : "Aceptar e Inscribirme"}
