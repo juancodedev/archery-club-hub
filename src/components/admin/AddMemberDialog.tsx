@@ -82,9 +82,12 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         throw new Error("El club no ha configurado una contraseña por defecto. Por favor, ve a Configuración del Club y establécela.");
       }
 
+      // Email: use provided value, or null for minors without email
+      const effectiveEmail = email.trim() !== '' ? email.trim() : null;
+
       // Use RPC function to create member account with auto-confirmed email
       const { data, error } = await supabase.rpc('create_member_account_by_admin', {
-        p_email: email,
+        p_email: effectiveEmail,
         p_password: defaultPassword,
         p_full_name: name,
         p_phone: phone || null,
@@ -187,10 +190,26 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
                 <Label>Teléfono</Label>
                 <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Correo electrónico *</Label>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
+              {!isMinor && (
+                <div className="space-y-2">
+                  <Label>Correo electrónico</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="correo@ejemplo.com"
+                  />
+                  <p className="text-xs text-muted-foreground">Opcional. Si se deja vacío, el miembro puede iniciar sesión con la contraseña del club.</p>
+                </div>
+              )}
+              {isMinor && (
+                <div className="space-y-2 rounded-lg bg-accent/10 border border-accent/30 p-3 sm:col-span-2">
+                  <p className="text-xs text-accent-foreground flex items-center gap-1">
+                    <span>ℹ️</span>
+                    <span>El arquero es <strong>menor de edad</strong>. No es necesario un email propio — ingresa el email del tutor/padre en la sección de tutor a continuación.</span>
+                  </p>
+                </div>
+              )}
               <div className="space-y-2 sm:col-span-2">
                 <Label>Nombre en Polera (Pila)</Label>
                 <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ej: Juanito" />
