@@ -50,6 +50,7 @@ export default function FinancePage() {
     const [selectedType, setSelectedType] = useState<"income" | "expense" | null>(null);
     const [selectedClubId, setSelectedClubId] = useState<string>(member?.club_id || "");
     const [clubs, setClubs] = useState<any[]>([]);
+    const [editingEntry, setEditingEntry] = useState<any>(null);
 
     useEffect(() => {
         if (isSuperAdmin) {
@@ -123,8 +124,9 @@ export default function FinancePage() {
 
     const balance = totals.income - totals.expense;
 
-    const openForm = (type: "income" | "expense") => {
+    const openForm = (type: "income" | "expense", entry?: any) => {
         setSelectedType(type);
+        setEditingEntry(entry || null);
         setIsFormOpen(true);
     };
 
@@ -353,6 +355,14 @@ export default function FinancePage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
+                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                onClick={() => openForm(entry.type, entry)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                 onClick={() => {
                                                     if (confirm("¿Estás seguro de eliminar este registro?")) {
@@ -381,11 +391,16 @@ export default function FinancePage() {
                     {clubId && (
                         <FinanceForm
                             type={selectedType || "income"}
+                            initialData={editingEntry}
                             onSuccess={() => {
                                 setIsFormOpen(false);
+                                setEditingEntry(null);
                                 queryClient.invalidateQueries({ queryKey: ["financial-entries"] });
                             }}
-                            onCancel={() => setIsFormOpen(false)}
+                            onCancel={() => {
+                                setIsFormOpen(false);
+                                setEditingEntry(null);
+                            }}
                         />
                     )}
                 </DialogContent>

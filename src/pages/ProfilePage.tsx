@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, MapPin, Calendar, Shield, Heart, Save, Pencil, X } from "lucide-react";
+import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatRUT } from "@/lib/rut";
+import { formatCurrency, cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const { member, user } = useAuth();
@@ -21,6 +22,9 @@ export default function ProfilePage() {
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [clubs, setClubs] = useState<any[]>([]);
   const [membersList, setMembersList] = useState<any[]>([]);
@@ -93,6 +97,35 @@ export default function ProfilePage() {
       return data;
     },
     enabled: !!selectedMemberId,
+  });
+
+  const { data: payments } = useQuery({
+    queryKey: ["member-payments-history", selectedMemberId],
+    queryFn: async () => {
+        if (!selectedMemberId || selectedMemberId === 'null') return [];
+        const { data, error } = await supabase
+            .from("financial_entries")
+            .select("*")
+            .eq("member_id", selectedMemberId)
+            .order("entry_date", { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    enabled: !!selectedMemberId
+  });
+
+  const changePassword = useMutation({
+    mutationFn: async () => {
+        if (newPassword.length < 6) throw new Error("Mínimo 6 caracteres");
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+    },
+    onSuccess: () => {
+        toast.success("Contraseña actualizada correctamente");
+        setIsChangingPassword(false);
+        setNewPassword("");
+    },
+    onError: (e: any) => toast.error("Error: " + e.message)
   });
 
   const { data: club } = useQuery({
@@ -175,17 +208,24 @@ export default function ProfilePage() {
     : [];
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-4xl pb-20">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end">
         <div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Datos Personales</h1>
-          <p className="text-muted-foreground">{isEditing ? "Editando información" : "Información personal y del club"}</p>
+          <h1 className="text-2xl font-display font-bold text-foreground">Mi Perfil</h1>
+          <p className="text-muted-foreground">{isEditing ? "Editando información" : "Información personal y gestión de cuenta"}</p>
         </div>
-        {!isEditing && fullMember && (
-          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">
-            <Pencil className="h-4 w-4" /> Editar Perfil
-          </Button>
-        )}
+        <div className="flex gap-2">
+            {!isEditing && fullMember && (
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">
+                <Pencil className="h-4 w-4" /> Editar Perfil
+            </Button>
+            )}
+            {!isEditing && member?.id === selectedMemberId && (
+                <Button variant="outline" size="sm" onClick={() => setIsChangingPassword(!isChangingPassword)} className="gap-2">
+                    <Lock className="h-4 w-4" /> Seguridad
+                </Button>
+            )}
+        </div>
       </motion.div>
 
       {isSuperAdmin && !isEditing && (
@@ -212,210 +252,274 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
-      {/* Avatar Section */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4">
-        <div className="relative group">
-          <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-muted overflow-hidden border-2 border-primary/20">
-            {formData.avatar_url ? (
-              <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                <User className="h-10 w-10 text-primary/40" />
+      {isChangingPassword && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass rounded-xl p-6 border-primary/20 space-y-4 overflow-hidden">
+              <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                  <Key className="h-5 w-5 text-primary" /> Actualizar Contraseña
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-4 items-end">
+                  <div className="space-y-2 flex-1 w-full">
+                      <Label htmlFor="pass">Nueva contraseña (mín. 6 caracteres)</Label>
+                      <div className="relative">
+                        <Input 
+                            id="pass"
+                            type={showPassword ? "text" : "password"} 
+                            value={newPassword} 
+                            onChange={e => setNewPassword(e.target.value)} 
+                            className="pr-10"
+                        />
+                        <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                      <Button variant="ghost" onClick={() => setIsChangingPassword(false)}>Cancelar</Button>
+                      <Button onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Guardar</Button>
+                  </div>
               </div>
-            )}
-          </div>
-          <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
-            <span className="text-xs font-medium">Cambiar</span>
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadAvatar(file);
-              }}
-            />
-          </label>
-        </div>
-        {!isEditing && (
-          <div className="text-center">
-            <h2 className="text-xl font-display font-bold text-foreground">{formData.full_name}</h2>
-            <p className="text-sm text-muted-foreground">{formData.display_name ? `"${formData.display_name}"` : ""}</p>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Club info */}
-      {club && !isEditing && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5">
-          <h3 className="font-display font-semibold text-foreground mb-2">🏹 {club.name}</h3>
-          <p className="text-sm text-muted-foreground">
-            {[club.city, club.country].filter(Boolean).join(", ") || "Sin ubicación"}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(fullMember as any)?.member_roles?.map((r: any) => (
-              <span key={r.role} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize">
-                {r.role}
-              </span>
-            ))}
-          </div>
-        </motion.div>
+          </motion.div>
       )}
 
-      {/* Personal info / EDIT FORM */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="font-display font-semibold text-foreground italic flex items-center gap-2">
-            <Shield className="h-4 w-4" /> Datos de Identificación
-          </h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1 space-y-6">
+            {/* Avatar Section */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4 text-center">
+                <div className="relative group">
+                <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-muted overflow-hidden border-2 border-primary/20 shadow-lg">
+                    {formData.avatar_url ? (
+                    <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-primary/10">
+                        <User className="h-12 w-12 text-primary/40" />
+                    </div>
+                    )}
+                </div>
+                <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
+                    <span className="text-xs font-medium">Cambiar</span>
+                    <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) uploadAvatar(file);
+                    }}
+                    />
+                </label>
+                </div>
+                <div>
+                    <h2 className="text-xl font-display font-bold text-foreground">{formData.full_name}</h2>
+                    <p className="text-sm text-muted-foreground">{formData.display_name ? `"${formData.display_name}"` : ""}</p>
+                    <div className="mt-4 flex flex-wrap justify-center gap-1">
+                        {(formData as any).roles?.map((r: string) => (
+                            <Badge key={r} variant="secondary" className="capitalize text-[10px] px-2 py-0">
+                                {r}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Club info */}
+            {club && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 border-l-4 border-primary">
+                    <p className="text-[10px] uppercase font-bold text-primary mb-1">Mi Club</p>
+                    <h3 className="font-display font-bold text-foreground text-lg">{club.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {[club.city, club.country].filter(Boolean).join(", ")}
+                    </p>
+                </motion.div>
+            )}
+
+            {/* Status */}
+            {fullMember && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Estado de membresía</span>
+                        <Badge variant={(fullMember as any).status === "activo" ? "default" : "destructive"} className="h-5 px-2">
+                            {(fullMember as any).status}
+                        </Badge>
+                    </div>
+                    {(fullMember as any).observations && (
+                        <p className="text-xs text-muted-foreground italic border-t border-border/50 pt-2 mt-2">
+                            "{(fullMember as any).observations}"
+                        </p>
+                    )}
+                </motion.div>
+            )}
         </div>
 
-        {isEditing ? (
-          <div className="space-y-4 pt-2">
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Nombre Completo</Label>
-                <Input value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Identificación (RUT/DNI)</Label>
-                <Input value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: formatRUT(e.target.value) })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Teléfono</Label>
-                <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Dirección</Label>
-                <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Nombre en Polera (Pila)</Label>
-                <Input value={formData.display_name} onChange={(e) => setFormData({ ...formData, display_name: e.target.value })} placeholder="Ej: Juanito" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Historial Médico / Alergias</Label>
-              <Input value={formData.medical_history} onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })} />
-            </div>
-
-            <div className="pt-4 border-t border-border">
-              <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Heart className="h-4 w-4 text-destructive" /> Contacto de Emergencia
-              </h4>
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Nombre del contacto</Label>
-                  <Input value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
+        <div className="md:col-span-2 space-y-6">
+            {/* Personal info / EDIT FORM */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-6 space-y-6 h-fit">
+                <div className="flex items-center justify-between">
+                <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" /> Datos del Arquero
+                </h3>
                 </div>
-                <div className="space-y-2">
-                  <Label>Teléfono del contacto</Label>
-                  <Input value={formData.emergency_contact_phone} onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })} />
+
+                {isEditing ? (
+                <div className="space-y-4 pt-2">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label>Nombre Completo</Label>
+                        <Input value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Identificación (RUT/DNI)</Label>
+                        <Input value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: formatRUT(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Teléfono</Label>
+                        <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Dirección Particular</Label>
+                        <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                    </div>
+                    </div>
+
+                    <div className="space-y-2">
+                    <Label>Antecedentes Médicos / Alergias</Label>
+                    <Input value={formData.medical_history} onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })} />
+                    </div>
+
+                    <div className="pt-4 border-t border-border">
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                        <Heart className="h-3 w-3 text-destructive" /> Emergencia
+                    </h4>
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                        <div className="space-y-2">
+                        <Label>Nombre Contacto</Label>
+                        <Input value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                        <Label>Teléfono Contacto</Label>
+                        <Input value={formData.emergency_contact_phone} onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })} />
+                        </div>
+                    </div>
+                    </div>
+
+                    <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
+                    <Button variant="ghost" onClick={() => setIsEditing(false)} className="gap-2 w-full sm:w-auto">
+                        <X className="h-4 w-4" /> Cancelar
+                    </Button>
+                    <Button onClick={() => updateProfile.mutate()} className="flex-1 gap-2 w-full sm:flex-auto">
+                        <Save className="h-4 w-4" /> Guardar Cambios
+                    </Button>
+                    </div>
                 </div>
-              </div>
-            </div>
+                ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {infoItems.map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="space-y-1">
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                            <Icon className="h-3 w-3" /> {label}
+                        </p>
+                        <p className="text-sm font-medium text-foreground">{value}</p>
+                    </div>
+                    ))}
 
-            {!(formData as any).roles?.includes("alumno") && (
-              <div className="pt-4 border-t border-border">
-                <h4 className="text-sm font-semibold mb-3">Tabla de Tallas</h4>
-                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Talla Polera</Label>
-                    <Select value={formData.shirt_size} onValueChange={(val) => setFormData({ ...formData, shirt_size: val })}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent>
-                        {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                          <SelectItem key={size} value={size}>{size}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Talla Cortavientos</Label>
-                    <Select value={formData.windbreaker_size} onValueChange={(val) => setFormData({ ...formData, windbreaker_size: val })}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                      <SelectContent>
-                        {['6', '8', '10', '12', '14', '16', 'S', 'M', 'L', 'XL', 'XXL'].map(size => (
-                          <SelectItem key={size} value={size}>{size}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="sm:col-span-2 border-t border-border/50 pt-4 grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Polera</p>
+                            <Badge variant="outline" className="font-mono">{formData.shirt_size || "—"}</Badge>
+                        </div>
+                        <div>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Cortavientos</p>
+                            <Badge variant="outline" className="font-mono">{formData.windbreaker_size || "—"}</Badge>
+                        </div>
+                    </div>
+
+                    {fullMember?.medical_history && (
+                    <div className="sm:col-span-2 bg-rose-500/5 p-4 rounded-xl border border-rose-500/10">
+                        <p className="text-[10px] uppercase font-bold text-rose-600 mb-1">Información Médica</p>
+                        <p className="text-sm text-foreground italic">"{fullMember.medical_history}"</p>
+                    </div>
+                    )}
                 </div>
-              </div>
-            )}
+                )}
+            </motion.div>
 
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 pt-4 border-t border-border">
-              <div className="space-y-2">
-                <Label>Nombre del Tutor (menores)</Label>
-                <Input value={formData.guardian_name} onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Teléfono del Tutor</Label>
-                <Input value={formData.guardian_phone} onChange={(e) => setFormData({ ...formData, guardian_phone: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
-              <Button variant="ghost" onClick={() => setIsEditing(false)} className="gap-2 w-full sm:w-auto">
-                <X className="h-4 w-4" /> Cancelar
-              </Button>
-              <Button onClick={() => updateProfile.mutate()} className="flex-1 gap-2 w-full sm:flex-auto">
-                <Save className="h-4 w-4" /> Guardar Cambios
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {infoItems.map(({ icon: Icon, label, value }) => (
-              <div key={label} className="flex items-start gap-3">
-                <Icon className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">{label}</p>
-                  <p className="text-sm font-medium text-foreground">{value}</p>
+            {/* Sección de Pagos (Visualización intuitiva) */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                    <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+                        <Wallet className="h-4 w-4 text-emerald-500" /> Control de Pagos
+                    </h3>
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                        Al día
+                    </Badge>
                 </div>
-              </div>
-            ))}
 
-            {!(formData as any).roles?.includes("alumno") && (
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div>
-                  <p className="text-xs text-muted-foreground">Talla Polera</p>
-                  <p className="text-sm font-medium text-foreground">{formData.shirt_size || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Talla Cortavientos</p>
-                  <p className="text-sm font-medium text-foreground">{formData.windbreaker_size || "—"}</p>
-                </div>
-              </div>
-            )}
+                {!payments || payments.length === 0 ? (
+                    <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed border-border/50">
+                        <CreditCard className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                        <p className="text-xs text-muted-foreground">Aún no hay registros financieros en tu cuenta.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-6">
+                        {/* Grid de meses de membresía */}
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            {Array.from({ length: 6 }).map((_, i) => {
+                                const date = new Date();
+                                date.setMonth(date.getMonth() - i);
+                                const month = date.getMonth() + 1;
+                                const year = date.getFullYear();
+                                const p = payments.find(p => p.category === 'membresia' && p.payment_month === month && p.payment_year === year);
+                                
+                                return (
+                                    <div key={i} className={cn(
+                                        "p-2 rounded-xl border text-center transition-all",
+                                        p ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/50 border-border/50 opacity-60"
+                                    )}>
+                                        <p className="text-[9px] uppercase font-bold text-muted-foreground">{date.toLocaleString('es-ES', { month: 'short' })}</p>
+                                        <p className="text-xs font-bold">{year}</p>
+                                        <div className="mt-1 flex justify-center">
+                                            {p ? (
+                                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                            ) : (
+                                                <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            }).reverse()}
+                        </div>
 
-            {fullMember?.medical_history && (
-              <div className="pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-1">Información Médica</p>
-                <p className="text-sm text-foreground italic">"{fullMember.medical_history}"</p>
-              </div>
-            )}
-          </div>
-        )}
-      </motion.div>
-
-      {/* Status */}
-      {fullMember && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Estado de membresía</span>
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${(fullMember as any).status === "activo" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-              }`}>
-              {(fullMember as any).status === "activo" ? "✓ Activo" : "✕ Inactivo"}
-            </span>
-          </div>
-          {(fullMember as any).observations && (
-            <p className="mt-3 text-sm text-muted-foreground">{(fullMember as any).observations}</p>
-          )}
-        </motion.div>
-      )}
+                        {/* Listado de movimientos */}
+                        <div className="space-y-2">
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] px-1">Últimos movimientos</p>
+                            {payments.slice(0, 3).map((p) => (
+                                <div key={p.id} className="flex items-center justify-between p-3 bg-card/40 rounded-xl border border-border/30 hover:bg-card/60 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn(
+                                            "h-8 w-8 rounded-lg flex items-center justify-center",
+                                            p.category === 'membresia' ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600"
+                                        )}>
+                                            {p.category === 'membresia' ? <Calendar className="h-4 w-4" /> : <DollarSign className="h-4 w-4" />}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold capitalize">{p.category}</p>
+                                            <p className="text-[9px] text-muted-foreground">
+                                                {new Date(p.entry_date).toLocaleDateString("es-CL")}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs font-bold text-emerald-600">{formatCurrency(p.amount)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
