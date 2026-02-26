@@ -15,8 +15,8 @@ import {
     Receipt,
     Eye,
     Trash2,
-    Pencil,
     User,
+    Pencil,
     History as HistoryIcon
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -71,11 +71,6 @@ export default function FinancePage() {
 
         if (data) {
             setClubs(data);
-            // If the current club is not in the allowed list, reset it
-            if (data.length > 0 && !data.find(c => c.id === selectedClubId)) {
-                // We don't automatically select the first one to avoid confusion
-                // but we could if we want. For now, we just clear it if it's invalid.
-            }
         }
     };
 
@@ -145,16 +140,14 @@ export default function FinancePage() {
         if (!receiptUrl) return;
 
         try {
-            // Check if it's already a full URL (legacy) or a path
             if (receiptUrl.startsWith('http')) {
                 window.open(receiptUrl, "_blank");
                 return;
             }
 
-            // Generate signed URL for private bucket
             const { data, error } = await supabase.storage
                 .from("receipts")
-                .createSignedUrl(receiptUrl, 300); // 5 minutes
+                .createSignedUrl(receiptUrl, 300);
 
             if (error) throw error;
             if (data?.signedUrl) {
@@ -170,23 +163,23 @@ export default function FinancePage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-10">
+        <div className="space-y-6 max-w-7xl mx-auto pb-20">
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
             >
                 <div>
-                    <h1 className="text-3xl font-display font-bold text-foreground flex items-center gap-3">
-                        <DollarSign className="h-8 w-8 text-primary" />
-                        Gestión Financiera
+                    <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-3">
+                        <DollarSign className="h-7 w-7 text-primary" />
+                        Finanzas
                     </h1>
-                    <p className="text-muted-foreground mt-1">Control de ingresos, gastos y reporte de balance</p>
+                    <p className="text-sm text-muted-foreground mt-1">Reporte de ingresos, gastos y balance del club</p>
 
                     {isSuperAdmin && (
                         <div className="mt-4 w-full max-w-xs">
                             <Select value={selectedClubId} onValueChange={setSelectedClubId}>
-                                <SelectTrigger className="glass border-primary/20">
+                                <SelectTrigger className="glass h-11">
                                     <SelectValue placeholder="Seleccionar club" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -198,163 +191,146 @@ export default function FinancePage() {
                         </div>
                     )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3">
                     <Button
                         onClick={() => openForm("income")}
                         disabled={!clubId}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-lg shadow-emerald-600/20"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-lg shadow-emerald-600/20 h-11 text-xs"
                     >
-                        <Plus className="h-4 w-4" /> Registrar Ingreso
+                        <Plus className="h-4 w-4" /> <span className="hidden xs:inline">Ingreso</span>
                     </Button>
                     <Button
                         onClick={() => openForm("expense")}
                         variant="destructive"
-                        className="gap-2 shadow-lg shadow-destructive/20"
+                        className="gap-2 shadow-lg shadow-destructive/20 h-11 text-xs"
                     >
-                        <Plus className="h-4 w-4" /> Registrar Gasto
+                        <Plus className="h-4 w-4" /> <span className="hidden xs:inline">Gasto</span>
                     </Button>
                 </div>
             </motion.div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-                    <Card className="glass overflow-hidden border-emerald-500/20">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                    <Card className="glass overflow-hidden border-emerald-500/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Ingresos</CardTitle>
+                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Ingresos</CardTitle>
                             <TrendingUp className="h-4 w-4 text-emerald-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-emerald-600">{formatCurrency(totals.income)}</div>
-                            <p className="text-xs text-muted-foreground mt-1">Acumulado histórico</p>
+                            <div className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums">{formatCurrency(totals.income)}</div>
                         </CardContent>
                     </Card>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                    <Card className="glass overflow-hidden border-destructive/20">
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+                    <Card className="glass overflow-hidden border-destructive/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Total Gastos</CardTitle>
+                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Gastos</CardTitle>
                             <TrendingDown className="h-4 w-4 text-destructive" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-destructive">{formatCurrency(totals.expense)}</div>
-                            <p className="text-xs text-muted-foreground mt-1">Acumulado histórico</p>
+                            <div className="text-xl sm:text-2xl font-black text-destructive tabular-nums">{formatCurrency(totals.expense)}</div>
                         </CardContent>
                     </Card>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                    <Card className="glass overflow-hidden border-primary/20">
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Balance General</CardTitle>
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+                    <Card className="glass overflow-hidden border-primary/20 shadow-lg relative group">
+                        <div className={cn(
+                            "absolute inset-0 opacity-5 transition-opacity group-hover:opacity-10",
+                            balance >= 0 ? "bg-primary" : "bg-destructive"
+                        )} />
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Balance</CardTitle>
                             <DollarSign className="h-4 w-4 text-primary" />
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="relative">
                             <div className={cn(
-                                "text-2xl font-bold",
+                                "text-xl sm:text-2xl font-black tabular-nums",
                                 balance >= 0 ? "text-primary" : "text-destructive"
                             )}>
                                 {formatCurrency(balance)}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1">Saldo disponible</p>
                         </CardContent>
                     </Card>
                 </motion.div>
             </div>
 
-            {/* Transactions Table */}
+            {/* Transactions Section */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="glass rounded-2xl overflow-hidden border-border/50"
+                className="glass rounded-3xl overflow-hidden border-border/50 shadow-2xl"
             >
-                <div className="p-6 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="p-5 sm:p-6 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h3 className="font-display font-bold text-lg flex items-center gap-2">
                         <HistoryIcon className="h-5 w-5 text-primary" />
-                        Historial de Transacciones
+                        Transacciones
                     </h3>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
                         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                            <SelectTrigger className="h-9 w-40 glass border-primary/20">
+                            <SelectTrigger className="h-10 w-full sm:w-40 glass border-primary/20 rounded-xl">
                                 <Filter className="h-4 w-4 mr-2" />
-                                <SelectValue placeholder="Filtrar por..." />
+                                <SelectValue placeholder="Filtrar" />
                             </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todo</SelectItem>
+                            <SelectContent className="glass">
+                                <SelectItem value="all">Todas</SelectItem>
                                 <SelectItem value="Membresía">Membresía</SelectItem>
                                 <SelectItem value="Otros">Otros Pagos</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" size="sm" className="gap-2 h-9">
+                        <Button variant="outline" size="sm" className="gap-2 h-10 w-full sm:w-auto rounded-xl border-primary/10">
                             <Download className="h-4 w-4" /> Exportar
                         </Button>
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop Table View (lg+) */}
+                <div className="hidden lg:block overflow-x-auto">
                     <Table>
                         <TableHeader className="bg-muted/30">
                             <TableRow>
-                                <TableHead className="w-[120px]">Fecha</TableHead>
-                                <TableHead>Categoría / Miembro</TableHead>
-                                <TableHead className="hidden md:table-cell">Descripción</TableHead>
-                                <TableHead>Tipo</TableHead>
-                                <TableHead className="text-right">Monto</TableHead>
-                                <TableHead className="w-[100px] text-center">Acciones</TableHead>
+                                <TableHead className="w-[120px] font-bold">Fecha</TableHead>
+                                <TableHead className="font-bold">Categoría / Miembro</TableHead>
+                                <TableHead className="font-bold">Descripción</TableHead>
+                                <TableHead className="font-bold text-right">Monto</TableHead>
+                                <TableHead className="w-[150px] text-center font-bold">Acciones</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {isLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Cargando transacciones...</TableCell>
+                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground animate-pulse font-medium italic">Sincronizando con el banco central de Quiver...</TableCell>
                                 </TableRow>
                             ) : entries?.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No hay transacciones registradas todavía.</TableCell>
+                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic">No hay transacciones registradas.</TableCell>
                                 </TableRow>
                             ) : entries?.map((entry) => (
-                                <TableRow key={entry.id} className="hover:bg-muted/20 transition-colors">
-                                    <TableCell className="font-medium">
+                                <TableRow key={entry.id} className="hover:bg-muted/20 transition-colors border-border/30">
+                                    <TableCell className="font-bold text-xs">
                                         {new Date(entry.entry_date).toLocaleDateString("es-CL")}
                                     </TableCell>
                                     <TableCell>
-                                        <div className="flex flex-col">
-                                            <Badge variant="outline" className="capitalize w-fit">
+                                        <div className="flex flex-col gap-1">
+                                            <Badge variant="outline" className="capitalize w-fit text-[10px] font-bold border-primary/30">
                                                 {entry.category}
                                             </Badge>
                                             {entry.members && (
-                                                <span className="text-xs font-medium text-foreground mt-1 flex items-center gap-1">
-                                                    <User className="h-3 w-3 text-muted-foreground" />
+                                                <span className="text-[10px] font-medium text-foreground mt-0.5 flex items-center gap-1">
+                                                    <User className="h-3 w-3 text-primary/60" />
                                                     {entry.members.full_name}
                                                 </span>
                                             )}
-                                            {(entry.payment_month && entry.payment_year) && (
-                                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                                                    {new Date(2000, entry.payment_month - 1).toLocaleString('es-ES', { month: 'short' })} {entry.payment_year}
-                                                </span>
-                                            )}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="hidden md:table-cell max-w-[200px] truncate">
+                                    <TableCell className="max-w-[250px] truncate text-xs text-muted-foreground">
                                         {entry.description || "-"}
                                     </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            {entry.type === "income" ? (
-                                                <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-none">
-                                                    Ingreso
-                                                </Badge>
-                                            ) : (
-                                                <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-200 border-none">
-                                                    Gasto
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </TableCell>
                                     <TableCell className={cn(
-                                        "text-right font-bold",
+                                        "text-right font-black tabular-nums",
                                         entry.type === "income" ? "text-emerald-600" : "text-rose-600"
                                     )}>
                                         {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
@@ -362,33 +338,14 @@ export default function FinancePage() {
                                     <TableCell>
                                         <div className="flex items-center justify-center gap-1">
                                             {entry.receipt_url && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-primary"
-                                                    onClick={() => handleViewReceipt(entry.receipt_url)}
-                                                >
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                                     <Receipt className="h-4 w-4" />
                                                 </Button>
                                             )}
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-muted-foreground hover:text-primary"
-                                                onClick={() => openForm(entry.type, entry)}
-                                            >
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type, entry)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={() => {
-                                                    if (confirm("¿Estás seguro de eliminar este registro?")) {
-                                                        deleteMutation.mutate(entry.id);
-                                                    }
-                                                }}
-                                            >
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -398,10 +355,76 @@ export default function FinancePage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {/* Mobile/Tablet Card View (<lg) */}
+                <div className="lg:hidden p-4 space-y-4 bg-muted/10">
+                    {isLoading ? (
+                        <div className="text-center py-20 animate-pulse italic text-muted-foreground">Cargando transacciones...</div>
+                    ) : entries?.length === 0 ? (
+                        <div className="text-center py-20 text-muted-foreground italic">No hay registros.</div>
+                    ) : entries?.map((entry) => (
+                        <motion.div
+                            key={entry.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-5 rounded-2xl bg-card border border-border/50 space-y-4 shadow-sm active:scale-[0.98] transition-transform"
+                        >
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-1.5">
+                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</p>
+                                    <Badge variant="outline" className="text-[9px] font-bold capitalize bg-primary/5 border-primary/20 h-5 px-2">
+                                        {entry.category}
+                                    </Badge>
+                                </div>
+                                <div className={cn(
+                                    "text-xl font-black tabular-nums",
+                                    entry.type === "income" ? "text-emerald-600" : "text-rose-600"
+                                )}>
+                                    {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                                {entry.members && (
+                                    <div className="flex items-center gap-2 text-[10px] font-bold py-1.5 px-3 bg-muted rounded-xl w-fit border border-border/30">
+                                        <User className="h-3 w-3 text-primary" />
+                                        {entry.members.full_name.toUpperCase()}
+                                    </div>
+                                )}
+                                {entry.description && (
+                                    <p className="text-xs text-muted-foreground leading-relaxed italic border-l-2 border-primary/20 pl-3">"{entry.description}"</p>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/30">
+                                <div className="flex gap-1">
+                                    {entry.receipt_url && (
+                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20" onClick={() => handleViewReceipt(entry.receipt_url)}>
+                                            <Receipt className="h-3.5 w-3.5" /> RECIBO
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="flex gap-1">
+                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type, entry)}>
+                                        <Pencil className="h-3.5 w-3.5" /> EDITAR
+                                    </Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 gap-1.5 text-destructive text-[10px] font-bold hover:bg-destructive/5"
+                                        onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             </motion.div>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="sm:max-w-[500px] glass p-0 border-none overflow-hidden">
+                <DialogContent className="sm:max-w-[500px] glass p-0 border-none overflow-hidden rounded-[2rem]">
                     <DialogHeader className="sr-only">
                         <DialogTitle>
                             {selectedType === "income" ? "Registrar Ingreso" : "Registrar Gasto"}
