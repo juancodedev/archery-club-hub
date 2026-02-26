@@ -114,6 +114,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
+      queryClient.invalidateQueries({ queryKey: ["all-members"] });
       toast({
         title: "✅ Miembro agregado exitosamente",
         description: `La cuenta está lista para usar inmediatamente con la contraseña: ${data.defaultPassword} (sin necesidad de validar el correo electrónico)`

@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Shield, Building2, Mail, MoreHorizontal } from "lucide-react";
+import { Search, UserPlus, Shield, Building2, Mail, MoreHorizontal, Pencil, Key, Filter, Trash2, ShieldCheck } from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -19,10 +19,20 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import AddMemberDialog from "@/components/admin/AddMemberDialog";
+import EditMemberDialog from "@/components/admin/EditMemberDialog";
+import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 
 interface Member {
     id: string;
@@ -30,51 +40,137 @@ interface Member {
     email: string;
     status: string;
     club_id: string;
+    identification?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    date_of_birth?: string | null;
+    observations?: string | null;
+    emergency_contact_name?: string | null;
+    emergency_contact_phone?: string | null;
+    shirt_size?: string | null;
+    windbreaker_size?: string | null;
+    display_name?: string | null;
     clubs: { name: string };
     member_roles: { role: string }[];
 }
 
 export default function MembersManagement() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedClubId, setSelectedClubId] = useState<string>("all");
+    const [clubs, setClubs] = useState<any[]>([]);
     const queryClient = useQueryClient();
-    const [isAddOpen, setIsAddOpen] = useState(false);
+
+    // Dialog states
+    const [editingMember, setEditingMember] = useState<any>(null);
+    const [rolesMember, setRolesMember] = useState<any>(null);
+
+    useEffect(() => {
+        fetchClubs();
+    }, []);
+
+    const fetchClubs = async () => {
+        const { data } = await supabase.from("clubs").select("id, name").order("name");
+        if (data) setClubs(data);
+    };
 
     const { data: members, isLoading } = useQuery({
-        queryKey: ["all-members"],
+        queryKey: ["all-members", selectedClubId],
         queryFn: async () => {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("members")
                 .select(`
                     *,
                     clubs(name),
                     member_roles(role)
-                `)
-                .order("created_at", { ascending: false });
+                `);
+            
+            if (selectedClubId !== "all") {
+                query = query.eq("club_id", selectedClubId);
+            }
+
+            const { data, error } = await query.order("created_at", { ascending: false });
 
             if (error) throw error;
             return data as Member[];
         }
     });
 
+    const resetPassword = useMutation({
+        mutationFn: async (member: Member) => {
+            const { data: clubData } = await supabase
+                .from("clubs")
+                .select("default_member_password")
+                .eq("id", member.club_id)
+                .single() as any;
+
+            const defaultPassword = clubData?.default_member_password || "Quiver2026!";
+
+            // We use the admin function to update the user password
+            const { error } = await supabase.rpc('admin_reset_user_password', {
+                p_user_id: member.user_id,
+                p_new_password: defaultPassword
+            });
+
+            if (error) throw error;
+            return { defaultPassword };
+        },
+        onSuccess: (data) => {
+            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${data.defaultPassword}`);
+        },
+        onError: (error: any) => {
+            toast.error("Error al resetear contraseña: " + error.message);
+        }
+    });
+
+    const deleteMember = useMutation({
+        mutationFn: async (memberId: string) => {
+            const { error } = await supabase.from("members").delete().eq("id", memberId);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["all-members"] });
+            toast.success("Miembro eliminado");
+        },
+        onError: (error: any) => {
+            toast.error("Error al eliminar: " + error.message);
+        }
+    });
+
     const filteredMembers = members?.filter(m =>
         m.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.clubs?.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="relative w-full md:w-96">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Buscar por nombre, email o club..."
-                        className="pl-10"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-1 flex-col sm:flex-row gap-3">
+                    <div className="relative w-full md:w-80">
+                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar por nombre o email..."
+                            className="pl-10"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <div className="w-full sm:w-64">
+                        <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+                            <SelectTrigger className="gap-2">
+                                <Filter className="h-4 w-4 text-muted-foreground" />
+                                <SelectValue placeholder="Filtrar por club" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todos los clubes</SelectItem>
+                                {clubs.map(c => (
+                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
-                <SuperAdminAddMemberDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["all-members"] })} />
+                <AddMemberDialog clubId={selectedClubId === "all" ? "" : selectedClubId} />
             </div>
 
             <div className="rounded-md border border-border/50 bg-card overflow-hidden">
@@ -103,7 +199,7 @@ export default function MembersManagement() {
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <span className="font-medium text-foreground">{m.full_name}</span>
-                                            <span className="text-xs text-muted-foreground">{m.email}</span>
+                                            <span className="text-xs text-muted-foreground">{m.email || "Sin email"}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -127,10 +223,39 @@ export default function MembersManagement() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <SuperAdminEditMemberDialog
-                                            member={m}
-                                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["all-members"] })}
-                                        />
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => setEditingMember(m)}>
+                                                    <Pencil className="h-4 w-4 mr-2" />Editar perfil completo
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles: m.member_roles.map(r => r.role) })}>
+                                                    <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                                                        resetPassword.mutate(m);
+                                                    }
+                                                }}>
+                                                    <Key className="h-4 w-4 mr-2" />Resetear contraseña
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem 
+                                                    className="text-destructive" 
+                                                    onClick={() => {
+                                                        if (confirm(`¿Estás seguro de eliminar a ${m.full_name}?`)) {
+                                                            deleteMember.mutate(m.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />Eliminar miembro
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -138,250 +263,24 @@ export default function MembersManagement() {
                     </TableBody>
                 </Table>
             </div>
+
+            {/* Comprehensive Dialogs */}
+            <EditMemberDialog
+                member={editingMember}
+                open={!!editingMember}
+                onOpenChange={(open) => !open && setEditingMember(null)}
+            />
+            
+            {rolesMember && (
+                <ManageRolesDialog
+                    memberId={rolesMember.id}
+                    memberName={rolesMember.full_name}
+                    clubId={rolesMember.club_id}
+                    currentRoles={rolesMember.roles}
+                    open={!!rolesMember}
+                    onOpenChange={(open) => !open && setRolesMember(null)}
+                />
+            )}
         </div>
     );
 }
-
-function SuperAdminAddMemberDialog({ onSuccess }: { onSuccess: () => void }) {
-    const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [clubs, setClubs] = useState<any[]>([]);
-
-    const [formData, setFormData] = useState({
-        full_name: "",
-        email: "",
-        club_id: "",
-        role: "arquero"
-    });
-
-    useEffect(() => {
-        if (open) {
-            fetchClubs();
-        }
-    }, [open]);
-
-    const fetchClubs = async () => {
-        const { data } = await supabase.from("clubs").select("id, name").order("name");
-        if (data) setClubs(data);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formData.club_id) {
-            toast.error("Debe seleccionar un club");
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const { data: member, error: memberError } = await supabase
-                .from("members")
-                .insert({
-                    full_name: formData.full_name,
-                    email: formData.email,
-                    club_id: formData.club_id,
-                    status: "activo"
-                })
-                .select()
-                .single();
-
-            if (memberError) throw memberError;
-
-            const { error: roleError } = await supabase
-                .from("member_roles")
-                .insert({
-                    member_id: member.id,
-                    club_id: formData.club_id,
-                    role: formData.role as any
-                });
-
-            if (roleError) throw roleError;
-
-            toast.success("Miembro creado correctamente");
-            onSuccess();
-            setOpen(false);
-            setFormData({ full_name: "", email: "", club_id: "", role: "arquero" });
-        } catch (error: any) {
-            toast.error("Error al crear miembro: " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button className="gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Crear Miembro
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Añadir Miembro Global</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                    <div className="space-y-2">
-                        <Label>Nombre Completo</Label>
-                        <Input
-                            placeholder="Juan Pérez"
-                            value={formData.full_name}
-                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Correo Electrónico</Label>
-                        <Input
-                            type="email"
-                            placeholder="juan@ejemplo.com"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Club de Destino</Label>
-                        <Select
-                            value={formData.club_id}
-                            onValueChange={(val) => setFormData({ ...formData, club_id: val })}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Seleccionar club..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {clubs.map(c => (
-                                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Rol Inicial</Label>
-                        <Select
-                            value={formData.role}
-                            onValueChange={(val) => setFormData({ ...formData, role: val })}
-                        >
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="arquero">Arquero</SelectItem>
-                                <SelectItem value="socio">Socio</SelectItem>
-                                <SelectItem value="entrenador">Entrenador</SelectItem>
-                                <SelectItem value="presidente">Presidente</SelectItem>
-                                <SelectItem value="administrador">Administrador</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Creando..." : "Crear Miembro"}
-                    </Button>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-function SuperAdminEditMemberDialog({ member, onSuccess }: { member: Member, onSuccess: () => void }) {
-    const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [status, setStatus] = useState(member.status);
-    const [selectedRoles, setSelectedRoles] = useState<string[]>(member.member_roles.map(r => r.role));
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-
-            // 1. Update status
-            const { error: statusError } = await supabase
-                .from("members")
-                .update({ status: status as any })
-                .eq("id", member.id);
-            if (statusError) throw statusError;
-
-            // 2. Manage roles (Nuclear approach: delete all and re-add for simplicity in this helper)
-            await supabase.from("member_roles").delete().eq("member_id", member.id);
-
-            const roleInserts = selectedRoles.map(role => ({
-                member_id: member.id,
-                club_id: member.club_id,
-                role: role as any
-            }));
-
-            if (roleInserts.length > 0) {
-                const { error: roleError } = await supabase.from("member_roles").insert(roleInserts);
-                if (roleError) throw roleError;
-            }
-
-            toast.success("Miembro actualizado correctamente");
-            onSuccess();
-            setOpen(false);
-        } catch (error: any) {
-            toast.error("Error al actualizar: " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const rolesList = ["administrador", "presidente", "entrenador", "arquero", "socio"];
-
-    const toggleRole = (role: string) => {
-        if (selectedRoles.includes(role)) {
-            setSelectedRoles(selectedRoles.filter(r => r !== role));
-        } else {
-            setSelectedRoles([...selectedRoles, role]);
-        }
-    };
-
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Editar Miembro {member.full_name}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-                    <div className="space-y-2">
-                        <Label>Estado</Label>
-                        <Select value={status} onValueChange={setStatus}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="activo">Activo</SelectItem>
-                                <SelectItem value="inactivo">Inactivo</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-3">
-                        <Label>Roles en el Club</Label>
-                        <div className="flex flex-wrap gap-2">
-                            {rolesList.map(role => (
-                                <Badge
-                                    key={role}
-                                    variant={selectedRoles.includes(role) ? "default" : "outline"}
-                                    className="cursor-pointer capitalize px-3 py-1"
-                                    onClick={() => toggleRole(role)}
-                                >
-                                    {role}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Guardando..." : "Guardar Cambios"}
-                    </Button>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
