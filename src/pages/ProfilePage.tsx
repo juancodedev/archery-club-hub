@@ -1,12 +1,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatRUT } from "@/lib/rut";
 import { formatCurrency, cn } from "@/lib/utils";
+
+const isMembershipCategory = (cat: string) => {
+    if (!cat) return false;
+    const c = cat.toLowerCase();
+    return c === 'membresía' || c === 'membresia' || c === 'cuota mensual';
+};
 
 export default function ProfilePage() {
   const { member, user } = useAuth();
@@ -234,12 +239,6 @@ export default function ProfilePage() {
     ]
     : [];
 
-  const isMembershipCategory = (cat: string) => {
-      if (!cat) return false;
-      const c = cat.toLowerCase();
-      return c === 'membresía' || c === 'membresia' || c === 'cuota mensual';
-  };
-
   return (
     <div className="space-y-6 max-w-4xl pb-20">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end">
@@ -408,25 +407,25 @@ export default function ProfilePage() {
                     <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Nombre Completo</Label>
-                        <Input value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                         <Label>Identificación (RUT/DNI)</Label>
-                        <Input value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: formatRUT(e.target.value) })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.identification} onChange={(e) => setFormData({ ...formData, identification: formatRUT(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
                         <Label>Teléfono</Label>
-                        <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                     </div>
                     <div className="space-y-2">
                         <Label>Dirección Particular</Label>
-                        <Input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                     </div>
                     </div>
 
                     <div className="space-y-2">
                     <Label>Antecedentes Médicos / Alergias</Label>
-                    <Input value={formData.medical_history} onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })} />
+                    <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.medical_history} onChange={(e) => setFormData({ ...formData, medical_history: e.target.value })} />
                     </div>
 
                     <div className="pt-4 border-t border-border">
@@ -436,13 +435,44 @@ export default function ProfilePage() {
                     <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                         <div className="space-y-2">
                         <Label>Nombre Contacto</Label>
-                        <Input value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.emergency_contact_name} onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })} />
                         </div>
                         <div className="space-y-2">
                         <Label>Teléfono Contacto</Label>
-                        <Input value={formData.emergency_contact_phone} onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })} />
+                        <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.emergency_contact_phone} onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })} />
                         </div>
                     </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-border">
+                        <h4 className="text-sm font-semibold mb-3 flex items-center gap-2 uppercase tracking-wider text-muted-foreground">
+                            <Wallet className="h-3 w-3 text-emerald-500" /> Información de Cobro
+                        </h4>
+                        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Día de Cobro Mensual</Label>
+                                <input 
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="number" 
+                                    min="1" 
+                                    max="31" 
+                                    value={(formData as any).billing_day} 
+                                    onChange={(e) => setFormData({ ...formData, billing_day: e.target.value } as any)} 
+                                    disabled={!isSuperAdmin}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Días de Gracia</Label>
+                                <input 
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    type="number" 
+                                    min="0" 
+                                    value={(formData as any).grace_days} 
+                                    onChange={(e) => setFormData({ ...formData, grace_days: e.target.value } as any)} 
+                                    disabled={!isSuperAdmin}
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex flex-col-reverse sm:flex-row gap-2 pt-4">
@@ -468,11 +498,11 @@ export default function ProfilePage() {
                     <div className="sm:col-span-2 border-t border-border/50 pt-4 grid grid-cols-2 gap-4">
                         <div>
                             <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Polera</p>
-                            <Badge variant="outline" className="font-mono">{formData.shirt_size || "—"}</Badge>
+                            <Badge variant="outline" className="font-mono">{(formData as any).shirt_size || "—"}</Badge>
                         </div>
                         <div>
                             <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Cortavientos</p>
-                            <Badge variant="outline" className="font-mono">{formData.windbreaker_size || "—"}</Badge>
+                            <Badge variant="outline" className="font-mono">{(formData as any).windbreaker_size || "—"}</Badge>
                         </div>
                     </div>
 
