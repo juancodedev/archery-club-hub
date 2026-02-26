@@ -13,12 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { formatRUT } from "@/lib/rut";
 import { formatCurrency, cn } from "@/lib/utils";
-
-const isMembershipCategory = (cat: string) => {
-    if (!cat) return false;
-    const c = cat.toLowerCase();
-    return c === 'membresía' || c === 'membresia' || c === 'cuota mensual';
-};
+import { calculateFinancialStatus, isMembershipCategory } from "@/lib/membershipUtils";
 
 export default function ProfilePage() {
   const { member, user } = useAuth();
@@ -123,27 +118,7 @@ export default function ProfilePage() {
   });
 
   const financialStatus = useMemo(() => {
-      if (!fullMember || !payments) return "cargando";
-      
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      const billingDay = (fullMember as any).billing_day || new Date(fullMember.enrollment_date).getDate();
-      const graceDays = (fullMember as any).grace_days ?? 7;
-      
-      const hasPaid = payments.some(p => 
-          isMembershipCategory(p.category) && 
-          p.payment_month === month && 
-          p.payment_year === year
-      );
-
-      if (hasPaid) return "vigente";
-      
-      if (now.getDate() > (billingDay + graceDays)) {
-          return "atrasado";
-      }
-
-      return "vigente";
+      return calculateFinancialStatus(fullMember, payments || []);
   }, [fullMember, payments]);
 
   const changePassword = useMutation({

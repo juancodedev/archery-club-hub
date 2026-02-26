@@ -20,6 +20,7 @@ import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialo
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import { Trophy, Wallet } from "lucide-react";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
+import { calculateFinancialStatus } from "@/lib/membershipUtils";
 
 export default function AdminPage() {
   const { member } = useAuth();
@@ -63,32 +64,15 @@ export default function AdminPage() {
       
       if (error) throw error;
       
-      // Obtener pagos del mes actual para todos los miembros del club
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
-      
-      const { data: payments } = await supabase
+      // Obtener todos los pagos del club para el cálculo de vigencia
+      const { data: allPayments } = await supabase
         .from("financial_entries")
-        .select("member_id")
-        .eq("club_id", selectedClubId)
-        .eq("payment_month", month)
-        .eq("payment_year", year)
-        .filter("category", "ilike", "membres%"); // Membresía o Membresia
-
-      const paidMemberIds = new Set(payments?.map(p => p.member_id) || []);
+        .select("*")
+        .eq("club_id", selectedClubId);
 
       return data.map(m => {
-          const billingDay = m.billing_day || new Date(m.enrollment_date).getDate();
-          const graceDays = m.grace_days ?? 7;
-          const currentDay = now.getDate();
-          const hasPaid = paidMemberIds.has(m.id);
-          
-          let financialStatus = "vigente";
-          if (!hasPaid && currentDay > (billingDay + graceDays)) {
-              financialStatus = "atrasado";
-          }
-
+          const memberPayments = allPayments?.filter(p => p.member_id === m.id) || [];
+          const financialStatus = calculateFinancialStatus(m, memberPayments);
           return { ...m, financialStatus };
       });
     },
