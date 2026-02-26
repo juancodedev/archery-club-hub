@@ -50,6 +50,9 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
   const [shirtSize, setShirtSize] = useState("");
   const [windbreakerSize, setWindbreakerSize] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   const [billingDay, setBillingDay] = useState("");
   const [graceDays, setGraceDays] = useState("7");
 
