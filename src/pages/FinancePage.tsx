@@ -15,6 +15,7 @@ import {
     Receipt,
     Eye,
     Trash2,
+    Pencil,
     User,
     History as HistoryIcon
 } from "lucide-react";
