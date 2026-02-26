@@ -50,9 +50,8 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
   const [shirtSize, setShirtSize] = useState("");
   const [windbreakerSize, setWindbreakerSize] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [guardianName, setGuardianName] = useState("");
-  const [guardianPhone, setGuardianPhone] = useState("");
-  const [guardianEmail, setGuardianEmail] = useState("");
+  const [billingDay, setBillingDay] = useState("");
+  const [graceDays, setGraceDays] = useState("7");
 
   useEffect(() => {
     if (member) {
@@ -72,6 +71,8 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       setGuardianName(member.guardian_name || "");
       setGuardianPhone(member.guardian_phone || "");
       setGuardianEmail(member.guardian_email || "");
+      setBillingDay(String((member as any).billing_day || ""));
+      setGraceDays(String((member as any).grace_days ?? "7"));
     }
   }, [member]);
 
@@ -97,6 +98,8 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
           guardian_name: guardianName || null,
           guardian_phone: guardianPhone || null,
           guardian_email: guardianEmail || null,
+          billing_day: billingDay ? Number(billingDay) : null,
+          grace_days: graceDays ? Number(graceDays) : 7,
         } as any)
         .eq("id", member.id);
       if (error) throw error;
@@ -184,6 +187,38 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             <Label>Observaciones</Label>
             <Input value={observations} onChange={(e) => setObservations(e.target.value)} />
           </div>
+
+          {/* Configuración de Pagos */}
+          <div className="glass rounded-xl p-4 space-y-4 border-l-4 border-emerald-500">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-emerald-500" /> Configuración de Pagos
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Día de Cobro (1-31)</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="31" 
+                  value={billingDay} 
+                  onChange={(e) => setBillingDay(e.target.value)} 
+                  placeholder="Día del mes..."
+                />
+                <p className="text-[10px] text-muted-foreground">Día del mes en que vence la membresía.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Días de Gracia</Label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={graceDays} 
+                  onChange={(e) => setGraceDays(e.target.value)} 
+                />
+                <p className="text-[10px] text-muted-foreground">Días adicionales antes de marcar como atrasado.</p>
+              </div>
+            </div>
+          </div>
+
           <Button type="submit" className="w-full" disabled={updateMember.isPending}>
             {updateMember.isPending ? "Guardando..." : "Guardar cambios"}
           </Button>

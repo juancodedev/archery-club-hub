@@ -55,12 +55,42 @@ export default function AdminPage() {
     queryKey: ["club-members", selectedClubId],
     queryFn: async () => {
       if (!selectedClubId || selectedClubId === "null") return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("members")
         .select("*, member_roles(role)")
         .eq("club_id", selectedClubId)
         .order("full_name");
-      return data || [];
+      
+      if (error) throw error;
+      
+      // Obtener pagos del mes actual para todos los miembros del club
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      
+      const { data: payments } = await supabase
+        .from("financial_entries")
+        .select("member_id")
+        .eq("club_id", selectedClubId)
+        .eq("payment_month", month)
+        .eq("payment_year", year)
+        .filter("category", "ilike", "membres%"); // Membresía o Membresia
+
+      const paidMemberIds = new Set(payments?.map(p => p.member_id) || []);
+
+      return data.map(m => {
+          const billingDay = m.billing_day || new Date(m.enrollment_date).getDate();
+          const graceDays = m.grace_days ?? 7;
+          const currentDay = now.getDate();
+          const hasPaid = paidMemberIds.has(m.id);
+          
+          let financialStatus = "vigente";
+          if (!hasPaid && currentDay > (billingDay + graceDays)) {
+              financialStatus = "atrasado";
+          }
+
+          return { ...m, financialStatus };
+      });
     },
     enabled: !!selectedClubId,
   });
@@ -166,9 +196,16 @@ export default function AdminPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize">
-                          {m.status}
-                        </Badge>
+                        <div className="flex flex-col gap-1">
+                            <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit">
+                            {m.status}
+                            </Badge>
+                            {m.status === "activo" && (
+                                <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="capitalize w-fit text-[10px] bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                                    {m.financialStatus}
+                                </Badge>
+                            )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
                         {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
