@@ -98,15 +98,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className={cn(
-      "flex min-h-screen transition-colors duration-500",
+      "flex min-h-screen transition-colors duration-500 overflow-hidden",
       isSuperAdmin ? "bg-superadmin" : "bg-background"
     )}>
-      {/* Sidebar - Desktop & Tablet Overlay */}
+      {/* Sidebar - Desktop relative, Mobile fixed overlay */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out md:static md:translate-x-0",
-        isSidebarOpen ? "translate-x-0 shadow-2xl md:shadow-none" : "-translate-x-full"
+        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+        isSidebarOpen 
+            ? "translate-x-0 shadow-2xl md:shadow-none md:w-64" 
+            : "-translate-x-full md:w-0 md:border-none md:opacity-0"
       )}>
-        <div className="flex items-center gap-3 p-6 border-b border-border">
+        <div className="flex items-center gap-3 p-6 border-b border-border min-w-[256px]">
           <div className={cn(
             "flex h-9 w-9 items-center justify-center rounded-lg",
             isSuperAdmin ? "bg-yellow-500/10" : "bg-primary/10"

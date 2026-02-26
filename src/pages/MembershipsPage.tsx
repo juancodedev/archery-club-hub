@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { calculateFinancialStatus, isMembershipCategory, isInscriptionCategory } from "@/lib/membershipUtils";
 
 export default function MembershipsPage() {
     const { member } = useAuth();
@@ -40,12 +41,12 @@ export default function MembershipsPage() {
                 .from("financial_entries")
                 .select("*")
                 .eq("club_id", clubId)
-                .gte("entry_date", startMonth.toISOString().split('T')[0])
-                .or('category.ilike.membresía,category.ilike.membresia,category.ilike.cuota mensual');
+                .gte("entry_date", startMonth.toISOString().split('T')[0]);
 
             if (paymentsError) throw paymentsError;
 
             return members.map(m => {
+                const memberPayments = payments?.filter(p => p.member_id === m.id) || [];
                 const billingDay = m.billing_day || new Date(m.enrollment_date).getDate();
                 const graceDays = m.grace_days ?? 7;
                 
@@ -56,33 +57,44 @@ export default function MembershipsPage() {
                     const month = d.getMonth() + 1;
                     const year = d.getFullYear();
                     
-                    const paid = payments?.some(p => 
-                        p.member_id === m.id && 
+                    const paid = memberPayments.some(p => 
+                        isMembershipCategory(p.category) && 
                         p.payment_month === month && 
                         p.payment_year === year
                     );
 
                     let status = paid ? "paid" : "pending";
                     
-                    // If it's the current month and hasn't been paid, check if it's overdue
-                    if (!paid && i === 0) {
-                        if (now.getDate() > (billingDay + graceDays)) {
-                            status = "overdue";
+                    if (!paid) {
+                        const isCurrentMonth = i === 0;
+                        if (isCurrentMonth) {
+                            if (now.getDate() > (billingDay + graceDays)) {
+                                status = "overdue";
+                            }
+                        } else {
+                            // Check if this month was after enrollment
+                            const monthDate = new Date(year, month - 1, 1);
+                            const enrollmentDate = new Date(m.enrollment_date);
+                            const startOfEnrollmentMonth = new Date(enrollmentDate.getFullYear(), enrollmentDate.getMonth(), 1);
+                            
+                            if (monthDate >= startOfEnrollmentMonth) {
+                                status = "overdue";
+                            }
                         }
-                    } else if (!paid && i > 0) {
-                        // Past months not paid are always overdue
-                        status = "overdue";
                     }
 
                     return { month, year, status, label: d.toLocaleString('es-ES', { month: 'short' }) };
                 }).reverse();
 
-                const isOverdue = monthsStatus.some(ms => ms.status === 'overdue');
+                // Check if inscription is missing
+                const hasPaidInscription = memberPayments.some(p => isInscriptionCategory(p.category));
+                const overallStatus = calculateFinancialStatus(m, memberPayments);
 
                 return {
                     ...m,
                     monthsStatus,
-                    overallStatus: isOverdue ? "atrasado" : "al día"
+                    overallStatus,
+                    hasPaidInscription
                 };
             });
         },
@@ -94,7 +106,7 @@ export default function MembershipsPage() {
             const matchesSearch = m.full_name.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = statusFilter === "all" || 
                                  (statusFilter === "overdue" && m.overallStatus === "atrasado") ||
-                                 (statusFilter === "ok" && m.overallStatus === "al día");
+                                 (statusFilter === "ok" && m.overallStatus === "vigente");
             return matchesSearch && matchesStatus;
         });
     }, [membersData, searchTerm, statusFilter]);
@@ -154,9 +166,14 @@ export default function MembershipsPage() {
                                 <div className="space-y-1">
                                     <h3 className="font-bold text-foreground text-lg">{m.full_name}</h3>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={m.overallStatus === "al día" ? "secondary" : "destructive"} className="text-[10px] h-5">
+                                        <Badge variant={m.overallStatus === "vigente" ? "secondary" : "destructive"} className="text-[10px] h-5">
                                             {m.overallStatus.toUpperCase()}
                                         </Badge>
+                                        {!m.hasPaidInscription && (
+                                            <Badge variant="outline" className="text-[10px] h-5 text-amber-600 border-amber-600/30">
+                                                FALTA INSCRIPCIÓN
+                                            </Badge>
+                                        )}
                                         <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                             <CalendarDays className="h-3 w-3" /> Cobro: día {m.billing_day || new Date(m.enrollment_date).getDate()}
                                         </span>
