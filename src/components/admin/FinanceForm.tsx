@@ -35,24 +35,24 @@ interface FinanceFormProps {
 }
 
 const CATEGORIES = {
-    income: ["Torneo", "Cuota Mensual", "Inscripción", "Venta Equipamiento", "Capacitación", "Otro"],
+    income: ["Membresía", "Otros Pagos", "Torneo", "Venta Equipamiento", "Capacitación", "Otro"],
     expense: ["Mantenimiento", "Alquiler", "Equipamiento", "Premiación", "Servicios", "Insumos", "Otro"]
 };
 
-export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormProps) {
+export default function FinanceForm({ type, onSuccess, onCancel, initialData }: FinanceFormProps & { initialData?: any }) {
     const { member } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    const [amount, setAmount] = useState("");
-    const [category, setCategory] = useState("");
-    const [description, setDescription] = useState("");
-    const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-    const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
-    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-    const [paymentMonth, setPaymentMonth] = useState<string>(String(new Date().getMonth() + 1));
-    const [paymentYear, setPaymentYear] = useState<string>(String(new Date().getFullYear()));
+    const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : "");
+    const [category, setCategory] = useState(initialData?.category || "");
+    const [description, setDescription] = useState(initialData?.description || "");
+    const [date, setDate] = useState(initialData?.entry_date || new Date().toISOString().split("T")[0]);
+    const [receiptUrl, setReceiptUrl] = useState<string | null>(initialData?.receipt_url || null);
+    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialData?.member_id || null);
+    const [paymentMonth, setPaymentMonth] = useState<string>(String(initialData?.payment_month || new Date().getMonth() + 1));
+    const [paymentYear, setPaymentYear] = useState<string>(String(initialData?.payment_year || new Date().getFullYear()));
 
     const clubId = member?.club_id;
 
@@ -87,7 +87,7 @@ export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormPr
     const handleCategoryChange = (val: string) => {
         setCategory(val);
         if (type === "income" && club) {
-            if (val === "Cuota Mensual") setAmount(String(club.monthly_fee || ""));
+            if (val === "Membresía") setAmount(String(club.monthly_fee || ""));
             if (val === "Inscripción") setAmount(String(club.inscription_fee || ""));
         }
     };
@@ -127,7 +127,7 @@ export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormPr
 
         try {
             setLoading(true);
-            const { error } = await supabase.from("financial_entries").insert({
+            const payload = {
                 club_id: clubId,
                 type,
                 category,
@@ -137,14 +137,28 @@ export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormPr
                 receipt_url: receiptUrl,
                 created_by: member?.user_id,
                 member_id: selectedMemberId,
-                payment_month: (category === "Cuota Mensual" || category === "Inscripción") ? Number(paymentMonth) : null,
-                payment_year: (category === "Cuota Mensual" || category === "Inscripción") ? Number(paymentYear) : null
-            });
+                payment_month: (category === "Membresía" || category === "Inscripción") ? Number(paymentMonth) : null,
+                payment_year: (category === "Membresía" || category === "Inscripción") ? Number(paymentYear) : null
+            };
+
+            let error;
+            if (initialData?.id) {
+                const { error: updateError } = await supabase
+                    .from("financial_entries")
+                    .update(payload)
+                    .eq("id", initialData.id);
+                error = updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from("financial_entries")
+                    .insert(payload);
+                error = insertError;
+            }
 
             if (error) throw error;
 
             toast({
-                title: type === "income" ? "Ingreso registrado" : "Gasto registrado",
+                title: initialData?.id ? "Registro actualizado" : (type === "income" ? "Ingreso registrado" : "Gasto registrado"),
                 description: "La transacción se ha guardado correctamente."
             });
             onSuccess();
@@ -204,7 +218,7 @@ export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormPr
                                 required
                             />
                         </div>
-                        {type === "income" && category === "Cuota Mensual" && club?.monthly_fee > 0 && (
+                        {type === "income" && category === "Membresía" && club?.monthly_fee > 0 && (
                             <p className="text-[10px] text-emerald-600 font-medium">Cargando monto por defecto del club</p>
                         )}
                         {type === "income" && category === "Inscripción" && club?.inscription_fee > 0 && (
@@ -233,7 +247,7 @@ export default function FinanceForm({ type, onSuccess, onCancel }: FinanceFormPr
                         </div>
                     )}
 
-                    {(category === "Cuota Mensual" || category === "Inscripción") && (
+                    {(category === "Membresía" || category === "Inscripción") && (
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label className="flex items-center gap-2">
