@@ -1,9 +1,10 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -15,6 +16,7 @@ const navItems = [
 
 const adminItems = [
   { to: "/admin", icon: Users, label: "Miembros" },
+  { to: "/admin/memberships", icon: Wallet, label: "Membresías" },
   { to: "/billing", icon: CreditCard, label: "Planes y alumnos" },
   { to: "/settings", icon: Settings, label: "Configuración" },
 ];
@@ -26,6 +28,7 @@ const presidenteItems = [
 const superAdminItems = [
   { to: "/super-admin/clubs", icon: Building2, label: "Clubes" },
   { to: "/super-admin/members", icon: Users, label: "Miembros" },
+  { to: "/admin/memberships", icon: Wallet, label: "Membresías" },
   { to: "/super-admin/finances", icon: DollarSign, label: "Finanzas" },
   { to: "/super-admin/plans", icon: CreditCard, label: "Planes y alumnos" },
   { to: "/super-admin/settings", icon: Settings, label: "Configuración" },
@@ -35,6 +38,20 @@ const superAdminItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { member, signOut, isSuperAdminSubdomain } = useAuth();
   const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar on mobile when navigating
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Adjust sidebar default based on screen size
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setIsSidebarOpen(!isMobile);
+  }, []);
 
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
 
@@ -49,6 +66,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     : [
       ...(isSecretaria ? [{ to: "/admin", icon: Users, label: "Miembros" }] : []),
       ...(isTesorero ? [
+        { to: "/admin/memberships", icon: Wallet, label: "Membresías" },
         { to: "/admin/finances", icon: DollarSign, label: "Finanzas" },
         { to: "/billing", icon: CreditCard, label: "Planes y alumnos" }
       ] : []),
@@ -83,8 +101,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       "flex min-h-screen transition-colors duration-500",
       isSuperAdmin ? "bg-superadmin" : "bg-background"
     )}>
-      {/* Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-card">
+      {/* Sidebar - Desktop & Tablet Overlay */}
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out md:static md:translate-x-0",
+        isSidebarOpen ? "translate-x-0 shadow-2xl md:shadow-none" : "-translate-x-full"
+      )}>
         <div className="flex items-center gap-3 p-6 border-b border-border">
           <div className={cn(
             "flex h-9 w-9 items-center justify-center rounded-lg",
@@ -102,72 +123,74 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}>
             {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <DivisionChangeNotifications />
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
+                <CloseIcon className="h-5 w-5 text-muted-foreground" />
+            </Button>
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navItems.map(renderLink)}
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border" />
+              <p className="px-3 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Administración</p>
               {uniqueItems.map(renderLink)}
             </>
           )}
         </nav>
 
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border bg-muted/20">
           <div className="mb-3 px-3">
             <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
-            <p className="text-xs text-muted-foreground truncate">{member?.email}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
           </div>
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
+          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={signOut}>
             <LogOut className="h-4 w-4" />
             Cerrar sesión
           </Button>
         </div>
       </aside>
 
-      {/* Mobile header */}
-      <div className="flex flex-1 flex-col">
-        <header className="flex md:hidden items-center justify-between border-b border-border p-3 bg-card">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            <span className="font-display font-bold text-foreground">
-              {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <DivisionChangeNotifications />
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="h-4 w-4" />
+      {/* Backdrop for mobile */}
+      {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col min-w-0">
+        <header className="flex h-14 items-center justify-between border-b border-border px-4 bg-card sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                <Menu className="h-6 w-6 text-foreground" />
             </Button>
+            <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                <span className="font-display font-bold text-foreground truncate max-w-[150px] sm:max-w-none">
+                {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
+                </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+                <DivisionChangeNotifications />
+            </div>
+            {member?.id && (
+                <Link to="/profile">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary hover:bg-primary/20 transition-colors">
+                        <User className="h-4 w-4" />
+                    </div>
+                </Link>
+            )}
           </div>
         </header>
 
-        {/* Mobile nav */}
-        <nav className="flex md:hidden border-b border-border bg-card overflow-x-auto scrollbar-hide">
-          {[...navItems, ...(isAdmin ? uniqueItems : [])].map(({ to, icon: Icon, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-3 text-xs font-medium whitespace-nowrap transition-colors min-w-[72px]",
-                location.pathname === to
-                  ? isSuperAdmin
-                    ? "text-indigo-400 border-b-2 border-indigo-400"
-                    : "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground"
-              )}
-            >
-              <Icon className={cn("h-5 w-5", location.pathname === to && isSuperAdmin && "text-indigo-400")} />
-              <span className="text-[10px]">{label}</span>
-            </Link>
-          ))}
-        </nav>
-
-        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-auto relative">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto relative">
           {member?.club_status === 'bloqueado' && !isSuperAdmin ? (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
               <div className="max-w-md w-full glass p-8 rounded-[2rem] text-center space-y-6 shadow-2xl border-destructive/20">
