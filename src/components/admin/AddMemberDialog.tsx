@@ -39,6 +39,8 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const [guardianName, setGuardianName] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
+  const [billingDay, setBillingDay] = useState(String(new Date().getDate()));
+  const [graceDays, setGraceDays] = useState("7");
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
   const [clubs, setClubs] = useState<any[]>([]);
@@ -104,7 +106,9 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         p_guardian_phone: isMinor ? guardianPhone : null,
         p_guardian_email: isMinor ? guardianEmail : null,
         p_club_id: targetClubId,
-        p_role: role
+        p_role: role,
+        p_billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
+        p_grace_days: graceDays ? Number(graceDays) : 7
       }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: any };
 
       if (error) throw error;
@@ -297,6 +301,37 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
               </div>
             </div>
           )}
+
+          {/* Configuración de Pagos */}
+          <div className="glass rounded-xl p-4 space-y-4 border-l-4 border-emerald-500">
+            <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-emerald-500" /> Configuración de Pagos
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Día de Cobro (1-31)</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="31" 
+                  value={billingDay} 
+                  onChange={(e) => setBillingDay(e.target.value)} 
+                  placeholder="Día del mes..."
+                />
+                <p className="text-[10px] text-muted-foreground">Vencimiento mensual. Por defecto: hoy.</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Días de Gracia</Label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={graceDays} 
+                  onChange={(e) => setGraceDays(e.target.value)} 
+                />
+                <p className="text-[10px] text-muted-foreground">Días extra antes de marcar atrasado.</p>
+              </div>
+            </div>
+          </div>
 
           {/* Rol */}
           <div className="space-y-2">

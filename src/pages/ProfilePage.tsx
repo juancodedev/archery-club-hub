@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,9 @@ export default function ProfilePage() {
           windbreaker_size: (data as any).windbreaker_size || "",
           display_name: (data as any).display_name || "",
           avatar_url: (data as any).avatar_url || "",
-          roles: (data as any).member_roles?.map((r: any) => r.role) || []
+          roles: (data as any).member_roles?.map((r: any) => r.role) || [],
+          billing_day: String((data as any).billing_day || ""),
+          grace_days: String((data as any).grace_days ?? "7")
         } as any);
       }
       return data;
@@ -114,6 +116,30 @@ export default function ProfilePage() {
     },
     enabled: !!selectedMemberId
   });
+
+  const financialStatus = useMemo(() => {
+      if (!fullMember || !payments) return "cargando";
+      
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const billingDay = (fullMember as any).billing_day || new Date(fullMember.enrollment_date).getDate();
+      const graceDays = (fullMember as any).grace_days ?? 7;
+      
+      const hasPaid = payments.some(p => 
+          isMembershipCategory(p.category) && 
+          p.payment_month === month && 
+          p.payment_year === year
+      );
+
+      if (hasPaid) return "vigente";
+      
+      if (now.getDate() > (billingDay + graceDays)) {
+          return "atrasado";
+      }
+
+      return "vigente";
+  }, [fullMember, payments]);
 
   const changePassword = useMutation({
     mutationFn: async () => {
@@ -348,9 +374,16 @@ export default function ProfilePage() {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] uppercase font-bold text-muted-foreground">Estado de membresía</span>
-                        <Badge variant={(fullMember as any).status === "activo" ? "default" : "destructive"} className="h-5 px-2">
-                            {(fullMember as any).status}
-                        </Badge>
+                        <div className="flex gap-2">
+                            <Badge variant={(fullMember as any).status === "activo" ? "default" : "destructive"} className="h-5 px-2">
+                                {(fullMember as any).status}
+                            </Badge>
+                            {(fullMember as any).status === "activo" && (
+                                <Badge variant={financialStatus === "vigente" ? "secondary" : "destructive"} className="h-5 px-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                                    {financialStatus}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                     {(fullMember as any).observations && (
                         <p className="text-xs text-muted-foreground italic border-t border-border/50 pt-2 mt-2">
