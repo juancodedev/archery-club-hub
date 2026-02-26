@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign } from "lucide-react";
+import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState } from "react";
@@ -207,6 +207,12 @@ export default function ProfilePage() {
       { icon: Phone, label: "Tel. Emergencia", value: (fullMember as any).emergency_contact_phone || "—", key: "emergency_contact_phone" },
     ]
     : [];
+
+  const isMembershipCategory = (cat: string) => {
+      if (!cat) return false;
+      const c = cat.toLowerCase();
+      return c === 'membresía' || c === 'membresia' || c === 'cuota mensual';
+  };
 
   return (
     <div className="space-y-6 max-w-4xl pb-20">
@@ -454,7 +460,7 @@ export default function ProfilePage() {
                         <Wallet className="h-4 w-4 text-emerald-500" /> Control de Pagos
                     </h3>
                     <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        Al día
+                        Estado Actual
                     </Badge>
                 </div>
 
@@ -472,7 +478,11 @@ export default function ProfilePage() {
                                 date.setMonth(date.getMonth() - i);
                                 const month = date.getMonth() + 1;
                                 const year = date.getFullYear();
-                                const p = payments.find(p => p.category === 'membresia' && p.payment_month === month && p.payment_year === year);
+                                const p = payments.find(p => 
+                                    isMembershipCategory(p.category) 
+                                    && p.payment_month === month 
+                                    && p.payment_year === year
+                                );
                                 
                                 return (
                                     <div key={i} className={cn(
@@ -501,14 +511,14 @@ export default function ProfilePage() {
                                     <div className="flex items-center gap-3">
                                         <div className={cn(
                                             "h-8 w-8 rounded-lg flex items-center justify-center",
-                                            p.category === 'membresia' ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600"
+                                            isMembershipCategory(p.category) ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-600"
                                         )}>
-                                            {p.category === 'membresia' ? <Calendar className="h-4 w-4" /> : <DollarSign className="h-4 w-4" />}
+                                            {isMembershipCategory(p.category) ? <Calendar className="h-4 w-4" /> : <DollarSign className="h-4 w-4" />}
                                         </div>
                                         <div>
                                             <p className="text-xs font-bold capitalize">{p.category}</p>
                                             <p className="text-[9px] text-muted-foreground">
-                                                {new Date(p.entry_date).toLocaleDateString("es-CL")}
+                                                {new Date(p.entry_date).toLocaleDateString("es-CL")} {p.description ? `• ${p.description}` : ""}
                                             </p>
                                         </div>
                                     </div>
