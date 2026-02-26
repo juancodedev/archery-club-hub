@@ -51,6 +51,7 @@ export default function FinancePage() {
     const [selectedClubId, setSelectedClubId] = useState<string>(member?.club_id || "");
     const [clubs, setClubs] = useState<any[]>([]);
     const [editingEntry, setEditingEntry] = useState<any>(null);
+    const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
     useEffect(() => {
         if (isSuperAdmin) {
@@ -80,14 +81,23 @@ export default function FinancePage() {
     const clubId = selectedClubId;
 
     const { data: entries, isLoading } = useQuery({
-        queryKey: ["financial-entries", clubId],
+        queryKey: ["financial-entries", clubId, categoryFilter],
         queryFn: async () => {
             if (!clubId) return [];
-            const { data, error } = await supabase
+            let query = supabase
                 .from("financial_entries")
                 .select("*, members(full_name)")
-                .eq("club_id", clubId)
-                .order("entry_date", { ascending: false });
+                .eq("club_id", clubId);
+            
+            if (categoryFilter !== "all") {
+                if (categoryFilter === "Otros") {
+                    query = query.neq("category", "Membresía");
+                } else {
+                    query = query.eq("category", categoryFilter);
+                }
+            }
+
+            const { data, error } = await query.order("entry_date", { ascending: false });
 
             if (error) throw error;
             return data;
@@ -265,9 +275,17 @@ export default function FinancePage() {
                         Historial de Transacciones
                     </h3>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="gap-2 h-9">
-                            <Filter className="h-4 w-4" /> Filtrar
-                        </Button>
+                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                            <SelectTrigger className="h-9 w-40 glass border-primary/20">
+                                <Filter className="h-4 w-4 mr-2" />
+                                <SelectValue placeholder="Filtrar por..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Todo</SelectItem>
+                                <SelectItem value="Membresía">Membresía</SelectItem>
+                                <SelectItem value="Otros">Otros Pagos</SelectItem>
+                            </SelectContent>
+                        </Select>
                         <Button variant="outline" size="sm" className="gap-2 h-9">
                             <Download className="h-4 w-4" /> Exportar
                         </Button>
