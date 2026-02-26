@@ -97,13 +97,12 @@ export default function MembersManagement() {
 
     const resetPassword = useMutation({
         mutationFn: async (member: Member) => {
-            const { data: clubData } = await supabase
-                .from("clubs")
-                .select("default_member_password")
-                .eq("id", member.club_id)
-                .single() as any;
+            const { data: defaultPassword, error: passwordError } = await supabase
+                .rpc('get_club_default_password', { p_club_id: member.club_id });
 
-            const defaultPassword = clubData?.default_member_password || "Quiver2026!";
+            if (passwordError) throw new Error("Permiso denegado para ver la contraseña del club.");
+            
+            const finalPassword = defaultPassword || "Quiver2026!";
 
             // We use the admin function to update the user password
             const { error } = await supabase.rpc('admin_reset_user_password', {
