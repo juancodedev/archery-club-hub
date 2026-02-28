@@ -11,6 +11,8 @@ import { Building2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect } from "react";
 
+interface Plan { id: string; name: string; price: number; }
+
 export default function RegisterClubPage() {
   const [clubName, setClubName] = useState("");
   const [city, setCity] = useState("");
@@ -19,7 +21,7 @@ export default function RegisterClubPage() {
   const [adminName, setAdminName] = useState("");
   const [password, setPassword] = useState("");
   const [planId, setPlanId] = useState("");
-  const [plans, setPlans] = useState<any[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -72,8 +74,8 @@ export default function RegisterClubPage() {
 
       // Ir directamente al dashboard
       navigate("/dashboard");
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

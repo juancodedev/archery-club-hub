@@ -8,7 +8,7 @@ import {
 import MemberDivisionsManager from "./MemberDivisionsManager";
 
 interface MemberDivisionsDialogProps {
-    member: any;
+    member: { id: string; full_name: string } | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }

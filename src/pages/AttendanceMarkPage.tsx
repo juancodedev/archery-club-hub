@@ -74,7 +74,7 @@ export default function AttendanceMarkPage() {
                             member_id: member.id,
                             club_id: member.club_id,
                             attended: true
-                        } as any);
+                        });
 
                     if (insertError) throw insertError;
                 }
@@ -83,10 +83,10 @@ export default function AttendanceMarkPage() {
                 setMessage("¡Asistencia registrada correctamente!");
                 toast({ title: "Asistencia confirmada", description: "Tu participación ha sido registrada." });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Error marking attendance:", error);
                 setStatus("error");
-                setMessage(error.message || "Ocurrió un error al registrar la asistencia");
+                setMessage((error as Error).message || "Ocurrió un error al registrar la asistencia");
             }
         }
 

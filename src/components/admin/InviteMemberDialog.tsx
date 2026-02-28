@@ -23,7 +23,7 @@ export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
     const [invitationLink, setInvitationLink] = useState("");
     const [copied, setCopied] = useState(false);
     const [selectedClubId, setSelectedClubId] = useState(initialClubId || "");
-    const [clubs, setClubs] = useState<any[]>([]);
+    const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
 
     useEffect(() => {
         if (isSuperAdmin && open) {
@@ -54,7 +54,7 @@ export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
                     club_id: targetClubId,
                     email: email || null,
                     created_by: creatorId
-                } as any)
+                })
                 .select("token")
                 .single();
 
@@ -63,8 +63,8 @@ export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
             const link = `${window.location.origin}/join?token=${data.token}`;
             setInvitationLink(link);
             toast({ title: "Invitación generada", description: "Copia el link para enviarlo." });
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message, variant: "destructive" });
+        } catch (error: unknown) {
+            toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
         } finally {
             setLoading(false);
         }

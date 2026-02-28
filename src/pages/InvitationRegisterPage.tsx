@@ -12,14 +12,17 @@ import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, C
 import { formatRUT } from "@/lib/rut";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+interface Invitation { club_id: string; email: string | null; expires_at: string; used_at: string | null; }
+interface ClubInfo { id: string; name: string; inscription_fee?: number; monthly_fee?: number; }
+
 export default function InvitationRegisterPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [invitation, setInvitation] = useState<any>(null);
-  const [club, setClub] = useState<any>(null);
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [club, setClub] = useState<ClubInfo | null>(null);
   const [expired, setExpired] = useState(false);
   const [loadingInv, setLoadingInv] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -86,8 +89,8 @@ export default function InvitationRegisterPage() {
           setExpired(true);
           // Still load club for logo if possible
           if (inv) {
-            const { data: c } = await supabase.from("public_clubs_view" as any).select("*").eq("id", inv.club_id).single();
-            setClub(c);
+            const { data: c } = await supabase.from("public_clubs_view").select("*").eq("id", inv.club_id).single();
+            setClub(c as ClubInfo);
           }
           setLoadingInv(false);
           return;
@@ -96,9 +99,9 @@ export default function InvitationRegisterPage() {
         setInvitation(inv);
         if (inv.email) setEmail(inv.email);
 
-        const { data: c, error: clubError } = await supabase.from("public_clubs_view" as any).select("*").eq("id", inv.club_id).single();
+        const { data: c, error: clubError } = await supabase.from("public_clubs_view").select("*").eq("id", inv.club_id).single();
         if (clubError) console.error("Error loading club:", clubError);
-        setClub(c);
+        setClub(c as ClubInfo);
       } catch (err) {
         console.error("Unexpected error loading invitation:", err);
         setExpired(true);
@@ -116,7 +119,7 @@ export default function InvitationRegisterPage() {
 
     try {
       let finalUserId = null;
-      let finalEmail = email.trim() !== "" ? email.trim() : null;
+      const finalEmail = email.trim() !== "" ? email.trim() : null;
 
       // 1. Create auth user only if email is provided
       if (!noEmail && finalEmail) {
@@ -131,7 +134,7 @@ export default function InvitationRegisterPage() {
       }
 
       // 2. Complete registration via RPC
-      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
+      const { data: rpcData, error: rpcError } = await supabase.rpc("accept_invitation_v2" as never, {
         p_token: token,
         p_user_id: finalUserId,
         p_password: password || null,
@@ -166,8 +169,8 @@ export default function InvitationRegisterPage() {
         });
       }
       navigate("/login");
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
