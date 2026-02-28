@@ -5,7 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 interface MemberInfo {
   id: string;
   user_id: string;
-  club_id: string;
+  club_id: string | null;
   full_name: string;
   email: string;
   status: string;
@@ -15,6 +15,7 @@ interface MemberInfo {
   subscription_end_date?: string | null;
   club_name?: string;
 }
+
 
 interface AuthContextType {
   session: Session | null;
@@ -61,7 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (membersData && membersData.length > 0) {
         const allMemberships: MemberInfo[] = await Promise.all(
-          membersData.map(async (m: any) => {
+          membersData.map(async (m: {
+            id: string;
+            user_id: string;
+            club_id: string;
+            full_name: string;
+            email: string;
+            status: string;
+            is_super_admin: boolean;
+            clubs?: { subscription_status?: string; subscription_end_date?: string | null; name?: string } | null;
+          }) => {
             const { data: rolesData } = await supabase
               .from("member_roles")
               .select("role")
@@ -75,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: m.email,
               status: m.status,
               roles: rolesData?.map((r) => r.role) || [],
-              is_super_admin: m.is_super_admin || userEmail === 'cl.jmunoz@gmail.com',
+              is_super_admin: m.is_super_admin ?? false,
               club_status: m.clubs?.subscription_status || 'activo',
               subscription_end_date: m.clubs?.subscription_end_date,
               club_name: m.clubs?.name
@@ -97,11 +107,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         console.log("Miembro activo establecido:", restored || allMemberships[0]);
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
+        // Este bloque queda como fallback temporal; usar is_super_admin desde la BD es la forma correcta
         console.log("Usuario es Super Admin de respaldo");
         const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
           user_id: userId,
-          club_id: null as any,
+          club_id: null,
           full_name: 'Super Administrador',
           email: userEmail || '',
           status: 'activo',

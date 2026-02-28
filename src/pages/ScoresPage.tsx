@@ -11,10 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { Club, MemberBasic } from "@/types/archery";
+
 
 export default function ScoresPage() {
   const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = member?.is_super_admin ?? false;
+
   const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -25,8 +28,9 @@ export default function ScoresPage() {
   const [modality, setModality] = useState("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [membersList, setMembersList] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [membersList, setMembersList] = useState<MemberBasic[]>([]);
+
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -81,7 +85,11 @@ export default function ScoresPage() {
 
       if (startDate) query = query.gte("score_date", startDate);
       if (endDate) query = query.lte("score_date", endDate);
-      if (modality !== "all") query = query.ilike("division", `%${modality}%`);
+      // Nota: el filtro por discipline se hace a través del join con tournament_types
+      if (modality !== "all") {
+        query = (query as ReturnType<typeof query.eq>).eq("tournament_types.discipline", modality);
+      }
+
 
       const { data, error } = await query.order("score_date", { ascending: false });
       if (error) throw error;
