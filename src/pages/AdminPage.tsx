@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, Filter, CalendarDays, XCircle, CheckCircle2 } from "lucide-react";
+import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +21,34 @@ import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
 import { calculateFinancialStatus } from "@/lib/membershipUtils";
 
+interface AdminMember {
+  id: string;
+  full_name: string;
+  email: string | null;
+  status: string;
+  club_id: string;
+  identification: string | null;
+  enrollment_date: string | null;
+  member_roles: { role: string }[];
+  financialStatus?: string;
+  phone: string | null;
+  address: string | null;
+  date_of_birth: string | null;
+  observations: string | null;
+  medical_history?: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  shirt_size: string | null;
+  windbreaker_size: string | null;
+  display_name: string | null;
+  guardian_name?: string | null;
+  guardian_phone?: string | null;
+  guardian_email?: string | null;
+  billing_day?: number | null;
+  grace_days?: number | null;
+  user_id?: string | null;
+}
+
 export default function AdminPage() {
   const { member } = useAuth();
   const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
@@ -29,15 +56,15 @@ export default function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
 
   // Edit/Role/Delete dialogs
-  const [editMember, setEditMember] = useState<any>(null);
-  const [rolesMember, setRolesMember] = useState<any>(null);
-  const [deleteMember, setDeleteMember] = useState<any>(null);
-  const [historyMember, setHistoryMember] = useState<any>(null);
-  const [paymentsMember, setPaymentsMember] = useState<any>(null);
-  const [divisionsMember, setDivisionsMember] = useState<any>(null);
+  const [editMember, setEditMember] = useState<AdminMember | null>(null);
+  const [rolesMember, setRolesMember] = useState<(AdminMember & { roles: string[] }) | null>(null);
+  const [deleteMember, setDeleteMember] = useState<AdminMember | null>(null);
+  const [historyMember, setHistoryMember] = useState<AdminMember | null>(null);
+  const [paymentsMember, setPaymentsMember] = useState<AdminMember | null>(null);
+  const [divisionsMember, setDivisionsMember] = useState<AdminMember | null>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -61,18 +88,18 @@ export default function AdminPage() {
         .select("*, member_roles(role)")
         .eq("club_id", selectedClubId)
         .order("full_name");
-      
+
       if (error) throw error;
-      
+
       const { data: allPayments } = await supabase
         .from("financial_entries")
         .select("*")
         .eq("club_id", selectedClubId);
 
       return data.map(m => {
-          const memberPayments = allPayments?.filter(p => p.member_id === m.id) || [];
-          const financialStatus = calculateFinancialStatus(m, memberPayments);
-          return { ...m, financialStatus };
+        const memberPayments = allPayments?.filter(p => p.member_id === m.id) || [];
+        const financialStatus = calculateFinancialStatus(m, memberPayments);
+        return { ...m, financialStatus };
       });
     },
     enabled: !!selectedClubId,
@@ -128,8 +155,8 @@ export default function AdminPage() {
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative w-full sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-10 h-11 sm:h-10 glass border-primary/10" placeholder="Buscar por nombre o email..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input className="pl-10 h-11 sm:h-10 glass border-primary/10" placeholder="Buscar por nombre o email..." value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -143,9 +170,9 @@ export default function AdminPage() {
           {/* Desktop Table View (lg+) */}
           <div className="hidden lg:block glass rounded-2xl overflow-hidden border border-border/50">
             <div className="overflow-x-auto">
-                <Table>
+              <Table>
                 <TableHeader className="bg-muted/30">
-                    <TableRow className="hover:bg-transparent border-border/50">
+                  <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="font-bold text-foreground">Nombre</TableHead>
                     <TableHead className="font-bold text-foreground">Identificación</TableHead>
                     <TableHead className="font-bold text-foreground">Correo</TableHead>
@@ -153,94 +180,94 @@ export default function AdminPage() {
                     <TableHead className="font-bold text-foreground">Estado</TableHead>
                     <TableHead className="font-bold text-foreground">Ingreso</TableHead>
                     <TableHead className="text-right font-bold text-foreground">Acciones</TableHead>
-                    </TableRow>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filtered?.map((m) => {
-                    const roles = (m.member_roles as any[])?.map((r: any) => r.role) || [];
+                  {filtered?.map((m) => {
+                    const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
                     return (
-                        <TableRow key={m.id} className="hover:bg-muted/20 border-border/30 transition-colors">
+                      <TableRow key={m.id} className="hover:bg-muted/20 border-border/30 transition-colors">
                         <TableCell className="font-bold text-foreground whitespace-nowrap">
-                            {m.full_name}
+                          {m.full_name}
                         </TableCell>
                         <TableCell className="text-muted-foreground whitespace-nowrap">
-                            {m.identification || "—"}
+                          {m.identification || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-xs">
-                            {m.email || "Sin email"}
+                          {m.email || "Sin email"}
                         </TableCell>
                         <TableCell>
-                            <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-1">
                             {roles.map((role: string) => (
-                                <Badge key={role} variant="outline" className="capitalize text-[9px] px-1.5 py-0 h-4 border-primary/20">
+                              <Badge key={role} variant="outline" className="capitalize text-[9px] px-1.5 py-0 h-4 border-primary/20">
                                 {role}
-                                </Badge>
+                              </Badge>
                             ))}
-                            </div>
+                          </div>
                         </TableCell>
                         <TableCell>
-                            <div className="flex flex-col gap-1">
-                                <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-[9px] h-4">
-                                {m.status}
-                                </Badge>
-                                {m.status === "activo" && (
-                                    <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="capitalize w-fit text-[9px] h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                                        {m.financialStatus}
-                                    </Badge>
-                                )}
-                            </div>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-[9px] h-4">
+                              {m.status}
+                            </Badge>
+                            {m.status === "activo" && (
+                              <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="capitalize w-fit text-[9px] h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                                {m.financialStatus}
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
-                            {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
+                          {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
                         </TableCell>
                         <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-2">
                             <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                              <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 transition-colors">
-                                    <MoreHorizontal className="h-4 w-4" />
+                                  <MoreHorizontal className="h-4 w-4" />
                                 </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="glass">
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="glass">
                                 <DropdownMenuItem onClick={() => setEditMember(m)}>
-                                    <Pencil className="h-4 w-4 mr-2" />Editar datos
+                                  <Pencil className="h-4 w-4 mr-2" />Editar datos
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
-                                    <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
+                                  <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setHistoryMember(m)}>
-                                    <History className="h-4 w-4 mr-2" />Historial puntajes
+                                  <History className="h-4 w-4 mr-2" />Historial puntajes
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setPaymentsMember(m)}>
-                                    <Wallet className="h-4 w-4 mr-2" />Historial pagos
+                                  <Wallet className="h-4 w-4 mr-2" />Historial pagos
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
-                                    <Trophy className="h-4 w-4 mr-2" />Divisiones
+                                  <Trophy className="h-4 w-4 mr-2" />Divisiones
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
-                                    {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
-                                    {m.status === "activo" ? "Desactivar Miembro" : "Activar Miembro"}
+                                  {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
+                                  {m.status === "activo" ? "Desactivar Miembro" : "Activar Miembro"}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
-                                    <Trash2 className="h-4 w-4 mr-2" />Eliminar
+                                  <Trash2 className="h-4 w-4 mr-2" />Eliminar
                                 </DropdownMenuItem>
-                                </DropdownMenuContent>
+                              </DropdownMenuContent>
                             </DropdownMenu>
-                            </div>
+                          </div>
                         </TableCell>
-                        </TableRow>
+                      </TableRow>
                     );
-                    })}
+                  })}
                 </TableBody>
-                </Table>
+              </Table>
             </div>
           </div>
 
           {/* Mobile & Tablet Card View (<lg) */}
           <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
             {filtered?.map((m) => {
-              const roles = (m.member_roles as any[])?.map((r: any) => r.role) || [];
+              const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
               return (
                 <motion.div
                   key={m.id}
@@ -255,63 +282,63 @@ export default function AdminPage() {
                       <p className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">{m.email || "Sin correo"}</p>
                     </div>
                     <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 bg-muted/20 rounded-xl">
-                            <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+                          <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
                         </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass min-w-[180px]">
-                            <DropdownMenuItem onClick={() => setEditMember(m)}>
-                                <Pencil className="h-4 w-4 mr-2" />Editar Perfil
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
-                                <ShieldCheck className="h-4 w-4 mr-2" />Roles
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setHistoryMember(m)}>
-                                <History className="h-4 w-4 mr-2" />Puntajes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPaymentsMember(m)}>
-                                <Wallet className="h-4 w-4 mr-2" />Pagos
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
-                                <Trophy className="h-4 w-4 mr-2" />Divisiones
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
-                                {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
-                                {m.status === "activo" ? "Desactivar" : "Activar"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => setDeleteMember(m)}>
-                                <Trash2 className="h-4 w-4 mr-2" />Eliminar
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="glass min-w-[180px]">
+                        <DropdownMenuItem onClick={() => setEditMember(m)}>
+                          <Pencil className="h-4 w-4 mr-2" />Editar Perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
+                          <ShieldCheck className="h-4 w-4 mr-2" />Roles
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setHistoryMember(m)}>
+                          <History className="h-4 w-4 mr-2" />Puntajes
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setPaymentsMember(m)}>
+                          <Wallet className="h-4 w-4 mr-2" />Pagos
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
+                          <Trophy className="h-4 w-4 mr-2" />Divisiones
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
+                          {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
+                          {m.status === "activo" ? "Desactivar" : "Activar"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive font-bold" onClick={() => setDeleteMember(m)}>
+                          <Trash2 className="h-4 w-4 mr-2" />Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-4 bg-muted/20 p-3 rounded-xl border border-border/50">
                     <div className="space-y-1">
-                        <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Finanzas</p>
-                        <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="text-[10px] h-5 w-fit border-none bg-emerald-500/10 text-emerald-500">
-                            {m.financialStatus.toUpperCase()}
-                        </Badge>
+                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Finanzas</p>
+                      <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="text-[10px] h-5 w-fit border-none bg-emerald-500/10 text-emerald-500">
+                        {m.financialStatus.toUpperCase()}
+                      </Badge>
                     </div>
                     <div className="space-y-1">
-                        <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ingreso</p>
-                        <p className="text-xs font-bold flex items-center gap-1">
-                            <CalendarDays className="h-3 w-3 text-primary" />
-                            {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
-                        </p>
+                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ingreso</p>
+                      <p className="text-xs font-bold flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3 text-primary" />
+                        {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">
                     {roles.map((role: string) => (
-                        <Badge key={role} variant="outline" className="capitalize text-[9px] px-2 py-0 h-4 border-primary/20 bg-background/50">
-                            {role}
-                        </Badge>
+                      <Badge key={role} variant="outline" className="capitalize text-[9px] px-2 py-0 h-4 border-primary/20 bg-background/50">
+                        {role}
+                      </Badge>
                     ))}
                     {m.status === 'inactivo' && (
-                        <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
+                      <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
                 </motion.div>

@@ -57,13 +57,13 @@ export default function ManageRolesDialog({ memberId, memberName, clubId, curren
           .delete()
           .eq("member_id", memberId)
           .eq("club_id", clubId)
-          .eq("role", role as any);
+          .eq("role", role);
         if (error) throw error;
       }
       for (const role of toAdd) {
         const { error } = await supabase
           .from("member_roles")
-          .insert({ member_id: memberId, club_id: clubId, role: role as any });
+          .insert({ member_id: memberId, club_id: clubId, role: role });
         if (error) throw error;
       }
     },
@@ -72,7 +72,7 @@ export default function ManageRolesDialog({ memberId, memberName, clubId, curren
       toast({ title: "Roles actualizados" });
       onOpenChange(false);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });

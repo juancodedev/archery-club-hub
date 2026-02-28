@@ -27,6 +27,8 @@ interface MemberData {
   guardian_name?: string | null;
   guardian_phone?: string | null;
   guardian_email?: string | null;
+  billing_day?: number | null;
+  grace_days?: number | null;
 }
 
 interface Props {
@@ -75,8 +77,8 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       setGuardianName(member.guardian_name || "");
       setGuardianPhone(member.guardian_phone || "");
       setGuardianEmail(member.guardian_email || "");
-      setBillingDay(String((member as any).billing_day || ""));
-      setGraceDays(String((member as any).grace_days ?? "7"));
+      setBillingDay(String(member.billing_day || ""));
+      setGraceDays(String(member.grace_days ?? "7"));
     }
   }, [member]);
 
@@ -104,7 +106,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
           guardian_email: guardianEmail || null,
           billing_day: billingDay ? Number(billingDay) : null,
           grace_days: graceDays ? Number(graceDays) : 7,
-        } as any)
+        })
         .eq("id", member.id);
       if (error) throw error;
     },
@@ -114,7 +116,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       toast({ title: "Miembro actualizado" });
       onOpenChange(false);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });
@@ -173,18 +175,18 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
               <Label>Historia Médica</Label>
               <Input value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} />
             </div>
-            
+
             <div className="space-y-2">
-                <Label>Nombre Tutor</Label>
-                <Input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
+              <Label>Nombre Tutor</Label>
+              <Input value={guardianName} onChange={(e) => setGuardianName(e.target.value)} />
             </div>
             <div className="space-y-2">
-                <Label>Teléfono Tutor</Label>
-                <Input value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
+              <Label>Teléfono Tutor</Label>
+              <Input value={guardianPhone} onChange={(e) => setGuardianPhone(e.target.value)} />
             </div>
             <div className="space-y-2 sm:col-span-2">
-                <Label>Email Tutor</Label>
-                <Input value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} />
+              <Label>Email Tutor</Label>
+              <Input value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} />
             </div>
           </div>
           <div className="space-y-2">
@@ -200,23 +202,23 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Día de Cobro (1-31)</Label>
-                <Input 
-                  type="number" 
-                  min="1" 
-                  max="31" 
-                  value={billingDay} 
-                  onChange={(e) => setBillingDay(e.target.value)} 
+                <Input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={billingDay}
+                  onChange={(e) => setBillingDay(e.target.value)}
                   placeholder="Día del mes..."
                 />
                 <p className="text-[10px] text-muted-foreground">Día del mes en que vence la membresía.</p>
               </div>
               <div className="space-y-2">
                 <Label>Días de Gracia</Label>
-                <Input 
-                  type="number" 
-                  min="0" 
-                  value={graceDays} 
-                  onChange={(e) => setGraceDays(e.target.value)} 
+                <Input
+                  type="number"
+                  min="0"
+                  value={graceDays}
+                  onChange={(e) => setGraceDays(e.target.value)}
                 />
                 <p className="text-[10px] text-muted-foreground">Días adicionales antes de marcar como atrasado.</p>
               </div>

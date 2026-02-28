@@ -1,8 +1,8 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, member, loading } = useAuth();
+  const { session, member, loading, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -38,7 +38,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             Contacta al administrador del club para regularizar el pago.
           </p>
           <button
-            onClick={() => useAuth().signOut()}
+            onClick={() => signOut()}
             className="text-primary hover:underline font-medium"
           >
             Cerrar sesión

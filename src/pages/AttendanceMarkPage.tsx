@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
@@ -74,7 +74,7 @@ export default function AttendanceMarkPage() {
                             member_id: member.id,
                             club_id: member.club_id,
                             attended: true
-                        } as any);
+                        });
 
                     if (insertError) throw insertError;
                 }
@@ -83,10 +83,10 @@ export default function AttendanceMarkPage() {
                 setMessage("¡Asistencia registrada correctamente!");
                 toast({ title: "Asistencia confirmada", description: "Tu participación ha sido registrada." });
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error("Error marking attendance:", error);
                 setStatus("error");
-                setMessage(error.message || "Ocurrió un error al registrar la asistencia");
+                setMessage((error as Error).message || "Ocurrió un error al registrar la asistencia");
             }
         }
 

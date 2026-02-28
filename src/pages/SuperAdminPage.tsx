@@ -58,8 +58,8 @@ export default function SuperAdminPage() {
 
             if (error) throw error;
             setClubs(data as Club[]);
-        } catch (error: any) {
-            toast.error("Error al cargar los clubes: " + error.message);
+        } catch (error: unknown) {
+            toast.error("Error al cargar los clubes: " + (error as Error).message);
         } finally {
             setLoading(false);
         }
@@ -77,8 +77,8 @@ export default function SuperAdminPage() {
 
             toast.success(`Club ${newStatus === "activo" ? "activado" : "bloqueado"} con éxito`);
             fetchClubs();
-        } catch (error: any) {
-            toast.error("Error al actualizar el estado: " + error.message);
+        } catch (error: unknown) {
+            toast.error("Error al actualizar el estado: " + (error as Error).message);
         }
     };
 

@@ -7,10 +7,17 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Loader2, Save } from "lucide-react";
 
+interface SystemSettings {
+    id?: string;
+    mercadopago_mode: string;
+    mercadopago_public_key?: string;
+    annual_discount_percentage: number;
+}
+
 export default function IntegrationsSettings() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [settings, setSettings] = useState<any>(null);
+    const [settings, setSettings] = useState<SystemSettings | null>(null);
 
     useEffect(() => {
         fetchSettings();

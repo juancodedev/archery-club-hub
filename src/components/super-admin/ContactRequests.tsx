@@ -13,8 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
+interface ContactRequest {
+    id: string;
+    created_at: string;
+    status: string;
+    type: string;
+    message: string;
+    clubs?: { name: string };
+    members?: { full_name: string };
+}
+
 export default function ContactRequests() {
-    const [requests, setRequests] = useState<any[]>([]);
+    const [requests, setRequests] = useState<ContactRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

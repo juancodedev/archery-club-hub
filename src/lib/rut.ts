@@ -1,24 +1,20 @@
-
 export function formatRUT(rut: string): string {
-    // Remove dots and dash
-    let value = rut.replace(/\./g, '').replace(/-/g, '');
-
-    // Keep only alphanumeric
-    value = value.replace(/[^0-9kK]/g, '');
+    // Remove dots and dash and keep only alphanumeric
+    const value = rut.replace(/\./g, "").replace(/-/g, "").replace(/[^0-9kK]/g, "");
 
     if (value.length < 2) return value;
 
-    let body = value.slice(0, -1);
-    let dv = value.slice(-1).toUpperCase();
+    const body = value.slice(0, -1);
+    const dv = value.slice(-1).toUpperCase();
 
     // Add dots
-    let formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
     return `${formattedBody}-${dv}`;
 }
 
 export function cleanRUT(rut: string): string {
-    return rut.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+    return rut.replace(/\./g, "").replace(/-/g, "").toUpperCase();
 }
 
 export function validateRUT(rut: string): boolean {
@@ -40,7 +36,7 @@ export function validateRUT(rut: string): boolean {
     }
 
     const expectedDV = 11 - (sum % 11);
-    let calculatedDV = expectedDV === 11 ? '0' : expectedDV === 10 ? 'K' : expectedDV.toString();
+    const calculatedDV = expectedDV === 11 ? "0" : expectedDV === 10 ? "K" : expectedDV.toString();
 
     return dv === calculatedDV;
 }

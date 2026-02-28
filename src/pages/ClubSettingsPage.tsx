@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -23,7 +23,7 @@ export default function ClubSettingsPage() {
   const queryClient = useQueryClient();
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
   const [qrToken, setQrToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function ClubSettingsPage() {
           monthly_fee: Number(monthlyFee) || 0,
           default_member_password: defaultPassword,
           allow_superadmin_finances: allowSuperAdminFinances,
-        } as any)
+        })
         .eq("id", selectedClubId);
       if (error) throw error;
     },
@@ -84,7 +84,7 @@ export default function ClubSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["club-settings"] });
       toast({ title: "Configuración actualizada" });
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   // Invitations
@@ -124,7 +124,7 @@ export default function ClubSettingsPage() {
       toast({ title: "Invitación creada" });
       setInvEmail("");
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const copyLink = (token: string) => {
@@ -242,7 +242,7 @@ export default function ClubSettingsPage() {
 
             {invitations && invitations.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                {invitations.map((inv: any) => {
+                {invitations.map((inv) => {
                   const isExpired = new Date(inv.expires_at) < new Date();
                   const isUsed = !!inv.used_at;
                   return (

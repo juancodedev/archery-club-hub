@@ -98,7 +98,7 @@ export default function MemberDivisionsManager({ memberId, memberName }: MemberD
             setValidFrom(new Date());
             setValidUntil(undefined);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });

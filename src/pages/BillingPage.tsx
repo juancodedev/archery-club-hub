@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Check, Info, Zap, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,28 @@ import {
     TableRow,
 } from "@/components/ui/table";
 
+interface Plan {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    price_annual: number | null;
+    student_limit: number;
+    features: string[];
+    monthlyPrice?: number;
+    annualPrice?: number;
+    accent?: string;
+    border?: string;
+    buttonText?: string;
+    isAnnual?: boolean;
+}
+
+interface ClubDetails {
+    id: string;
+    plans?: { name: string; student_limit: number } | null;
+    subscription_status?: string;
+}
+
 export default function BillingPage() {
     const [isAnnualPro, setIsAnnualPro] = useState(false);
     const [isAnnualBusiness, setIsAnnualBusiness] = useState(false);
@@ -40,22 +62,16 @@ export default function BillingPage() {
     const [compareIsAnnual, setCompareIsAnnual] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
     const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState<any>(null);
-    const [availablePlans, setAvailablePlans] = useState<any[]>([]);
+    const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+    const [availablePlans, setAvailablePlans] = useState<Plan[]>([]);
     const [contactMessage, setContactMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const { member } = useAuth();
     const [hasSavedCard, setHasSavedCard] = useState(false);
-    const [clubDetails, setClubDetails] = useState<any>(null);
+    const [clubDetails, setClubDetails] = useState<ClubDetails | null>(null);
     const [studentCount, setStudentCount] = useState(0);
 
-    useEffect(() => {
-        if (member?.club_id) {
-            fetchClubAndStudents();
-        }
-    }, [member]);
-
-    const fetchClubAndStudents = async () => {
+    const fetchClubAndStudents = useCallback(async () => {
         // Fetch club and its plan
         const { data: clubData } = await supabase
             .from("clubs")
@@ -93,7 +109,14 @@ export default function BillingPage() {
             }));
             setAvailablePlans(styledPlans);
         }
-    };
+    }, [member?.club_id, isAnnualPro, isAnnualBusiness]);
+
+    useEffect(() => {
+        if (member?.club_id) {
+            fetchClubAndStudents();
+        }
+    }, [member?.club_id, fetchClubAndStudents]);
+
 
     const handleContactSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -125,7 +148,7 @@ export default function BillingPage() {
             plan_id: selectedPlan?.id,
             billing_cycle: selectedPlan?.isAnnual ? "annual" : "monthly",
             subscription_status: "activo"
-        } as any).eq("id", member?.club_id);
+        }).eq("id", member?.club_id);
 
         if (error) {
             toast.error("Error al procesar pago");

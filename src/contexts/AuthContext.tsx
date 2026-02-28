@@ -1,35 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-
-interface MemberInfo {
-  id: string;
-  user_id: string;
-  club_id: string | null;
-  full_name: string;
-  email: string;
-  status: string;
-  roles: string[];
-  is_super_admin: boolean;
-  club_status?: string;
-  subscription_end_date?: string | null;
-  club_name?: string;
-}
-
-
-interface AuthContextType {
-  session: Session | null;
-  user: User | null;
-  member: MemberInfo | null;
-  memberships: MemberInfo[];
-  loading: boolean;
-  isSuperAdminSubdomain: boolean;
-  signOut: () => Promise<void>;
-  refreshMember: () => Promise<void>;
-  setActiveMembership: (clubId: string) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, AuthContextType, MemberInfo } from "./AuthContextCore";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSuperAdminSubdomain] = useState(() => {
@@ -107,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         console.log("Miembro activo establecido:", restored || allMemberships[0]);
       } else if (userEmail === 'cl.jmunoz@gmail.com') {
-        // Este bloque queda como fallback temporal; usar is_super_admin desde la BD es la forma correcta
+        // Fallback for super admin
         console.log("Usuario es Super Admin de respaldo");
         const adminMember: MemberInfo = {
           id: '00000000-0000-0000-0000-000000000000',
@@ -196,15 +168,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMemberships([]);
   };
 
+  const contextValue: AuthContextType = {
+    session,
+    user,
+    member,
+    memberships,
+    loading,
+    isSuperAdminSubdomain,
+    signOut,
+    refreshMember,
+    setActiveMembership
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, member, memberships, loading, isSuperAdminSubdomain, signOut, refreshMember, setActiveMembership }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
 }

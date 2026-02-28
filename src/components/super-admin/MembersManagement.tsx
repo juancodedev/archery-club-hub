@@ -40,16 +40,20 @@ interface Member {
     email: string;
     status: string;
     club_id: string;
-    identification?: string | null;
-    phone?: string | null;
-    address?: string | null;
-    date_of_birth?: string | null;
-    observations?: string | null;
-    emergency_contact_name?: string | null;
-    emergency_contact_phone?: string | null;
-    shirt_size?: string | null;
-    windbreaker_size?: string | null;
-    display_name?: string | null;
+    user_id?: string | null;
+    identification: string | null;
+    phone: string | null;
+    address: string | null;
+    date_of_birth: string | null;
+    observations: string | null;
+    emergency_contact_name: string | null;
+    emergency_contact_phone: string | null;
+    shirt_size: string | null;
+    windbreaker_size: string | null;
+    display_name: string | null;
+    guardian_name?: string | null;
+    guardian_phone?: string | null;
+    guardian_email?: string | null;
     clubs: { name: string };
     member_roles: { role: string }[];
 }
@@ -57,12 +61,12 @@ interface Member {
 export default function MembersManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedClubId, setSelectedClubId] = useState<string>("all");
-    const [clubs, setClubs] = useState<any[]>([]);
+    const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
     const queryClient = useQueryClient();
 
     // Dialog states
-    const [editingMember, setEditingMember] = useState<any>(null);
-    const [rolesMember, setRolesMember] = useState<any>(null);
+    const [editingMember, setEditingMember] = useState<Member | null>(null);
+    const [rolesMember, setRolesMember] = useState<(Member & { roles: string[] }) | null>(null);
 
     useEffect(() => {
         fetchClubs();
@@ -83,7 +87,7 @@ export default function MembersManagement() {
                     clubs(name),
                     member_roles(role)
                 `);
-            
+
             if (selectedClubId !== "all") {
                 query = query.eq("club_id", selectedClubId);
             }
@@ -101,7 +105,7 @@ export default function MembersManagement() {
                 .rpc('get_club_default_password', { p_club_id: member.club_id });
 
             if (passwordError) throw new Error("Permiso denegado para ver la contraseña del club.");
-            
+
             const finalPassword = defaultPassword || "Quiver2026!";
 
             // We use the admin function to update the user password
@@ -116,7 +120,7 @@ export default function MembersManagement() {
         onSuccess: (data) => {
             toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${data.defaultPassword}`);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error("Error al resetear contraseña: " + error.message);
         }
     });
@@ -130,7 +134,7 @@ export default function MembersManagement() {
             queryClient.invalidateQueries({ queryKey: ["all-members"] });
             toast.success("Miembro eliminado");
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error("Error al eliminar: " + error.message);
         }
     });
@@ -243,8 +247,8 @@ export default function MembersManagement() {
                                                     <Key className="h-4 w-4 mr-2" />Resetear contraseña
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem 
-                                                    className="text-destructive" 
+                                                <DropdownMenuItem
+                                                    className="text-destructive"
                                                     onClick={() => {
                                                         if (confirm(`¿Estás seguro de eliminar a ${m.full_name}?`)) {
                                                             deleteMember.mutate(m.id);
@@ -269,7 +273,7 @@ export default function MembersManagement() {
                 open={!!editingMember}
                 onOpenChange={(open) => !open && setEditingMember(null)}
             />
-            
+
             {rolesMember && (
                 <ManageRolesDialog
                     memberId={rolesMember.id}
