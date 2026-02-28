@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 import { cn } from "@/lib/utils";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
@@ -78,7 +79,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const uniqueItems = Array.from(new Map(allAdminItems.map(item => [item.to, item])).values());
 
 
-  const renderLink = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => (
+  const renderLink = ({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) => (
+
     <Link
       key={to}
       to={to}
@@ -104,9 +106,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar - Desktop relative, Mobile fixed overlay */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative md:translate-x-0",
-        isSidebarOpen 
-            ? "translate-x-0 shadow-2xl md:shadow-none md:w-64" 
-            : "-translate-x-full md:w-0 md:border-none md:opacity-0"
+        isSidebarOpen
+          ? "translate-x-0 shadow-2xl md:shadow-none md:w-64"
+          : "-translate-x-full md:w-0 md:border-none md:opacity-0"
       )}>
         <div className="flex items-center gap-3 p-6 border-b border-border min-w-[256px]">
           <div className={cn(
@@ -128,7 +130,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             <DivisionChangeNotifications />
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
-                <CloseIcon className="h-5 w-5 text-muted-foreground" />
+              <CloseIcon className="h-5 w-5 text-muted-foreground" />
             </Button>
           </div>
         </div>
@@ -158,10 +160,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Backdrop for mobile */}
       {isSidebarOpen && (
-          <div 
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+        <div
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
 
       {/* Main Content Area */}
@@ -169,25 +171,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between border-b border-border px-4 bg-card sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-                <Menu className="h-6 w-6 text-foreground" />
+              <Menu className="h-6 w-6 text-foreground" />
             </Button>
             <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <span className="font-display font-bold text-foreground truncate max-w-[150px] sm:max-w-none">
+              <Target className="h-5 w-5 text-primary" />
+              <span className="font-display font-bold text-foreground truncate max-w-[150px] sm:max-w-none">
                 {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
-                </span>
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:block">
-                <DivisionChangeNotifications />
+              <DivisionChangeNotifications />
             </div>
             {member?.id && (
-                <Link to="/profile">
-                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary hover:bg-primary/20 transition-colors">
-                        <User className="h-4 w-4" />
-                    </div>
-                </Link>
+              <Link to="/profile">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary hover:bg-primary/20 transition-colors">
+                  <User className="h-4 w-4" />
+                </div>
+              </Link>
             )}
           </div>
         </header>

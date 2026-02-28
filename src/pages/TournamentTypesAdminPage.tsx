@@ -20,25 +20,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DISCIPLINES, BOW_TYPES, TOURNAMENT_FORMATS, metersToYards, formatYards } from "@/lib/archeryConstants";
+import { DISCIPLINES, BOW_TYPES, TOURNAMENT_FORMATS, yardsToMeters, metersToYards, formatYards } from "@/lib/archeryConstants";
+import type { TournamentType } from "@/types/archery";
 
-interface TournamentType {
-    id: string;
-    name: string;
-    description: string | null;
-    arrows_per_end: number;
-    ends_per_round: number;
-    distance_meters: number | null;
-    distance_yards: number | null;
-    target_size_cm: number | null;
-    is_indoor: boolean;
-    discipline: string | null;
-    bow_type: string | null;
-    tournament_format: string | null;
-    is_system: boolean;
-    club_id: string | null;
-    active: boolean;
-}
+
 
 const DISCIPLINE_BADGE_COLORS: Record<string, string> = {
     outdoor: "bg-green-500/10 text-green-500 border-green-500/20",
@@ -56,7 +41,8 @@ const DISCIPLINE_ICONS: Record<string, string> = {
 
 export default function TournamentTypesAdminPage() {
     const { member } = useAuth();
-    const isSuperAdmin = member?.is_super_admin || member?.email === "cl.jmunoz@gmail.com";
+    const isSuperAdmin = member?.is_super_admin ?? false;
+
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState("");
@@ -96,7 +82,8 @@ export default function TournamentTypesAdminPage() {
     const createMutation = useMutation({
         mutationFn: async (data: typeof formData) => {
             const yardsVal = data.distance_yards ? parseFloat(data.distance_yards) : null;
-            const metersVal = yardsVal ? Math.round(yardsVal / 1.09361) : null;
+            const metersVal = yardsVal ? yardsToMeters(yardsVal) : null;
+
             const { error } = await supabase.from("tournament_types").insert({
                 name: data.name,
                 description: data.description || null,
@@ -121,15 +108,17 @@ export default function TournamentTypesAdminPage() {
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
+
         },
     });
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
             const yardsVal = data.distance_yards ? parseFloat(data.distance_yards) : null;
-            const metersVal = yardsVal ? Math.round(yardsVal / 1.09361) : null;
+            const metersVal = yardsVal ? yardsToMeters(yardsVal) : null;
+
             const { error } = await supabase
                 .from("tournament_types")
                 .update({
@@ -154,8 +143,9 @@ export default function TournamentTypesAdminPage() {
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
+
         },
     });
 
@@ -184,8 +174,9 @@ export default function TournamentTypesAdminPage() {
             setDeleteDialogOpen(false);
             setSelectedType(null);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
+
         },
     });
 
