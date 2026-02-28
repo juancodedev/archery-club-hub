@@ -8,9 +8,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { Target, Mountain } from "lucide-react";
+import { DISCIPLINE_LABELS, formatYards, metersToYards } from "@/lib/archeryConstants";
 
 interface TournamentType {
     id: string;
@@ -19,8 +18,12 @@ interface TournamentType {
     arrows_per_end: number;
     ends_per_round: number;
     distance_meters: number | null;
+    distance_yards: number | null;
     target_size_cm: number | null;
     is_indoor: boolean;
+    discipline: string | null;
+    bow_type: string | null;
+    tournament_format: string | null;
     is_system: boolean;
 }
 
@@ -30,6 +33,24 @@ interface TournamentTypeSelectProps {
     onTypeChange?: (tournamentType: TournamentType | null) => void;
     label?: string;
     placeholder?: string;
+}
+
+const DISCIPLINE_ICONS: Record<string, string> = {
+    outdoor: "🎯",
+    indoor: "🏠",
+    campo: "🌲",
+    "3d": "🐗",
+};
+
+function getDisciplineIcon(type: TournamentType): string {
+    if (type.discipline && DISCIPLINE_ICONS[type.discipline]) return DISCIPLINE_ICONS[type.discipline];
+    return type.is_indoor ? "🏠" : "🎯";
+}
+
+function getDistanceLabel(type: TournamentType): string {
+    if (type.distance_yards) return `${type.distance_yards} yd`;
+    if (type.distance_meters) return `${metersToYards(type.distance_meters)} yd`;
+    return "";
 }
 
 export default function TournamentTypeSelect({
@@ -48,13 +69,17 @@ export default function TournamentTypeSelect({
         fetchTournamentTypes();
     }, [member]);
 
+    // Solo dispara cuando los `types` terminan de cargarse (carga asíncrona).
+    // NO incluir `onTypeChange` en las deps: esa función cambia referencia
+    // en cada render del padre, lo que causaría un ciclo infinito que resetea
+    // todas las flechas (setEnds) cada vez que el usuario escribe un punto.
     useEffect(() => {
-        // Cuando cambia el value, notificar al padre con el objeto completo
-        if (value && onTypeChange) {
+        if (value && onTypeChange && types.length > 0) {
             const selectedType = types.find((t) => t.id === value);
             onTypeChange(selectedType || null);
         }
-    }, [value, types, onTypeChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value, types]);
 
     const fetchTournamentTypes = async () => {
         setLoading(true);
@@ -63,9 +88,9 @@ export default function TournamentTypeSelect({
                 .from("tournament_types")
                 .select("*")
                 .eq("active", true)
+                .order("discipline")
                 .order("name");
 
-            // Incluir tipos del sistema y del club (si existe)
             if (member?.club_id) {
                 query = query.or(`is_system.eq.true,club_id.eq.${member.club_id}`);
             } else {
@@ -73,7 +98,6 @@ export default function TournamentTypeSelect({
             }
 
             const { data, error } = await query;
-
             if (error) throw error;
             setTypes(data || []);
         } catch (error) {
@@ -87,52 +111,79 @@ export default function TournamentTypeSelect({
         type.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Agrupar por disciplina para el dropdown
+    const grouped = filteredTypes.reduce<Record<string, TournamentType[]>>((acc, t) => {
+        const group = t.discipline || "otro";
+        if (!acc[group]) acc[group] = [];
+        acc[group].push(t);
+        return acc;
+    }, {});
+
+    const disciplineOrder = ["indoor", "outdoor", "campo", "3d", "otro"];
+
     return (
-        <div className="space-y-2">
-            <Label>{label}</Label>
-            <Select value={value} onValueChange={onChange} disabled={loading}>
-                <SelectTrigger>
-                    <SelectValue placeholder={placeholder} />
-                </SelectTrigger>
-                <SelectContent>
-                    <div className="p-2">
-                        <Input
-                            placeholder="Buscar tipo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="mb-2"
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    </div>
-                    {filteredTypes.length === 0 ? (
-                        <div className="py-2 px-4 text-sm text-muted-foreground">
-                            No se encontraron tipos de torneo
+        <Select
+            value={value}
+            onValueChange={(newId) => {
+                onChange(newId);
+                // Llamada directa al cambiar selección del usuario (no useEffect)
+                if (onTypeChange) {
+                    const selectedType = types.find((t) => t.id === newId) || null;
+                    onTypeChange(selectedType);
+                }
+            }}
+            disabled={loading}
+        >
+            <SelectTrigger>
+                <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+                <div className="p-2">
+                    <Input
+                        placeholder="Buscar tipo..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="mb-2 h-8 text-sm"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+                {disciplineOrder.map(disc => {
+                    const items = grouped[disc];
+                    if (!items || items.length === 0) return null;
+                    const icon = DISCIPLINE_ICONS[disc] || "🏹";
+                    const discLabel = disc !== "otro"
+                        ? (DISCIPLINE_LABELS[disc as keyof typeof DISCIPLINE_LABELS] || disc)
+                        : "Otros";
+                    return (
+                        <div key={disc}>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-3 py-1.5 border-t border-border/30 mt-1">
+                                {icon} {discLabel}
+                            </p>
+                            {items.map((type) => {
+                                const distLabel = getDistanceLabel(type);
+                                return (
+                                    <SelectItem key={type.id} value={type.id}>
+                                        <div className="flex flex-col gap-0.5 py-0.5">
+                                            <span className="font-medium text-sm">{type.name}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {type.arrows_per_end} flechas/serie
+                                                {distLabel && ` • ${distLabel}`}
+                                                {type.target_size_cm && ` • ${type.target_size_cm} cm`}
+                                                {!type.is_system && " • Personalizado"}
+                                            </span>
+                                        </div>
+                                    </SelectItem>
+                                );
+                            })}
                         </div>
-                    ) : (
-                        filteredTypes.map((type) => (
-                            <SelectItem key={type.id} value={type.id}>
-                                <div className="flex items-center gap-2 py-1">
-                                    {type.is_indoor ? (
-                                        <Target className="h-4 w-4 text-blue-500" />
-                                    ) : (
-                                        <Mountain className="h-4 w-4 text-green-500" />
-                                    )}
-                                    <div className="flex flex-col gap-0.5">
-                                        <span className="font-medium">{type.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {type.arrows_per_end} flechas/serie
-                                            {type.distance_meters &&
-                                                ` • ${type.distance_meters}m`}
-                                            {type.target_size_cm && ` • ${type.target_size_cm}cm`}
-                                            {!type.is_system && " • Personalizado"}
-                                        </span>
-                                    </div>
-                                </div>
-                            </SelectItem>
-                        ))
-                    )}
-                </SelectContent>
-            </Select>
-        </div>
+                    );
+                })}
+                {filteredTypes.length === 0 && (
+                    <div className="py-2 px-4 text-sm text-muted-foreground">
+                        No se encontraron tipos de torneo
+                    </div>
+                )}
+            </SelectContent>
+        </Select>
     );
 }
