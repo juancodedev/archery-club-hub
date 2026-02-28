@@ -14,6 +14,8 @@ import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
 import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
+import type { TournamentType, Club, MemberBasic } from "@/types/archery";
+
 
 function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
   return Array.from({ length: endsCount }, () => Array(arrowsPerEnd).fill(""));
@@ -21,7 +23,7 @@ function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
 
 export default function NewScorePage() {
   const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = member?.is_super_admin ?? false;
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -42,8 +44,9 @@ export default function NewScorePage() {
   // For SuperAdmin/Admin
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  const [clubs, setClubs] = useState<{ id: string; name: string; }[]>([]);
-  const [members, setMembers] = useState<{ id: string; name: string;}[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [members, setMembers] = useState<MemberBasic[]>([]);
+
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -74,13 +77,7 @@ export default function NewScorePage() {
   };
 
   // Handle tournament type change
-  interface TournamentType {
-    arrows_per_end: number;
-    ends_per_round: number;
-    is_indoor: boolean;
-  }
-
-  const handleTournamentTypeChange = (type: TournamentType) => {
+  const handleTournamentTypeChange = (type: TournamentType | null) => {
     if (type) {
       setArrowsPerEnd(type.arrows_per_end);
       setEndsCount(type.ends_per_round);
@@ -146,8 +143,10 @@ export default function NewScorePage() {
         description: `Total: ${grandTotal} puntos${xCount > 0 ? ` (${xCount}X)` : ''}`
       });
       navigate("/scores");
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (error) {
+      const err = error as Error;
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+
     } finally {
       setLoading(false);
     }
@@ -170,7 +169,7 @@ export default function NewScorePage() {
         {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-4">
-                <UserIcon className="h-4 w-4 text-primary" /> Selección de Arquero
+              <UserIcon className="h-4 w-4 text-primary" /> Selección de Arquero
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               {isSuperAdmin && (
@@ -204,10 +203,10 @@ export default function NewScorePage() {
         {/* Event info */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-border/50 pb-3">
-              <Info className="h-5 w-5 text-primary" />
-              <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
+            <Info className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
           </div>
-          
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-2 lg:col-span-2">
               <Label className="text-xs font-bold text-muted-foreground">Evento / Entrenamiento</Label>
@@ -248,47 +247,47 @@ export default function NewScorePage() {
         {/* Scorecard */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
           <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display font-bold text-foreground flex items-center gap-2">
-                  <Target className="h-5 w-5 text-primary" /> Tarjeta de Puntuación
-              </h3>
-              <Badge variant="outline" className="font-mono text-xs border-primary/30">
-                  {arrowsPerEnd} flechas / {endsCount} rondas
-              </Badge>
+            <h3 className="font-display font-bold text-foreground flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" /> Tarjeta de Puntuación
+            </h3>
+            <Badge variant="outline" className="font-mono text-xs border-primary/30">
+              {arrowsPerEnd} flechas / {endsCount} rondas
+            </Badge>
           </div>
-          
+
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto pb-4">
             <table className="w-full text-sm">
-                <thead>
+              <thead>
                 <tr className="border-b border-border uppercase tracking-widest text-[10px] text-muted-foreground font-bold">
-                    <th className="py-3 px-2 text-left">Round</th>
-                    {Array.from({ length: arrowsPerEnd }, (_, i) => (
+                  <th className="py-3 px-2 text-left">Round</th>
+                  {Array.from({ length: arrowsPerEnd }, (_, i) => (
                     <th key={i} className="py-3 px-1 text-center">F{i + 1}</th>
-                    ))}
-                    <th className="py-3 px-2 text-center text-primary">Total</th>
-                    <th className="py-3 px-2 text-center text-primary">Acum.</th>
+                  ))}
+                  <th className="py-3 px-2 text-center text-primary">Total</th>
+                  <th className="py-3 px-2 text-center text-primary">Acum.</th>
                 </tr>
-                </thead>
-                <tbody>
+              </thead>
+              <tbody>
                 {ends.map((end, endIdx) => (
-                    <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
+                  <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
                     <td className="py-3 px-2 font-bold text-foreground/70">#{endIdx + 1}</td>
                     {end.map((arrow, arrowIdx) => (
-                        <td key={arrowIdx} className="py-1.5 px-1">
+                      <td key={arrowIdx} className="py-1.5 px-1">
                         <Input
-                            className="w-12 h-10 text-center font-bold text-base p-0 glass focus:ring-primary/50"
-                            value={arrow}
-                            onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
-                            placeholder="—"
-                            maxLength={2}
+                          className="w-12 h-10 text-center font-bold text-base p-0 glass focus:ring-primary/50"
+                          value={arrow}
+                          onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                          placeholder="—"
+                          maxLength={2}
                         />
-                        </td>
+                      </td>
                     ))}
                     <td className="py-3 px-2 text-center font-bold text-foreground bg-primary/5">{endTotal(end)}</td>
                     <td className="py-3 px-2 text-center font-black text-primary bg-primary/10">{runningTotal(endIdx)}</td>
-                    </tr>
+                  </tr>
                 ))}
-                </tbody>
+              </tbody>
             </table>
           </div>
 
@@ -297,31 +296,31 @@ export default function NewScorePage() {
             {ends.map((end, endIdx) => (
               <div key={endIdx} className="p-4 rounded-2xl bg-muted/20 border border-border/50 shadow-inner">
                 <div className="flex justify-between items-center mb-3">
-                    <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
-                    <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                            <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
-                            <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
-                            <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
-                        </div>
+                  <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
+                      <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
                     </div>
+                    <div className="flex flex-col items-center">
+                      <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
+                      <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {end.map((arrow, arrowIdx) => (
-                        <div key={arrowIdx} className="flex-1 min-w-[54px]">
-                             <Input
-                                className="w-full h-12 text-center font-black text-xl p-0 glass border-primary/20 focus:border-primary shadow-sm"
-                                value={arrow}
-                                onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
-                                placeholder="—"
-                                maxLength={2}
-                                inputMode="text"
-                            />
-                        </div>
-                    ))}
+                  {end.map((arrow, arrowIdx) => (
+                    <div key={arrowIdx} className="flex-1 min-w-[54px]">
+                      <Input
+                        className="w-full h-12 text-center font-black text-xl p-0 glass border-primary/20 focus:border-primary shadow-sm"
+                        value={arrow}
+                        onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                        placeholder="—"
+                        maxLength={2}
+                        inputMode="text"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -333,11 +332,11 @@ export default function NewScorePage() {
               <div className="relative">
                 <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-1">Puntaje Total</p>
                 <div className="flex items-center justify-center gap-3">
-                    <Trophy className="h-6 w-6 text-yellow-500 animate-pulse" />
-                    <p className="text-5xl font-display font-black text-primary tabular-nums tracking-tighter">{grandTotal}</p>
-                    {xCount > 0 && (
-                        <span className="text-xl font-bold text-yellow-500/80">({xCount}X)</span>
-                    )}
+                  <Trophy className="h-6 w-6 text-yellow-500 animate-pulse" />
+                  <p className="text-5xl font-display font-black text-primary tabular-nums tracking-tighter">{grandTotal}</p>
+                  {xCount > 0 && (
+                    <span className="text-xl font-bold text-yellow-500/80">({xCount}X)</span>
+                  )}
                 </div>
               </div>
             </div>
