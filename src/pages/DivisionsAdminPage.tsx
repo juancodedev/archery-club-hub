@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -90,7 +90,7 @@ export default function DivisionsAdminPage() {
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -116,7 +116,7 @@ export default function DivisionsAdminPage() {
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -146,7 +146,7 @@ export default function DivisionsAdminPage() {
             setDeleteDialogOpen(false);
             setSelectedDivision(null);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });

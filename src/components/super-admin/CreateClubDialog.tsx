@@ -100,8 +100,8 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
 
             // Reset form
             setClubName(""); setCity(""); setCountry(""); setEmail(""); setAdminName(""); setPlanId("");
-        } catch (error: any) {
-            toast.error("Error al crear el club: " + error.message);
+        } catch (error: unknown) {
+            toast.error("Error al crear el club: " + (error as Error).message);
         } finally {
             setLoading(false);
         }

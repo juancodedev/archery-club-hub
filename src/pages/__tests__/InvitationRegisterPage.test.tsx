@@ -41,7 +41,7 @@ describe("InvitationRegisterPage", () => {
     });
 
     it("debe mostrar 'Enlace Expirado' si la invitación no existe", async () => {
-        (supabase.rpc as any).mockResolvedValue({ data: [], error: null });
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
 
         renderPage();
 
@@ -60,8 +60,8 @@ describe("InvitationRegisterPage", () => {
         }];
         const mockClub = { id: "club1", name: "Archer Club", inscription_fee: 1000, monthly_fee: 500 };
 
-        (supabase.rpc as any).mockResolvedValue({ data: mockInv, error: null });
-        (supabase.from as any).mockImplementation(() => ({
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockInv, error: null });
+        (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             single: vi.fn().mockResolvedValue({ data: mockClub, error: null }),
@@ -77,7 +77,7 @@ describe("InvitationRegisterPage", () => {
     });
 
     it("debe mostrar error si hay un problema de permisos (RPC error)", async () => {
-        (supabase.rpc as any).mockResolvedValue({
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
             data: null,
             error: { message: "permission denied", code: "42501" }
         });
@@ -100,8 +100,8 @@ describe("InvitationRegisterPage", () => {
         }];
         const mockClub = { id: "club456", name: "Green Club", inscription_fee: 1000, monthly_fee: 500 };
 
-        (supabase.rpc as any).mockResolvedValue({ data: mockInv, error: null });
-        (supabase.from as any).mockImplementation((table: string) => {
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockInv, error: null });
+        (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
             if (table === "clubs") {
                 return {
                     select: vi.fn().mockReturnThis(),
@@ -122,7 +122,7 @@ describe("InvitationRegisterPage", () => {
                 eq: vi.fn().mockResolvedValue({ error: null }),
             };
         });
-        (supabase.auth.signUp as any).mockResolvedValue({ data: { user: { id: "user789" } }, error: null });
+        (supabase.auth.signUp as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: { user: { id: "user789" } }, error: null });
 
         renderPage();
 

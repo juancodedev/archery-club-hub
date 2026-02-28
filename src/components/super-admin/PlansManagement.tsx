@@ -44,7 +44,7 @@ export default function PlansManagement() {
         if (error) {
             toast.error("Error al cargar planes");
         } else {
-            setPlans((data as any[]).map(p => ({
+            setPlans((data as Plan[]).map(p => ({
                 ...p,
                 features: Array.isArray(p.features) ? p.features as string[] : []
             })));

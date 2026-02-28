@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { calculateFinancialStatus, isMembershipCategory, isInscriptionCategory } from "@/lib/membershipUtils";
 
+interface MonthStatus { month: number; year: number; status: string; label: string; }
+
 export default function MembershipsPage() {
     const { member } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,7 +24,7 @@ export default function MembershipsPage() {
         queryKey: ["club-memberships-status", clubId],
         queryFn: async () => {
             if (!clubId) return [];
-            
+
             // 1. Fetch all members of the club
             const { data: members, error: membersError } = await supabase
                 .from("members")
@@ -36,7 +38,7 @@ export default function MembershipsPage() {
             // 2. Fetch all membership payments for the last 6 months
             const now = new Date();
             const startMonth = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-            
+
             const { data: payments, error: paymentsError } = await supabase
                 .from("financial_entries")
                 .select("*")
@@ -49,22 +51,22 @@ export default function MembershipsPage() {
                 const memberPayments = payments?.filter(p => p.member_id === m.id) || [];
                 const billingDay = m.billing_day || new Date(m.enrollment_date).getDate();
                 const graceDays = m.grace_days ?? 7;
-                
+
                 // Calculate status for each of the last 6 months
                 const monthsStatus = Array.from({ length: 6 }).map((_, i) => {
                     const d = new Date();
                     d.setMonth(d.getMonth() - i);
                     const month = d.getMonth() + 1;
                     const year = d.getFullYear();
-                    
-                    const paid = memberPayments.some(p => 
-                        isMembershipCategory(p.category) && 
-                        p.payment_month === month && 
+
+                    const paid = memberPayments.some(p =>
+                        isMembershipCategory(p.category) &&
+                        p.payment_month === month &&
                         p.payment_year === year
                     );
 
                     let status = paid ? "paid" : "pending";
-                    
+
                     if (!paid) {
                         const isCurrentMonth = i === 0;
                         if (isCurrentMonth) {
@@ -76,7 +78,7 @@ export default function MembershipsPage() {
                             const monthDate = new Date(year, month - 1, 1);
                             const enrollmentDate = new Date(m.enrollment_date);
                             const startOfEnrollmentMonth = new Date(enrollmentDate.getFullYear(), enrollmentDate.getMonth(), 1);
-                            
+
                             if (monthDate >= startOfEnrollmentMonth) {
                                 status = "overdue";
                             }
@@ -104,9 +106,9 @@ export default function MembershipsPage() {
     const filteredMembers = useMemo(() => {
         return membersData?.filter(m => {
             const matchesSearch = m.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter === "all" || 
-                                 (statusFilter === "overdue" && m.overallStatus === "atrasado") ||
-                                 (statusFilter === "ok" && m.overallStatus === "vigente");
+            const matchesStatus = statusFilter === "all" ||
+                (statusFilter === "overdue" && m.overallStatus === "atrasado") ||
+                (statusFilter === "ok" && m.overallStatus === "vigente");
             return matchesSearch && matchesStatus;
         });
     }, [membersData, searchTerm, statusFilter]);
@@ -124,8 +126,8 @@ export default function MembershipsPage() {
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Buscar arquero..." 
+                    <Input
+                        placeholder="Buscar arquero..."
                         className="pl-10 glass border-primary/10 h-11 rounded-xl"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
@@ -181,14 +183,14 @@ export default function MembershipsPage() {
                                 </div>
 
                                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-                                    {m.monthsStatus.map((ms: any, idx: number) => (
-                                        <div 
-                                            key={idx} 
+                                    {m.monthsStatus.map((ms: MonthStatus, idx: number) => (
+                                        <div
+                                            key={idx}
                                             className={cn(
                                                 "min-w-[50px] p-2 rounded-xl border text-center transition-all",
-                                                ms.status === "paid" ? "bg-emerald-500/10 border-emerald-500/30" : 
-                                                ms.status === "overdue" ? "bg-rose-500/10 border-rose-500/30" : 
-                                                "bg-muted/50 border-border/50"
+                                                ms.status === "paid" ? "bg-emerald-500/10 border-emerald-500/30" :
+                                                    ms.status === "overdue" ? "bg-rose-500/10 border-rose-500/30" :
+                                                        "bg-muted/50 border-border/50"
                                             )}
                                         >
                                             <p className="text-[8px] uppercase font-bold text-muted-foreground">{ms.label}</p>

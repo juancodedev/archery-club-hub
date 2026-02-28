@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -42,6 +42,18 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import FinanceForm from "@/components/admin/FinanceForm";
 
+interface Club { id: string; name: string; allow_superadmin_finances: boolean; }
+interface FinancialEntry {
+    id: string;
+    type: "income" | "expense";
+    amount: number;
+    entry_date: string;
+    category: string;
+    description: string | null;
+    receipt_url: string | null;
+    members?: { full_name: string } | null;
+}
+
 export default function FinancePage() {
     const { member } = useAuth();
     const isSuperAdmin = member?.is_super_admin;
@@ -50,8 +62,8 @@ export default function FinancePage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedType, setSelectedType] = useState<"income" | "expense" | null>(null);
     const [selectedClubId, setSelectedClubId] = useState<string>(member?.club_id || "");
-    const [clubs, setClubs] = useState<any[]>([]);
-    const [editingEntry, setEditingEntry] = useState<any>(null);
+    const [clubs, setClubs] = useState<Club[]>([]);
+    const [editingEntry, setEditingEntry] = useState<FinancialEntry | null>(null);
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
     useEffect(() => {
@@ -84,7 +96,7 @@ export default function FinancePage() {
                 .from("financial_entries")
                 .select("*, members(full_name)")
                 .eq("club_id", clubId);
-            
+
             if (categoryFilter !== "all") {
                 if (categoryFilter === "Otros") {
                     query = query.neq("category", "Membresía");
@@ -113,7 +125,7 @@ export default function FinancePage() {
             queryClient.invalidateQueries({ queryKey: ["financial-entries"] });
             toast({ title: "Registro eliminado correctamente" });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({
                 title: "Error al eliminar",
                 description: error.message,
@@ -130,7 +142,7 @@ export default function FinancePage() {
 
     const balance = totals.income - totals.expense;
 
-    const openForm = (type: "income" | "expense", entry?: any) => {
+    const openForm = (type: "income" | "expense", entry?: FinancialEntry) => {
         setSelectedType(type);
         setEditingEntry(entry || null);
         setIsFormOpen(true);
@@ -153,7 +165,8 @@ export default function FinancePage() {
             if (data?.signedUrl) {
                 window.open(data.signedUrl, "_blank");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            console.error(error);
             toast({
                 title: "Error al abrir comprobante",
                 description: "No se pudo generar el enlace seguro.",
@@ -408,9 +421,9 @@ export default function FinancePage() {
                                     <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type, entry)}>
                                         <Pencil className="h-3.5 w-3.5" /> EDITAR
                                     </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="sm" 
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
                                         className="h-8 gap-1.5 text-destructive text-[10px] font-bold hover:bg-destructive/5"
                                         onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}
                                     >

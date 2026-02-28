@@ -27,7 +27,7 @@ export default function DeleteMemberDialog({ memberId, memberName, open, onOpenC
       toast({ title: "Miembro eliminado" });
       onOpenChange(false);
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });

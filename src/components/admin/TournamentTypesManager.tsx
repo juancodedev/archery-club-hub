@@ -93,29 +93,29 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
 
     const updateMutation = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-            const { error } = await supabase
+        mutationFn: async ({ id, data: formValues }: { id: string; data: typeof formData }) => {
+            const { error, data: updated } = await supabase
                 .from("tournament_types")
                 .update({
-                    name: data.name,
-                    description: data.description?.trim() || null,
-                    arrows_per_end: parseInt(data.arrows_per_end) || 3,
-                    ends_per_round: parseInt(data.ends_per_round) || 10,
-                    distance_meters: data.distance_meters && data.distance_meters.trim() !== "" ? parseInt(data.distance_meters) : null,
-                    target_size_cm: data.target_size_cm && data.target_size_cm.trim() !== "" ? parseInt(data.target_size_cm) : null,
-                    is_indoor: data.is_indoor,
+                    name: formValues.name,
+                    description: formValues.description?.trim() || null,
+                    arrows_per_end: parseInt(formValues.arrows_per_end) || 3,
+                    ends_per_round: parseInt(formValues.ends_per_round) || 10,
+                    distance_meters: formValues.distance_meters && formValues.distance_meters.trim() !== "" ? parseInt(formValues.distance_meters) : null,
+                    target_size_cm: formValues.target_size_cm && formValues.target_size_cm.trim() !== "" ? parseInt(formValues.target_size_cm) : null,
+                    is_indoor: formValues.is_indoor,
                 })
                 .eq("id", id)
                 .select();
 
             if (error) throw error;
-            if (!data || (data as any).length === 0) {
+            if (!updated || updated.length === 0) {
                 throw new Error("No se pudo actualizar el registro. Es posible que no tengas permisos para modificar formatos globales del sistema.");
             }
         },
@@ -125,7 +125,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -138,7 +138,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tournament_types"] });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -153,7 +153,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
             toast({ title: "Tipo de torneo eliminado" });
             setDeleteDialogOpen(false);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });

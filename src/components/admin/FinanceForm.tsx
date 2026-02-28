@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,19 @@ const CATEGORIES = {
     expense: ["Mantenimiento", "Alquiler", "Equipamiento", "Premiación", "Servicios", "Insumos", "Otro"]
 };
 
-export default function FinanceForm({ type, onSuccess, onCancel, initialData }: FinanceFormProps & { initialData?: any }) {
+interface InitialData {
+    id?: string;
+    amount?: number;
+    category?: string;
+    description?: string;
+    entry_date?: string;
+    receipt_url?: string | null;
+    member_id?: string | null;
+    payment_month?: number;
+    payment_year?: number;
+}
+
+export default function FinanceForm({ type, onSuccess, onCancel, initialData }: FinanceFormProps & { initialData?: InitialData }) {
     const { member } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -110,10 +122,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
             setReceiptUrl(filePath);
             toast({ title: "Archivo subido correctamente" });
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Error al subir archivo",
-                description: error.message,
+                description: (error as Error).message,
                 variant: "destructive"
             });
         } finally {
@@ -162,10 +174,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                 description: "La transacción se ha guardado correctamente."
             });
             onSuccess();
-        } catch (error: any) {
+        } catch (error: unknown) {
             toast({
                 title: "Error al guardar",
-                description: error.message,
+                description: (error as Error).message,
                 variant: "destructive"
             });
         } finally {

@@ -39,8 +39,8 @@ export default function ExtraChargesDialog({ clubId, clubName }: Props) {
             toast.success("Cargo extra añadido correctamente");
             setOpen(false);
             setName(""); setDescription(""); setAmount("");
-        } catch (error: any) {
-            toast.error("Error al añadir cargo: " + error.message);
+        } catch (error: unknown) {
+            toast.error("Error al añadir cargo: " + (error as Error).message);
         } finally {
             setLoading(false);
         }

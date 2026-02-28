@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -40,6 +40,9 @@ function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
   );
 }
 
+interface ClubItem { id: string; name: string; }
+interface QrSession { id: string; name: string; attendance_token?: string; }
+
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
   const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
@@ -48,8 +51,8 @@ export default function TrainingSessionsPage() {
   const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [qrSession, setQrSession] = useState<any>(null);
+  const [clubs, setClubs] = useState<ClubItem[]>([]);
+  const [qrSession, setQrSession] = useState<QrSession | null>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -119,29 +122,29 @@ export default function TrainingSessionsPage() {
       setDialogOpen(false);
       setName(""); setDiscipline(""); setDistanceYards(""); setTargetType(""); setDetail(""); setDialogClubId("");
     },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const toggleAttendance = useMutation({
     mutationFn: async ({ enrollmentId, currentStatus }: { enrollmentId: string, currentStatus: boolean }) => {
-      const { error } = await supabase.from("training_enrollments").update({ attended: !currentStatus } as any).eq("id", enrollmentId);
+      const { error } = await supabase.from("training_enrollments").update({ attended: !currentStatus }).eq("id", enrollmentId);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "Asistencia actualizada" }); },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const generateQR = useMutation({
     mutationFn: async (sessionId: string) => {
       const token = Math.random().toString(36).substring(2, 15);
       const expires = new Date(); expires.setHours(expires.getHours() + 24);
-      const { error } = await supabase.from("training_sessions").update({ attendance_token: token, attendance_token_expires: expires.toISOString() } as any).eq("id", sessionId);
+      const { error } = await supabase.from("training_sessions").update({ attendance_token: token, attendance_token_expires: expires.toISOString() } as never).eq("id", sessionId);
       if (error) throw error;
       return { token, sessionId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      const currentSession = sessions?.find(s => s.id === data.sessionId);
+      const currentSession = sessions?.find((s: { id: string }) => s.id === data.sessionId);
       if (currentSession) { setQrSession({ ...currentSession, attendance_token: data.token }); }
       toast({ title: "Código QR generado", description: "Válido por 24 horas." });
     },
@@ -154,7 +157,7 @@ export default function TrainingSessionsPage() {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "¡Inscripción exitosa!" }); },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const unenroll = useMutation({
@@ -164,10 +167,11 @@ export default function TrainingSessionsPage() {
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "Desinscrito correctamente" }); },
-    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const isEnrolled = (session: any) => (session.training_enrollments as any[])?.some((e: any) => e.member_id === member?.id);
+  const isEnrolled = (session: { training_enrollments: { member_id: string }[] | null }) =>
+    session.training_enrollments?.some((e: { member_id: string }) => e.member_id === member?.id);
   const qrUrl = qrSession ? `${window.location.origin}/attendance/${qrSession.id}?token=${qrSession.attendance_token}` : "";
 
   const getDisciplineIcon = (d: string | null) => DISCIPLINE_ICONS[d || ""] || "";
@@ -288,9 +292,10 @@ export default function TrainingSessionsPage() {
         <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}</div>
       ) : sessions && sessions.length > 0 ? (
         <div className="space-y-4">
-          {sessions.map((session: any, i: number) => {
+          {sessions.map((session, i: number) => {
             const enrolled = isEnrolled(session);
-            const enrollments = (session.training_enrollments as any[]) || [];
+            const enrollments: { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[] =
+              (session.training_enrollments as { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[]) || [];
             const enrollCount = enrollments.length;
             const attendedCount = enrollments.filter(e => e.attended).length;
             const disc = session.discipline || session.division || null;
@@ -369,7 +374,7 @@ export default function TrainingSessionsPage() {
                       <Users className="h-3 w-3" /> Miembros Inscritos
                     </p>
                     <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                      {enrollments.map((e: any) => (
+                      {enrollments.map((e) => (
                         <button
                           key={e.id}
                           disabled={toggleAttendance.isPending}
