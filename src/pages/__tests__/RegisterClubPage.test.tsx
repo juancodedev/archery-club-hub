@@ -41,7 +41,7 @@ describe("RegisterClubPage", () => {
         vi.clearAllMocks();
 
         // Default plans response
-        (supabase.from as any).mockImplementation(() => ({
+        (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation(() => ({
             select: vi.fn().mockReturnThis(),
             order: vi.fn().mockImplementation(() => Promise.resolve({
                 data: [{ id: "p1", name: "Basico", price: 29.99 }],
@@ -67,11 +67,11 @@ describe("RegisterClubPage", () => {
 
     it("debe registrar un club exitosamente y redirigir al dashboard", async () => {
         const mockAuthData = { user: { id: "user123" } };
-        (supabase.auth.signUp as any).mockResolvedValue({ data: mockAuthData, error: null });
-        (supabase.rpc as any).mockResolvedValue({ data: "club123", error: null });
+        (supabase.auth.signUp as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockAuthData, error: null });
+        (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: "club123", error: null });
 
         const mockUpdate = vi.fn().mockResolvedValue({ error: null });
-        (supabase.from as any).mockImplementation((table: string) => {
+        (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
             if (table === "plans") {
                 return {
                     select: vi.fn().mockReturnThis(),

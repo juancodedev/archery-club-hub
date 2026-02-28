@@ -92,28 +92,28 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
 
     const updateMutation = useMutation({
-        mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-            const { error } = await supabase
+        mutationFn: async ({ id, data: formValues }: { id: string; data: typeof formData }) => {
+            const { error, data: updated } = await supabase
                 .from("divisions")
                 .update({
-                    name: data.name.trim(),
-                    abbreviation: data.abbreviation.trim().toUpperCase(),
-                    description: data.description?.trim() || null,
-                    min_age: data.min_age && data.min_age.trim() !== "" ? parseInt(data.min_age) : null,
-                    max_age: data.max_age && data.max_age.trim() !== "" ? parseInt(data.max_age) : null,
-                    gender: data.gender === "mixed" ? null : (data.gender || null),
+                    name: formValues.name.trim(),
+                    abbreviation: formValues.abbreviation.trim().toUpperCase(),
+                    description: formValues.description?.trim() || null,
+                    min_age: formValues.min_age && formValues.min_age.trim() !== "" ? parseInt(formValues.min_age) : null,
+                    max_age: formValues.max_age && formValues.max_age.trim() !== "" ? parseInt(formValues.max_age) : null,
+                    gender: formValues.gender === "mixed" ? null : (formValues.gender || null),
                 })
                 .eq("id", id)
                 .select();
 
             if (error) throw error;
-            if (!data || (data as any).length === 0) {
+            if (!updated || updated.length === 0) {
                 throw new Error("No se pudo actualizar el registro. Es posible que no tengas permisos para modificar categorías globales del sistema.");
             }
         },
@@ -123,7 +123,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
             setEditDialogOpen(false);
             resetForm();
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -153,7 +153,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
             setDeleteDialogOpen(false);
             setSelectedDivision(null);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({ title: "Error", description: error.message, variant: "destructive" });
         },
     });
@@ -213,9 +213,9 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
         };
 
         if (selectedDivision) {
-            updateMutation.mutate({ id: selectedDivision.id, data: submittableData as any });
+            updateMutation.mutate({ id: selectedDivision.id, data: submittableData });
         } else {
-            createMutation.mutate(submittableData as any);
+            createMutation.mutate(submittableData);
         }
     };
 

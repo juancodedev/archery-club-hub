@@ -43,7 +43,7 @@ export default function LoginPage() {
         return () => clearTimeout(timer);
       }
     }
-  }, [session, member, navigate, isSuperAdminSubdomain]);
+  }, [session, member, navigate, isSuperAdminSubdomain, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +60,7 @@ export default function LoginPage() {
       } else if (data.session) {
         console.log("✅ [LoginPage] Sesión iniciada con éxito para UID:", data.session.user.id);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("💥 [LoginPage] Error inesperado:", err);
       toast({ title: "Error inesperado", description: "Ocurrió un error al procesar tu solicitud.", variant: "destructive" });
     } finally {

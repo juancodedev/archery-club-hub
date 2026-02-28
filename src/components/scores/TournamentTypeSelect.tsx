@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
     Select,
@@ -29,11 +29,6 @@ const DISCIPLINE_ICONS: Record<string, string> = {
     "3d": "🐗",
 };
 
-function getDisciplineIcon(type: TournamentType): string {
-    if (type.discipline && DISCIPLINE_ICONS[type.discipline]) return DISCIPLINE_ICONS[type.discipline];
-    return type.is_indoor ? "🏠" : "🎯";
-}
-
 function getDistanceLabel(type: TournamentType): string {
     if (type.distance_yards) return `${type.distance_yards} yd`;
     if (type.distance_meters) return `${metersToYards(type.distance_meters)} yd`;
@@ -52,23 +47,7 @@ export default function TournamentTypeSelect({
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        fetchTournamentTypes();
-    }, [member]);
-
-    // Solo dispara cuando los `types` terminan de cargarse (carga asíncrona).
-    // NO incluir `onTypeChange` en las deps: esa función cambia referencia
-    // en cada render del padre, lo que causaría un ciclo infinito que resetea
-    // todas las flechas (setEnds) cada vez que el usuario escribe un punto.
-    useEffect(() => {
-        if (value && onTypeChange && types.length > 0) {
-            const selectedType = types.find((t) => t.id === value);
-            onTypeChange(selectedType || null);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value, types]);
-
-    const fetchTournamentTypes = async () => {
+    const fetchTournamentTypes = useCallback(async () => {
         setLoading(true);
         try {
             let query = supabase
@@ -92,7 +71,20 @@ export default function TournamentTypeSelect({
         } finally {
             setLoading(false);
         }
-    };
+    }, [member?.club_id]);
+
+    useEffect(() => {
+        fetchTournamentTypes();
+    }, [fetchTournamentTypes]);
+
+    // Solo dispara cuando los `types` terminan de cargarse (carga asíncrona).
+    useEffect(() => {
+        if (value && onTypeChange && types.length > 0) {
+            const selectedType = types.find((t) => t.id === value);
+            onTypeChange(selectedType || null);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [value, types]);
 
     const filteredTypes = types.filter((type) =>
         type.name.toLowerCase().includes(searchTerm.toLowerCase())

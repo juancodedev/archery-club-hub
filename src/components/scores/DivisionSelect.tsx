@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
     Select,
@@ -39,11 +39,7 @@ export default function DivisionSelect({
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        fetchDivisions();
-    }, [member]);
-
-    const fetchDivisions = async () => {
+    const fetchDivisions = useCallback(async () => {
         setLoading(true);
         try {
             // Obtener divisiones del sistema
@@ -69,7 +65,11 @@ export default function DivisionSelect({
         } finally {
             setLoading(false);
         }
-    };
+    }, [member?.club_id]);
+
+    useEffect(() => {
+        fetchDivisions();
+    }, [fetchDivisions]);
 
     const filteredDivisions = divisions.filter(
         (div) =>

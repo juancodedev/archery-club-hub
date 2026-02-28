@@ -43,7 +43,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const [graceDays, setGraceDays] = useState("7");
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
-  const [clubs, setClubs] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
 
   const isMinor = useMemo(() => {
     if (!dateOfBirth) return false;
@@ -108,7 +108,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         p_role: role,
         p_billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
         p_grace_days: graceDays ? Number(graceDays) : 7
-      }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: any };
+      }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: { message: string } | null };
 
       if (error) throw error;
       if (!data?.success) throw new Error("No se pudo crear el miembro");
@@ -141,7 +141,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       setGuardianEmail("");
       setRole("arquero");
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     },
   });
@@ -309,23 +309,23 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Día de Cobro (1-31)</Label>
-                <Input 
-                  type="number" 
-                  min="1" 
-                  max="31" 
-                  value={billingDay} 
-                  onChange={(e) => setBillingDay(e.target.value)} 
+                <Input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={billingDay}
+                  onChange={(e) => setBillingDay(e.target.value)}
                   placeholder="Día del mes..."
                 />
                 <p className="text-[10px] text-muted-foreground">Vencimiento mensual. Por defecto: hoy.</p>
               </div>
               <div className="space-y-2">
                 <Label>Días de Gracia</Label>
-                <Input 
-                  type="number" 
-                  min="0" 
-                  value={graceDays} 
-                  onChange={(e) => setGraceDays(e.target.value)} 
+                <Input
+                  type="number"
+                  min="0"
+                  value={graceDays}
+                  onChange={(e) => setGraceDays(e.target.value)}
                 />
                 <p className="text-[10px] text-muted-foreground">Días extra antes de marcar atrasado.</p>
               </div>
