@@ -61,7 +61,7 @@ export default function AttendanceMarkPage() {
                     // Already enrolled, just update attendance
                     const { error: updateError } = await supabase
                         .from("training_enrollments")
-                        .update({ attended: true } as any)
+                        .update<{ attended: boolean }>({ attended: true })
                         .eq("id", enrollment.id);
 
                     if (updateError) throw updateError;

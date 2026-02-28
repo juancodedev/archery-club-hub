@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
 import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DivisionSelect from "@/components/scores/DivisionSelect";
@@ -41,8 +42,8 @@ export default function NewScorePage() {
   // For SuperAdmin/Admin
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string; }[]>([]);
+  const [members, setMembers] = useState<{ id: string; name: string;}[]>([]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -73,7 +74,13 @@ export default function NewScorePage() {
   };
 
   // Handle tournament type change
-  const handleTournamentTypeChange = (type: any) => {
+  interface TournamentType {
+    arrows_per_end: number;
+    ends_per_round: number;
+    is_indoor: boolean;
+  }
+
+  const handleTournamentTypeChange = (type: TournamentType) => {
     if (type) {
       setArrowsPerEnd(type.arrows_per_end);
       setEndsCount(type.ends_per_round);
@@ -128,7 +135,7 @@ export default function NewScorePage() {
         division_id: divisionId || null,
         tournament_type_id: tournamentTypeId || null,
         detail,
-        ends: ends as any,
+        ends: ends as string[][],
         total_score: grandTotal,
         x_count: xCount,
       });
