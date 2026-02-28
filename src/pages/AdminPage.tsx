@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, Filter, CalendarDays } from "lucide-react";
+import { Shield, Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, Filter, CalendarDays, XCircle, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
