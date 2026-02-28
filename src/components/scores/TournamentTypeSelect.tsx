@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { DISCIPLINE_LABELS, metersToYards } from "@/lib/archeryConstants";
 import type { TournamentType } from "@/types/archery";
 
