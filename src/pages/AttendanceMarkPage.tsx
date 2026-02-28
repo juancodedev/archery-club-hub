@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";

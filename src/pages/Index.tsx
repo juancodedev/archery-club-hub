@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard, Check } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContextCore";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
