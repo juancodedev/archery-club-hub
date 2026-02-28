@@ -65,6 +65,9 @@ export default function DashboardPage() {
     { icon: Award, label: "Rol Actual", value: member?.roles[0] || "Arquero", color: "text-emerald-500", to: "/profile" },
   ];
 
+  function cn(...classes: (string | undefined | null | false)[]): string {
+    return classes.filter(Boolean).join(" ");
+  }
   return (
     <div className="space-y-8 pb-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">

@@ -158,6 +158,9 @@ export default function ReportsPage() {
     { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-400" },
   ];
 
+  function cn(baseClass: string, colorClass: string): string {
+    return `${baseClass} ${colorClass}`;
+  }
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
