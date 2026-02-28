@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Crosshair } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
 import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
+import { cn } from "@/lib/utils";
 
 function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
   return Array.from({ length: endsCount }, () => Array(arrowsPerEnd).fill(""));
@@ -40,8 +42,8 @@ export default function NewScorePage() {
   // For SuperAdmin/Admin
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  const [clubs, setClubs] = useState<any[]>([]);
-  const [members, setMembers] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string; }[]>([]);
+  const [members, setMembers] = useState<{ id: string; name: string;}[]>([]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -72,7 +74,13 @@ export default function NewScorePage() {
   };
 
   // Handle tournament type change
-  const handleTournamentTypeChange = (type: any) => {
+  interface TournamentType {
+    arrows_per_end: number;
+    ends_per_round: number;
+    is_indoor: boolean;
+  }
+
+  const handleTournamentTypeChange = (type: TournamentType) => {
     if (type) {
       setArrowsPerEnd(type.arrows_per_end);
       setEndsCount(type.ends_per_round);
@@ -127,7 +135,7 @@ export default function NewScorePage() {
         division_id: divisionId || null,
         tournament_type_id: tournamentTypeId || null,
         detail,
-        ends: ends as any,
+        ends: ends as string[][],
         total_score: grandTotal,
         x_count: xCount,
       });
@@ -146,32 +154,34 @@ export default function NewScorePage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-4xl">
+    <div className="space-y-6 pb-20 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1">
-          <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Crosshair className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
+            <Crosshair className="h-7 w-7 text-primary" />
             Registrar Puntaje
           </h1>
-          <p className="text-sm text-muted-foreground">Ingresa la tarjeta de puntuación</p>
+          <p className="text-sm text-muted-foreground mt-1 font-medium italic">"Ingresa tu tarjeta de rendimiento"</p>
         </div>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Scorecard selection (for owners/trainers) */}
         {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
-            <h3 className="font-display font-semibold text-foreground mb-4">Selección de Arquero</h3>
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
+            <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-4">
+                <UserIcon className="h-4 w-4 text-primary" /> Selección de Arquero
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
               {isSuperAdmin && (
                 <div className="space-y-2">
-                  <Label>Club</Label>
+                  <Label className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Club</Label>
                   <Select value={selectedClubId} onValueChange={(val) => {
                     setSelectedClubId(val);
                     setSelectedMemberId("");
                     fetchMembers(val);
                   }}>
-                    <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                    <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
                     <SelectContent>
                       {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
@@ -179,9 +189,9 @@ export default function NewScorePage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Arquero</Label>
+                <Label className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Arquero</Label>
                 <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar arquero" /></SelectTrigger>
+                  <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar arquero" /></SelectTrigger>
                   <SelectContent>
                     {members.map(m => <SelectItem key={m.id} value={m.id}>{m.full_name}</SelectItem>)}
                   </SelectContent>
@@ -192,18 +202,26 @@ export default function NewScorePage() {
         )}
 
         {/* Event info */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-4 sm:p-5">
-          <h3 className="font-display font-semibold text-foreground mb-4">Información del Evento</h3>
-          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Evento / Entrenamiento</Label>
-              <Input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Entrenamiento libre" />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
+          <div className="flex items-center gap-2 border-b border-border/50 pb-3">
+              <Info className="h-5 w-5 text-primary" />
+              <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
+          </div>
+          
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2 lg:col-span-2">
+              <Label className="text-xs font-bold text-muted-foreground">Evento / Entrenamiento</Label>
+              <Input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Entrenamiento libre..." className="h-11 glass border-primary/10" />
             </div>
             <div className="space-y-2">
-              <Label>Fecha</Label>
-              <Input type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} />
+              <Label className="text-xs font-bold text-muted-foreground">Fecha</Label>
+              <div className="relative">
+                <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/50" />
+                <Input type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} className="h-11 pl-10 glass border-primary/10" />
+              </div>
             </div>
             <div className="space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground">División / Categoría</Label>
               <DivisionSelect
                 value={divisionId}
                 onChange={setDivisionId}
@@ -212,6 +230,7 @@ export default function NewScorePage() {
               />
             </div>
             <div className="space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground">Tipo de Torneo</Label>
               <TournamentTypeSelect
                 value={tournamentTypeId}
                 onChange={setTournamentTypeId}
@@ -219,63 +238,118 @@ export default function NewScorePage() {
                 placeholder="Indoor 18m, Outdoor 70m..."
               />
             </div>
-            <div className="space-y-2 sm:col-span-2 lg:col-span-2">
-              <Label>Detalle</Label>
-              <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." />
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+              <Label className="text-xs font-bold text-muted-foreground">Detalle</Label>
+              <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." className="h-11 glass border-primary/10" />
             </div>
           </div>
         </motion.div>
 
         {/* Scorecard */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-4 sm:p-5 overflow-x-auto">
-          <h3 className="font-display font-semibold text-foreground mb-4">Tarjeta de Puntuación</h3>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="py-2 px-2 text-left text-muted-foreground font-medium">End</th>
-                {Array.from({ length: arrowsPerEnd }, (_, i) => (
-                  <th key={i} className="py-2 px-1 text-center text-muted-foreground font-medium">F{i + 1}</th>
-                ))}
-                <th className="py-2 px-2 text-center text-muted-foreground font-medium">Total</th>
-                <th className="py-2 px-2 text-center text-muted-foreground font-medium">Acum.</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ends.map((end, endIdx) => (
-                <tr key={endIdx} className="border-b border-border/50">
-                  <td className="py-2 px-2 font-medium text-foreground">End {endIdx + 1}</td>
-                  {end.map((arrow, arrowIdx) => (
-                    <td key={arrowIdx} className="py-1 px-1">
-                      <Input
-                        className="w-12 h-9 text-center text-sm p-0"
-                        value={arrow}
-                        onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
-                        placeholder="—"
-                        maxLength={2}
-                      />
-                    </td>
-                  ))}
-                  <td className="py-2 px-2 text-center font-semibold text-foreground">{endTotal(end)}</td>
-                  <td className="py-2 px-2 text-center font-bold text-primary">{runningTotal(endIdx)}</td>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
+          <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display font-bold text-foreground flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary" /> Tarjeta de Puntuación
+              </h3>
+              <Badge variant="outline" className="font-mono text-xs border-primary/30">
+                  {arrowsPerEnd} flechas / {endsCount} rondas
+              </Badge>
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto pb-4">
+            <table className="w-full text-sm">
+                <thead>
+                <tr className="border-b border-border uppercase tracking-widest text-[10px] text-muted-foreground font-bold">
+                    <th className="py-3 px-2 text-left">Round</th>
+                    {Array.from({ length: arrowsPerEnd }, (_, i) => (
+                    <th key={i} className="py-3 px-1 text-center">F{i + 1}</th>
+                    ))}
+                    <th className="py-3 px-2 text-center text-primary">Total</th>
+                    <th className="py-3 px-2 text-center text-primary">Acum.</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                {ends.map((end, endIdx) => (
+                    <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
+                    <td className="py-3 px-2 font-bold text-foreground/70">#{endIdx + 1}</td>
+                    {end.map((arrow, arrowIdx) => (
+                        <td key={arrowIdx} className="py-1.5 px-1">
+                        <Input
+                            className="w-12 h-10 text-center font-bold text-base p-0 glass focus:ring-primary/50"
+                            value={arrow}
+                            onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                            placeholder="—"
+                            maxLength={2}
+                        />
+                        </td>
+                    ))}
+                    <td className="py-3 px-2 text-center font-bold text-foreground bg-primary/5">{endTotal(end)}</td>
+                    <td className="py-3 px-2 text-center font-black text-primary bg-primary/10">{runningTotal(endIdx)}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+          </div>
 
-          <div className="mt-4 flex justify-end">
-            <div className="glass rounded-lg px-6 py-3 text-center">
-              <p className="text-xs text-muted-foreground">Total General</p>
-              <p className="text-3xl font-display font-bold text-primary">{grandTotal}</p>
+          {/* Mobile Grid View */}
+          <div className="md:hidden space-y-4">
+            {ends.map((end, endIdx) => (
+              <div key={endIdx} className="p-4 rounded-2xl bg-muted/20 border border-border/50 shadow-inner">
+                <div className="flex justify-between items-center mb-3">
+                    <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
+                    <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                            <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
+                            <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
+                            <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {end.map((arrow, arrowIdx) => (
+                        <div key={arrowIdx} className="flex-1 min-w-[54px]">
+                             <Input
+                                className="w-full h-12 text-center font-black text-xl p-0 glass border-primary/20 focus:border-primary shadow-sm"
+                                value={arrow}
+                                onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                                placeholder="—"
+                                maxLength={2}
+                                inputMode="text"
+                            />
+                        </div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <div className="glass rounded-3xl px-8 py-5 text-center border-primary/20 shadow-2xl shadow-primary/10 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+              <div className="relative">
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-1">Puntaje Total</p>
+                <div className="flex items-center justify-center gap-3">
+                    <Trophy className="h-6 w-6 text-yellow-500 animate-pulse" />
+                    <p className="text-5xl font-display font-black text-primary tabular-nums tracking-tighter">{grandTotal}</p>
+                    {xCount > 0 && (
+                        <span className="text-xl font-bold text-yellow-500/80">({xCount}X)</span>
+                    )}
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
 
-        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 justify-end">
-          <Button type="button" variant="outline" onClick={() => navigate("/scores")} className="w-full sm:w-auto">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-4">
+          <Button type="button" variant="ghost" onClick={() => navigate("/scores")} className="h-12 w-full sm:w-auto font-bold rounded-xl">
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-            {loading ? "Guardando..." : "Guardar Puntaje"}
+          <Button type="submit" disabled={loading} className="h-12 w-full sm:w-80 font-bold rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all">
+            {loading ? "Sincronizando..." : "Guardar Puntaje en la Nube"}
           </Button>
         </div>
       </form>
