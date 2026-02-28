@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Calendar, Plus, Users, CheckCircle, XCircle, QrCode, Info, MapPin, User as UserIcon, Target } from "lucide-react";
+import { Calendar, Plus, Users, CheckCircle, XCircle, QrCode, Info, User as UserIcon, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import QRCode from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DISCIPLINES, STANDARD_DISTANCES, formatYards, type DisciplineValue } from "@/lib/archeryConstants";
+
+const DISCIPLINE_ICONS: Record<string, string> = { outdoor: "🎯", indoor: "🏠", campo: "🌲", "3d": "🐗" };
+const DISCIPLINE_BADGE: Record<string, string> = {
+  outdoor: "bg-green-500/10 text-green-600 border-green-500/20",
+  indoor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  campo: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  "3d": "bg-purple-500/10 text-purple-600 border-purple-500/20",
+};
 
 function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
   const canvasRef = (ref: HTMLCanvasElement | null) => {
@@ -20,16 +29,10 @@ function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
       QRCode.toCanvas(ref, value, {
         width: size,
         margin: 2,
-        color: {
-          dark: "#0F172A",
-          light: "#FFFFFF",
-        },
-      }, (error) => {
-        if (error) console.error("QR Error:", error);
-      });
+        color: { dark: "#0F172A", light: "#FFFFFF" },
+      }, (error) => { if (error) console.error("QR Error:", error); });
     }
   };
-
   return (
     <div className="p-4 bg-white rounded-3xl shadow-2xl inline-block border-8 border-white">
       <canvas ref={canvasRef} />
@@ -78,10 +81,16 @@ export default function TrainingSessionsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [eventDate, setEventDate] = useState(new Date().toISOString().split("T")[0]);
-  const [division, setDivision] = useState("");
+  const [discipline, setDiscipline] = useState<string>("");
+  const [distanceYards, setDistanceYards] = useState<string>("");
   const [targetType, setTargetType] = useState("");
   const [detail, setDetail] = useState("");
   const [dialogClubId, setDialogClubId] = useState("");
+
+  // Filtrar distancias estándar por disciplina seleccionada
+  const filteredDistances = discipline
+    ? STANDARD_DISTANCES.filter(d => d.discipline === discipline)
+    : STANDARD_DISTANCES;
 
   const createSession = useMutation({
     mutationFn: async () => {
@@ -96,7 +105,9 @@ export default function TrainingSessionsPage() {
         created_by: creatorId,
         name,
         event_date: eventDate,
-        division: division || null,
+        division: discipline || null,
+        discipline: discipline || null,
+        distance_yards: distanceYards ? parseFloat(distanceYards) : null,
         target_type: targetType || null,
         detail: detail || null,
       });
@@ -106,53 +117,32 @@ export default function TrainingSessionsPage() {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
       toast({ title: "Sesión creada exitosamente" });
       setDialogOpen(false);
-      setName("");
-      setDivision("");
-      setTargetType("");
-      setDetail("");
-      setDialogClubId("");
+      setName(""); setDiscipline(""); setDistanceYards(""); setTargetType(""); setDetail(""); setDialogClubId("");
     },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const toggleAttendance = useMutation({
     mutationFn: async ({ enrollmentId, currentStatus }: { enrollmentId: string, currentStatus: boolean }) => {
-      const { error } = await supabase
-        .from("training_enrollments")
-        .update({ attended: !currentStatus } as any)
-        .eq("id", enrollmentId);
+      const { error } = await supabase.from("training_enrollments").update({ attended: !currentStatus } as any).eq("id", enrollmentId);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      toast({ title: "Asistencia actualizada" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "Asistencia actualizada" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const generateQR = useMutation({
     mutationFn: async (sessionId: string) => {
       const token = Math.random().toString(36).substring(2, 15);
-      const expires = new Date();
-      expires.setHours(expires.getHours() + 24);
-
-      const { error } = await supabase
-        .from("training_sessions")
-        .update({
-          attendance_token: token,
-          attendance_token_expires: expires.toISOString()
-        } as any)
-        .eq("id", sessionId);
-
+      const expires = new Date(); expires.setHours(expires.getHours() + 24);
+      const { error } = await supabase.from("training_sessions").update({ attendance_token: token, attendance_token_expires: expires.toISOString() } as any).eq("id", sessionId);
       if (error) throw error;
       return { token, sessionId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
       const currentSession = sessions?.find(s => s.id === data.sessionId);
-      if (currentSession) {
-        setQrSession({ ...currentSession, attendance_token: data.token });
-      }
+      if (currentSession) { setQrSession({ ...currentSession, attendance_token: data.token }); }
       toast({ title: "Código QR generado", description: "Válido por 24 horas." });
     },
   });
@@ -160,41 +150,28 @@ export default function TrainingSessionsPage() {
   const enroll = useMutation({
     mutationFn: async (sessionId: string) => {
       if (!member) throw new Error("No member");
-      const { error } = await supabase.from("training_enrollments").insert({
-        training_session_id: sessionId,
-        member_id: member.id,
-        club_id: selectedClubId,
-      });
+      const { error } = await supabase.from("training_enrollments").insert({ training_session_id: sessionId, member_id: member.id, club_id: selectedClubId });
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      toast({ title: "¡Inscripción exitosa!" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "¡Inscripción exitosa!" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
   const unenroll = useMutation({
     mutationFn: async (sessionId: string) => {
       if (!member) throw new Error("No member");
-      const { error } = await supabase
-        .from("training_enrollments")
-        .delete()
-        .eq("training_session_id", sessionId)
-        .eq("member_id", member.id);
+      const { error } = await supabase.from("training_enrollments").delete().eq("training_session_id", sessionId).eq("member_id", member.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      toast({ title: "Desinscrito correctamente" });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["training-sessions"] }); toast({ title: "Desinscrito correctamente" }); },
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
-  const isEnrolled = (session: any) =>
-    (session.training_enrollments as any[])?.some((e: any) => e.member_id === member?.id);
-
+  const isEnrolled = (session: any) => (session.training_enrollments as any[])?.some((e: any) => e.member_id === member?.id);
   const qrUrl = qrSession ? `${window.location.origin}/attendance/${qrSession.id}?token=${qrSession.attendance_token}` : "";
+
+  const getDisciplineIcon = (d: string | null) => DISCIPLINE_ICONS[d || ""] || "";
+  const getDisciplineBadge = (d: string | null) => DISCIPLINE_BADGE[d || ""] || "bg-muted/30";
 
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto">
@@ -231,22 +208,57 @@ export default function TrainingSessionsPage() {
                   )}
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Nombre de la Sesión</Label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Práctica barebow del jueves" required className="h-11 glass border-primary/10" />
+                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Práctica Indoor del jueves" required className="h-11 glass border-primary/10" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Fecha del Evento</Label>
                     <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} required className="h-11 glass border-primary/10" />
                   </div>
+
+                  {/* Disciplina */}
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Disciplina</Label>
+                    <Select value={discipline} onValueChange={(v) => { setDiscipline(v); setDistanceYards(""); }}>
+                      <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar disciplina..." /></SelectTrigger>
+                      <SelectContent className="glass">
+                        {DISCIPLINES.map(d => (
+                          <SelectItem key={d.value} value={d.value}>{d.icon} {d.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Distancia en yardas */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">División</Label>
-                      <Input value={division} onChange={(e) => setDivision(e.target.value)} placeholder="Recurvo..." className="h-11 glass border-primary/10" />
+                      <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Distancia</Label>
+                      <Select value={distanceYards} onValueChange={setDistanceYards}>
+                        <SelectTrigger className="glass h-11">
+                          <SelectValue placeholder="Seleccionar..." />
+                        </SelectTrigger>
+                        <SelectContent className="glass">
+                          {filteredDistances.map(d => (
+                            <SelectItem key={`${d.yards}-${d.discipline}`} value={d.yards.toString()}>{d.label}</SelectItem>
+                          ))}
+                          <SelectItem value="custom">Otra distancia...</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Diana / Target</Label>
-                      <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="40cm..." className="h-11 glass border-primary/10" />
+                      <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="40 cm, 122 cm..." className="h-11 glass border-primary/10" />
                     </div>
                   </div>
+
+                  {/* Input manual si eligió "Otra distancia" */}
+                  {distanceYards === "custom" && (
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Distancia manual (yardas)</Label>
+                      <Input type="number" placeholder="Ej: 45" className="h-11 glass border-primary/10"
+                        onChange={(e) => setDistanceYards(e.target.value)} />
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Detalle Opcional</Label>
                     <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." className="h-11 glass border-primary/10" />
@@ -269,12 +281,11 @@ export default function TrainingSessionsPage() {
               </SelectContent>
             </Select>
           </div>
-        )}      </motion.div>
+        )}
+      </motion.div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}
-        </div>
+        <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}</div>
       ) : sessions && sessions.length > 0 ? (
         <div className="space-y-4">
           {sessions.map((session: any, i: number) => {
@@ -282,6 +293,7 @@ export default function TrainingSessionsPage() {
             const enrollments = (session.training_enrollments as any[]) || [];
             const enrollCount = enrollments.length;
             const attendedCount = enrollments.filter(e => e.attended).length;
+            const disc = session.discipline || session.division || null;
 
             return (
               <motion.div
@@ -296,21 +308,30 @@ export default function TrainingSessionsPage() {
                     <h3 className="font-bold text-foreground text-xl leading-tight">{session.name}</h3>
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-medium">
                       <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
-                        <Calendar className="h-3 w-3" /> 
+                        <Calendar className="h-3 w-3" />
                         {new Date(session.event_date).toLocaleDateString("es-CL", { day: "numeric", month: "long" })}
                       </span>
-                      {session.division && <Badge variant="secondary" className="h-5 px-2 text-[9px] uppercase font-black">{session.division}</Badge>}
+                      {disc && (
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${getDisciplineBadge(disc)}`}>
+                          {getDisciplineIcon(disc)} {disc}
+                        </span>
+                      )}
+                      {session.distance_yards && (
+                        <span className="flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-lg font-mono text-xs">
+                          📏 {session.distance_yards} yd
+                        </span>
+                      )}
                       {session.target_type && (
-                          <span className="flex items-center gap-1.5 opacity-70">
-                              <Target className="h-3 w-3" /> {session.target_type}
-                          </span>
+                        <span className="flex items-center gap-1.5 opacity-70">
+                          <Target className="h-3 w-3" /> {session.target_type}
+                        </span>
                       )}
                     </div>
                     {session.detail && (
-                        <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
-                            <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
-                            <p className="text-[11px] leading-relaxed italic text-muted-foreground line-clamp-2">"{session.detail}"</p>
-                        </div>
+                      <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
+                        <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
+                        <p className="text-[11px] leading-relaxed italic text-muted-foreground line-clamp-2">"{session.detail}"</p>
+                      </div>
                     )}
                   </div>
 
@@ -319,71 +340,54 @@ export default function TrainingSessionsPage() {
                       <span className="text-[8px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Asistencia</span>
                       <span className="text-lg font-black text-primary tabular-nums">{attendedCount}/{enrollCount}</span>
                     </div>
-
                     <div className="flex gap-2">
-                        {isAdmin && (
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-11 w-11 rounded-xl glass border-primary/20 hover:border-primary/50 text-primary"
-                            onClick={() => generateQR.mutate(session.id)}
-                            disabled={generateQR.isPending}
-                        >
-                            <QrCode className="h-5 w-5" />
+                      {isAdmin && (
+                        <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl glass border-primary/20 hover:border-primary/50 text-primary" onClick={() => generateQR.mutate(session.id)} disabled={generateQR.isPending}>
+                          <QrCode className="h-5 w-5" />
                         </Button>
-                        )}
-                        {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
+                      )}
+                      {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
                         <>
-                            {enrolled ? (
+                          {enrolled ? (
                             <Button variant="ghost" size="sm" className="h-11 px-4 gap-2 text-destructive font-black rounded-xl hover:bg-destructive/5" onClick={() => unenroll.mutate(session.id)}>
-                                <XCircle className="h-4 w-4" /> SALIR
+                              <XCircle className="h-4 w-4" /> SALIR
                             </Button>
-                            ) : (
+                          ) : (
                             <Button size="sm" className="h-11 px-6 gap-2 rounded-xl font-black shadow-lg shadow-primary/20" onClick={() => enroll.mutate(session.id)}>
-                                <CheckCircle className="h-4 w-4" /> INSCRIBIRME
+                              <CheckCircle className="h-4 w-4" /> INSCRIBIRME
                             </Button>
-                            )}
+                          )}
                         </>
-                        )}
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Control de Asistencia Grid (visible to admin/entrenador) */}
                 {isAdmin && enrollCount > 0 && (
                   <div className="pt-4 border-t border-border/50">
                     <p className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground mb-3 px-1 flex items-center gap-2">
                       <Users className="h-3 w-3" /> Miembros Inscritos
                     </p>
                     <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                        {enrollments.map((e: any) => (
+                      {enrollments.map((e: any) => (
                         <button
-                            key={e.id}
-                            disabled={toggleAttendance.isPending}
-                            onClick={() => toggleAttendance.mutate({ enrollmentId: e.id, currentStatus: e.attended })}
-                            className={cn(
-                                "flex flex-col items-center justify-center p-2 rounded-2xl border transition-all relative group",
-                                e.attended ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/30 border-transparent hover:bg-muted/50"
-                            )}
+                          key={e.id}
+                          disabled={toggleAttendance.isPending}
+                          onClick={() => toggleAttendance.mutate({ enrollmentId: e.id, currentStatus: e.attended })}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-2 rounded-2xl border transition-all relative group",
+                            e.attended ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/30 border-transparent hover:bg-muted/50"
+                          )}
                         >
-                            <div className={cn(
-                                "h-1.5 w-1.5 rounded-full absolute top-2 right-2",
-                                e.attended ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/20"
-                            )} />
-                            <div className={cn(
-                                "h-8 w-8 rounded-full mb-1.5 flex items-center justify-center border transition-colors",
-                                e.attended ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-500" : "bg-background/50 border-border text-muted-foreground"
-                            )}>
-                                <UserIcon className="h-4 w-4" />
-                            </div>
-                            <span className={cn(
-                                "text-[10px] font-bold truncate w-full text-center px-1",
-                                e.attended ? "text-emerald-600" : "text-muted-foreground"
-                            )}>
-                                {e.members?.full_name?.split(" ")[0]}
-                            </span>
+                          <div className={cn("h-1.5 w-1.5 rounded-full absolute top-2 right-2", e.attended ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/20")} />
+                          <div className={cn("h-8 w-8 rounded-full mb-1.5 flex items-center justify-center border transition-colors", e.attended ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-500" : "bg-background/50 border-border text-muted-foreground")}>
+                            <UserIcon className="h-4 w-4" />
+                          </div>
+                          <span className={cn("text-[10px] font-bold truncate w-full text-center px-1", e.attended ? "text-emerald-600" : "text-muted-foreground")}>
+                            {e.members?.full_name?.split(" ")[0]}
+                          </span>
                         </button>
-                        ))}
+                      ))}
                     </div>
                   </div>
                 )}
@@ -399,7 +403,7 @@ export default function TrainingSessionsPage() {
             <p className="text-sm text-muted-foreground max-w-xs mx-auto font-medium leading-relaxed">No hay sesiones programadas en este servidor para el club seleccionado.</p>
           </div>
           {(isAdmin || isSuperAdmin) && (
-              <Button onClick={() => setDialogOpen(true)} className="rounded-xl px-8 h-11 font-black">PROGRAMAR PRIMERA SESIÓN</Button>
+            <Button onClick={() => setDialogOpen(true)} className="rounded-xl px-8 h-11 font-black">PROGRAMAR PRIMERA SESIÓN</Button>
           )}
         </div>
       )}
@@ -409,27 +413,17 @@ export default function TrainingSessionsPage() {
         <DialogContent className="sm:max-w-md rounded-[2.5rem] glass overflow-hidden border-none p-0">
           <div className="p-8 space-y-8 flex flex-col items-center text-center">
             <div className="space-y-2">
-                <DialogTitle className="font-display font-black text-2xl tracking-tighter">ACCESO RÁPIDO</DialogTitle>
-                <DialogDescription className="font-medium text-muted-foreground">
-                Escanea para registrar tu participación en la nube
-                </DialogDescription>
+              <DialogTitle className="font-display font-black text-2xl tracking-tighter">ACCESO RÁPIDO</DialogTitle>
+              <DialogDescription className="font-medium text-muted-foreground">Escanea para registrar tu participación en la nube</DialogDescription>
             </div>
-            
-            {qrSession && (
-              <QRCodeCanvas
-                value={qrUrl}
-                size={240}
-              />
-            )}
-            
+            {qrSession && <QRCodeCanvas value={qrUrl} size={240} />}
             <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 w-full">
               <p className="font-black text-foreground text-lg uppercase">{qrSession?.name}</p>
               <div className="flex items-center justify-center gap-2 mt-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Token validado - 24 horas</p>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Token validado - 24 horas</p>
               </div>
             </div>
-
             <Button variant="ghost" className="w-full h-12 rounded-2xl font-black text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground" onClick={() => setQrSession(null)}>Cerrar Panel</Button>
           </div>
         </DialogContent>
