@@ -61,7 +61,7 @@ export default function DivisionSelect({
             if (error) throw error;
             setDivisions(data || []);
         } catch (error) {
-            console.error("Error fetching divisions:", error);
+            if (import.meta.env.DEV) console.error("Error fetching divisions:", error);
         } finally {
             setLoading(false);
         }

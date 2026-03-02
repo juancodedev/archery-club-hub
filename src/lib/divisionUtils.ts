@@ -129,7 +129,7 @@ export async function getMemberActiveDivisions(
         .order("is_primary", { ascending: false });
 
     if (error) {
-        console.error("Error fetching member divisions:", error);
+        if (import.meta.env.DEV) console.error("Error fetching member divisions:", error);
         return [];
     }
 

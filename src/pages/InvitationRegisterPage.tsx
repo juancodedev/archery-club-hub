@@ -65,7 +65,7 @@ export default function InvitationRegisterPage() {
   useEffect(() => {
     async function loadInvitation() {
       if (!token) {
-        console.error("No token provided");
+        if (import.meta.env.DEV) console.error("No token provided");
         setExpired(true);
         setLoadingInv(false);
         return;
@@ -76,7 +76,7 @@ export default function InvitationRegisterPage() {
           .rpc("get_invitation_by_token", { p_token: token });
 
         if (invError) {
-          console.error("Error loading invitation:", invError);
+          if (import.meta.env.DEV) console.error("Error loading invitation:", invError);
           setExpired(true);
           setLoadingInv(false);
           return;
@@ -85,7 +85,7 @@ export default function InvitationRegisterPage() {
         const inv = invRows && invRows.length > 0 ? invRows[0] : null;
 
         if (!inv || inv.used_at || new Date(inv.expires_at) < new Date()) {
-          console.log("Invitation invalid or expired:", inv);
+          if (import.meta.env.DEV) console.log("Invitation invalid or expired:", inv);
           setExpired(true);
           // Still load club for logo if possible
           if (inv) {
@@ -100,10 +100,10 @@ export default function InvitationRegisterPage() {
         if (inv.email) setEmail(inv.email);
 
         const { data: c, error: clubError } = await supabase.from("public_clubs_view").select("*").eq("id", inv.club_id).single();
-        if (clubError) console.error("Error loading club:", clubError);
+        if (clubError && import.meta.env.DEV) console.error("Error loading club:", clubError);
         setClub(c as ClubInfo);
       } catch (err) {
-        console.error("Unexpected error loading invitation:", err);
+        if (import.meta.env.DEV) console.error("Unexpected error loading invitation:", err);
         setExpired(true);
       } finally {
         setLoadingInv(false);

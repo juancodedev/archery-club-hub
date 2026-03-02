@@ -20,7 +20,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (session) {
       if (member) {
-        console.log("🎯 [LoginPage] Miembro cargado, redirigiendo...");
+        if (import.meta.env.DEV) console.log("🎯 [LoginPage] Miembro cargado, redirigiendo...");
         if (isSuperAdminSubdomain || member.is_super_admin) {
           navigate("/super-admin");
         } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
@@ -32,7 +32,7 @@ export default function LoginPage() {
         // Si tenemos sesión pero después de 5s no hay miembro, algo anda mal en la DB
         const timer = setTimeout(() => {
           if (session && !member) {
-            console.error("🚨 [LoginPage] Tiempo de espera agotado para cargar el perfil del miembro.");
+            if (import.meta.env.DEV) console.error("🚨 [LoginPage] Tiempo de espera agotado para cargar el perfil del miembro.");
             toast({
               title: "Error de Perfil",
               description: "Tu cuenta de usuario existe, pero no encontramos tu perfil de miembro en este club. Contacta al soporte.",
@@ -51,17 +51,17 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      console.log("🚀 [LoginPage] Intentando signIn para:", email);
+      if (import.meta.env.DEV) console.log("🚀 [LoginPage] Intentando signIn para:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        console.error("❌ [LoginPage] Error de auth:", error.message);
+        if (import.meta.env.DEV) console.error("❌ [LoginPage] Error de auth:", error.message);
         toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
       } else if (data.session) {
-        console.log("✅ [LoginPage] Sesión iniciada con éxito para UID:", data.session.user.id);
+        if (import.meta.env.DEV) console.log("✅ [LoginPage] Sesión iniciada con éxito para UID:", data.session.user.id);
       }
     } catch (err: unknown) {
-      console.error("💥 [LoginPage] Error inesperado:", err);
+      if (import.meta.env.DEV) console.error("💥 [LoginPage] Error inesperado:", err);
       toast({ title: "Error inesperado", description: "Ocurrió un error al procesar tu solicitud.", variant: "destructive" });
     } finally {
       setLoading(false);
