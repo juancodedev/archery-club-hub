@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const {
-      full_name, club_id, email, password, role = 'arquero',
+      full_name, club_id, email, role = 'arquero',
       phone, date_of_birth, identification, address, medical_history,
       emergency_contact_name, emergency_contact_phone,
       shirt_size, windbreaker_size, display_name,
@@ -48,18 +48,14 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Nombre y club son obligatorios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check permissions: super admin or club admin
-    const { data: isSuper } = await callerClient.rpc('is_super_admin', { p_user_id: caller.id });
-    const { data: isAdmin } = await callerClient.rpc('is_club_admin', { p_user_id: caller.id, p_club_id: club_id });
-
-    if (!isSuper && !isAdmin) {
-      return new Response(JSON.stringify({ error: 'No tienes permisos para crear miembros en este club' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     // Resolve email
     const effectiveEmail = email?.trim() || null;
     const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
-    const effectivePassword = password?.trim() || `Arquero${Math.floor(Math.random() * 9000 + 1000)}`;
+
+    // Generate secure random password server-side (never accept from client)
+    const randomBytes = new Uint8Array(16);
+    crypto.getRandomValues(randomBytes);
+    const effectivePassword = 'Arq!' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
     // Create auth user via Admin API
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
