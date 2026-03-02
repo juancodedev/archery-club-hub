@@ -49,7 +49,7 @@ interface FullMember extends MemberForStatus {
 
 export default function ProfilePage() {
   const { member, user } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = !!member?.is_super_admin;
   const queryClient = useQueryClient();
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
