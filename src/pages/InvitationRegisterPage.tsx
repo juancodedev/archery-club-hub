@@ -121,7 +121,7 @@ export default function InvitationRegisterPage() {
       let finalUserId = null;
       const finalEmail = email.trim() !== "" ? email.trim() : null;
 
-      // 1. Create auth user only if email is provided
+      // 1. Create auth user only if email is provided (via standard signUp - user verifies email)
       if (!noEmail && finalEmail) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: finalEmail,
@@ -133,29 +133,32 @@ export default function InvitationRegisterPage() {
         finalUserId = authData.user.id;
       }
 
-      // 2. Complete registration via RPC
-      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
-        p_token: token,
-        p_user_id: finalUserId,
-        p_password: password || null,
-        p_full_name: fullName,
-        p_email: finalEmail,
-        p_phone: phone || null,
-        p_date_of_birth: dateOfBirth || null,
-        p_identification: identification || null,
-        p_address: address || null,
-        p_medical_history: medicalHistory || null,
-        p_emergency_contact_name: emergencyContactName,
-        p_emergency_contact_phone: emergencyContactPhone,
-        p_shirt_size: shirtSize || null,
-        p_windbreaker_size: windbreakerSize || null,
-        p_display_name: displayName || null,
-        p_guardian_name: isMinor ? guardianName : null,
-        p_guardian_phone: isMinor ? guardianPhone : null,
-        p_guardian_email: isMinor ? guardianEmail : null,
+      // 2. Complete registration via edge function (uses Admin API for placeholder accounts)
+      const { data: rpcData, error: rpcError } = await supabase.functions.invoke('accept-invitation', {
+        body: {
+          token,
+          user_id: finalUserId,
+          full_name: fullName,
+          email: finalEmail,
+          password: password || null,
+          phone: phone || null,
+          date_of_birth: dateOfBirth || null,
+          identification: identification || null,
+          address: address || null,
+          medical_history: medicalHistory || null,
+          emergency_contact_name: emergencyContactName,
+          emergency_contact_phone: emergencyContactPhone,
+          shirt_size: shirtSize || null,
+          windbreaker_size: windbreakerSize || null,
+          display_name: displayName || null,
+          guardian_name: isMinor ? guardianName : null,
+          guardian_phone: isMinor ? guardianPhone : null,
+          guardian_email: isMinor ? guardianEmail : null,
+        },
       });
 
       if (rpcError) throw rpcError;
+      if (rpcData?.error) throw new Error(rpcData.error);
 
       if (noEmail) {
         toast({
