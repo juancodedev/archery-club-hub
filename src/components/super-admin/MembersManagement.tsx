@@ -102,24 +102,18 @@ export default function MembersManagement() {
 
     const resetPassword = useMutation({
         mutationFn: async (member: Member) => {
-            const { data: defaultPassword, error: passwordError } = await supabase
-                .rpc('get_club_default_password', { p_club_id: member.club_id });
+            if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
 
-            if (passwordError) throw new Error("Permiso denegado para ver la contraseña del club.");
-
-            const finalPassword = defaultPassword || "Quiver2026!";
-
-            // We use the admin function to update the user password
+            // Password is generated server-side by the RPC function
             const { error } = await supabase.rpc('admin_reset_user_password', {
                 p_user_id: member.user_id,
-                p_new_password: defaultPassword
+                p_new_password: '' // Ignored by server; password generated server-side
             });
 
             if (error) throw error;
-            return { defaultPassword };
         },
         onSuccess: () => {
-            toast.success("Contraseña reseteada exitosamente. El miembro puede iniciar sesión con la contraseña por defecto del club.");
+            toast.success("Contraseña reseteada exitosamente. Se generó una contraseña segura automáticamente.");
         },
         onError: (error: Error) => {
             toast.error(getSafeErrorMessage(error));
