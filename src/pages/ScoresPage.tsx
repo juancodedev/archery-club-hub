@@ -87,7 +87,7 @@ export default function ScoresPage() {
       if (endDate) query = query.lte("score_date", endDate);
       // Nota: el filtro por discipline se hace a través del join con tournament_types
       if (modality !== "all") {
-        query = (query as ReturnType<typeof query.eq>).eq("tournament_types.discipline", modality);
+        query = (query as any).eq("tournament_types.discipline", modality);
       }
 
 

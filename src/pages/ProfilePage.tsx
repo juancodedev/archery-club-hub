@@ -112,26 +112,27 @@ export default function ProfilePage() {
         .single();
 
       if (data) {
+        const d = data as any;
         setFormData({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          identification: data.identification || "",
-          medical_history: data.medical_history || "",
-          guardian_name: (data as Record<string, string | null>).guardian_name || "",
-          guardian_phone: (data as Record<string, string | null>).guardian_phone || "",
-          emergency_contact_name: (data as Record<string, string | null>).emergency_contact_name || "",
-          emergency_contact_phone: (data as Record<string, string | null>).emergency_contact_phone || "",
-          shirt_size: (data as Record<string, string | null>).shirt_size || "",
-          windbreaker_size: (data as Record<string, string | null>).windbreaker_size || "",
-          display_name: (data as Record<string, string | null>).display_name || "",
-          avatar_url: (data as Record<string, string | null>).avatar_url || "",
-          roles: (data as Record<string, { role: string }[]>).member_roles?.map((r: { role: string }) => r.role) || [],
-          billing_day: String((data as Record<string, number | null>).billing_day || ""),
-          grace_days: String((data as Record<string, number | null>).grace_days ?? "7")
+          full_name: d.full_name || "",
+          phone: d.phone || "",
+          address: d.address || "",
+          identification: d.identification || "",
+          medical_history: d.medical_history || "",
+          guardian_name: d.guardian_name || "",
+          guardian_phone: d.guardian_phone || "",
+          emergency_contact_name: d.emergency_contact_name || "",
+          emergency_contact_phone: d.emergency_contact_phone || "",
+          shirt_size: d.shirt_size || "",
+          windbreaker_size: d.windbreaker_size || "",
+          display_name: d.display_name || "",
+          avatar_url: d.avatar_url || "",
+          roles: d.member_roles?.map((r: { role: string }) => r.role) || [],
+          billing_day: String(d.billing_day || ""),
+          grace_days: String(d.grace_days ?? "7")
         } as typeof formData & { roles: string[]; billing_day: string; grace_days: string });
       }
-      return data;
+      return data as unknown as FullMember;
     },
     enabled: !!selectedMemberId,
   });
@@ -225,7 +226,11 @@ export default function ProfilePage() {
       if (!selectedMemberId) return;
       const { error } = await supabase
         .from("members")
-        .update(formData)
+        .update({
+          ...formData,
+          billing_day: formData.billing_day ? Number(formData.billing_day) : null,
+          grace_days: formData.grace_days ? Number(formData.grace_days) : null,
+        } as any)
         .eq("id", selectedMemberId);
       if (error) throw error;
     },
