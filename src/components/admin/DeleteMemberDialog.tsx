@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   memberId: string | null;
@@ -17,18 +18,20 @@ export default function DeleteMemberDialog({ memberId, memberName, open, onOpenC
   const deleteMember = useMutation({
     mutationFn: async () => {
       if (!memberId) return;
-      // Delete roles first, then member
-      await supabase.from("member_roles").delete().eq("member_id", memberId);
-      const { error } = await supabase.from("members").delete().eq("id", memberId);
+      const { data, error } = await supabase.functions.invoke('delete-member', {
+        body: { member_id: memberId },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
+      queryClient.invalidateQueries({ queryKey: ["all-members"] });
       toast({ title: "Miembro eliminado" });
       onOpenChange(false);
     },
     onError: (e: Error) => {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     },
   });
 

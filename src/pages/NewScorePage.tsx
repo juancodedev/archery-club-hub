@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
@@ -144,8 +145,7 @@ export default function NewScorePage() {
       });
       navigate("/scores");
     } catch (error) {
-      const err = error as Error;
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: "Error", description: getSafeErrorMessage(error), variant: "destructive" });
 
     } finally {
       setLoading(false);
