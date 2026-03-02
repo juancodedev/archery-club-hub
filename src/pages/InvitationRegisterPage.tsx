@@ -134,7 +134,7 @@ export default function InvitationRegisterPage() {
       }
 
       // 2. Complete registration via RPC
-      const { data: rpcData, error: rpcError } = await supabase.rpc("accept_invitation_v2" as never, {
+      const { data: rpcData, error: rpcError } = await (supabase.rpc as any)("accept_invitation_v2", {
         p_token: token,
         p_user_id: finalUserId,
         p_password: password || null,

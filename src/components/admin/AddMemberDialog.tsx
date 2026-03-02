@@ -105,7 +105,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
         p_guardian_phone: isMinor ? guardianPhone : null,
         p_guardian_email: isMinor ? guardianEmail : null,
         p_club_id: targetClubId,
-        p_role: role,
+        p_role: role as "administrador" | "alumno" | "arquero" | "entrenador" | "presidente" | "secretaria" | "socio" | "tesorero",
         p_billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
         p_grace_days: graceDays ? Number(graceDays) : 7
       }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: { message: string } | null };

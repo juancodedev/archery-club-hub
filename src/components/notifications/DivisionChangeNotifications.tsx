@@ -54,7 +54,7 @@ export default function DivisionChangeNotifications() {
     const acknowledgeMutation = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
-                .rpc("acknowledge_division_notification", { notification_id: id });
+                .rpc("acknowledge_division_notification", { p_notification_id: id });
             if (error) throw error;
         },
         onSuccess: () => {
