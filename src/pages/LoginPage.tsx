@@ -21,7 +21,7 @@ export default function LoginPage() {
     if (session) {
       if (member) {
         console.log("🎯 [LoginPage] Miembro cargado, redirigiendo...");
-        if (isSuperAdminSubdomain || member.is_super_admin || member.email === 'cl.jmunoz@gmail.com') {
+        if (isSuperAdminSubdomain || member.is_super_admin) {
           navigate("/super-admin");
         } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
           navigate("/admin");

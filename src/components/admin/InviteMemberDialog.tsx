@@ -15,7 +15,7 @@ interface Props {
 
 export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
     const { member } = useAuth();
-    const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+    const isSuperAdmin = !!member?.is_super_admin;
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
