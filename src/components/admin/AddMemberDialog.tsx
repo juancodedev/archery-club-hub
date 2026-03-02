@@ -71,28 +71,16 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;
       if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
 
-      // Get default password from club via RPC (Secured)
-      const { data: defaultPassword, error: passwordError } = await supabase
-        .rpc('get_club_default_password', { p_club_id: targetClubId });
-
-      if (passwordError) {
-        throw new Error("No se pudo recuperar la contraseña por defecto. Verifica tus permisos o la configuración del club.");
-      }
-
-      if (!defaultPassword) {
-        throw new Error("El club no ha configurado una contraseña por defecto. Por favor, ve a Configuración del Club y establécela.");
-      }
-
       // Email: use provided value, or null for minors without email
       const effectiveEmail = email.trim() !== '' ? email.trim() : null;
 
       // Use edge function to create member account via Admin API
+      // Password is generated server-side automatically
       const { data, error } = await supabase.functions.invoke('create-member', {
         body: {
           full_name: name,
           club_id: targetClubId,
           email: effectiveEmail,
-          password: defaultPassword,
           role,
           phone: phone || null,
           date_of_birth: dateOfBirth || null,
@@ -121,7 +109,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       queryClient.invalidateQueries({ queryKey: ["all-members"] });
       toast({
         title: "✅ Miembro agregado exitosamente",
-        description: "La cuenta está lista. El miembro puede iniciar sesión con la contraseña por defecto del club."
+        description: "La cuenta está lista. Se generó una contraseña segura automáticamente."
       });
       setOpen(false);
       // Reset all fields
