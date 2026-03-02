@@ -63,7 +63,7 @@ function PricingPlans() {
 
 export default function Index() {
   const { session, member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = !!member?.is_super_admin;
   const dashboardPath = isSuperAdmin ? "/super-admin" : "/dashboard";
 
   const features = [

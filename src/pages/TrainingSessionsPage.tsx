@@ -45,7 +45,7 @@ interface QrSession { id: string; name: string; attendance_token?: string; }
 
 export default function TrainingSessionsPage() {
   const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = !!member?.is_super_admin;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");

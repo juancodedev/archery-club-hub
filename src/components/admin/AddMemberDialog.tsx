@@ -20,7 +20,7 @@ interface Props {
 
 export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = !!member?.is_super_admin;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
