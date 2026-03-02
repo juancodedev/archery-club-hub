@@ -104,7 +104,7 @@ export default function BillingPage() {
                 accent: idx === 1 ? "bg-primary text-primary-foreground shadow-2xl shadow-primary/30" : "bg-card/20",
                 border: idx === 1 ? "border-primary/50" : "border-border/30",
                 buttonText: "Actualizar",
-                features: p.features || [],
+                features: (Array.isArray(p.features) ? p.features : []) as string[],
                 isAnnual: p.name === "Pro" ? isAnnualPro : isAnnualBusiness, // This mapping is a bit loose but works for now
             }));
             setAvailablePlans(styledPlans);

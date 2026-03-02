@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Plan { id: string; name: string; description: string | null; price: number; features: string[] | null; }
+interface Plan { id: string; name: string; description: string | null; price: number; features: any[] | null; }
 function PricingPlans() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +14,7 @@ function PricingPlans() {
   useEffect(() => {
     async function fetchPlans() {
       const { data } = await supabase.from("plans").select("*").eq("is_active", true).order("price", { ascending: true });
-      if (data) setPlans(data);
+      if (data) setPlans(data as any);
       setLoading(false);
     }
     fetchPlans();
