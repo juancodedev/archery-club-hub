@@ -1,1 +1,10 @@
 project_id = "kijtnpztgorykmfiesoj"
+
+[functions.delete-member]
+verify_jwt = false
+
+[functions.create-member]
+verify_jwt = false
+
+[functions.accept-invitation]
+verify_jwt = false

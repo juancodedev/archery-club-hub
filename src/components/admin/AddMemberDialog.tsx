@@ -86,31 +86,34 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       // Email: use provided value, or null for minors without email
       const effectiveEmail = email.trim() !== '' ? email.trim() : null;
 
-      // Use RPC function to create member account with auto-confirmed email
-      const { data, error } = await supabase.rpc('create_member_account_by_admin', {
-        p_email: effectiveEmail,
-        p_password: defaultPassword,
-        p_full_name: name,
-        p_phone: phone || null,
-        p_date_of_birth: dateOfBirth || null,
-        p_identification: identification || null,
-        p_address: address || null,
-        p_medical_history: medicalHistory || null,
-        p_emergency_contact_name: emergencyContactName || null,
-        p_emergency_contact_phone: emergencyContactPhone || null,
-        p_shirt_size: shirtSize || null,
-        p_windbreaker_size: windbreakerSize || null,
-        p_display_name: displayName || null,
-        p_guardian_name: isMinor ? guardianName : null,
-        p_guardian_phone: isMinor ? guardianPhone : null,
-        p_guardian_email: isMinor ? guardianEmail : null,
-        p_club_id: targetClubId,
-        p_role: role as "administrador" | "alumno" | "arquero" | "entrenador" | "presidente" | "secretaria" | "socio" | "tesorero",
-        p_billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
-        p_grace_days: graceDays ? Number(graceDays) : 7
-      }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: { message: string } | null };
+      // Use edge function to create member account via Admin API
+      const { data, error } = await supabase.functions.invoke('create-member', {
+        body: {
+          full_name: name,
+          club_id: targetClubId,
+          email: effectiveEmail,
+          password: defaultPassword,
+          role,
+          phone: phone || null,
+          date_of_birth: dateOfBirth || null,
+          identification: identification || null,
+          address: address || null,
+          medical_history: medicalHistory || null,
+          emergency_contact_name: emergencyContactName || null,
+          emergency_contact_phone: emergencyContactPhone || null,
+          shirt_size: shirtSize || null,
+          windbreaker_size: windbreakerSize || null,
+          display_name: displayName || null,
+          guardian_name: isMinor ? guardianName : null,
+          guardian_phone: isMinor ? guardianPhone : null,
+          guardian_email: isMinor ? guardianEmail : null,
+          billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
+          grace_days: graceDays ? Number(graceDays) : 7,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (!data?.success) throw new Error("No se pudo crear el miembro");
 
       return { defaultPassword };
