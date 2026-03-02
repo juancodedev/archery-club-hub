@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddMemberDialog from "@/components/admin/AddMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
@@ -121,7 +122,7 @@ export default function MembersManagement() {
             toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${data.defaultPassword}`);
         },
         onError: (error: Error) => {
-            toast.error("Error al resetear contraseña: " + error.message);
+            toast.error(getSafeErrorMessage(error));
         }
     });
 
@@ -135,7 +136,7 @@ export default function MembersManagement() {
             toast.success("Miembro eliminado");
         },
         onError: (error: Error) => {
-            toast.error("Error al eliminar: " + error.message);
+            toast.error(getSafeErrorMessage(error));
         }
     });
 

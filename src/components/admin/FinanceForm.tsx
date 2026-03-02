@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface FinanceFormProps {
     type: "income" | "expense";
@@ -125,7 +126,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         } catch (error: unknown) {
             toast({
                 title: "Error al subir archivo",
-                description: (error as Error).message,
+                description: getSafeErrorMessage(error),
                 variant: "destructive"
             });
         } finally {
@@ -177,7 +178,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         } catch (error: unknown) {
             toast({
                 title: "Error al guardar",
-                description: (error as Error).message,
+                description: getSafeErrorMessage(error),
                 variant: "destructive"
             });
         } finally {
