@@ -166,7 +166,7 @@ export default function FinancePage() {
                 window.open(data.signedUrl, "_blank");
             }
         } catch (error: unknown) {
-            console.error(error);
+            if (import.meta.env.DEV) console.error(error);
             toast({
                 title: "Error al abrir comprobante",
                 description: "No se pudo generar el enlace seguro.",
