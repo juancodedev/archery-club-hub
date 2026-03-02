@@ -67,7 +67,7 @@ export default function TournamentTypeSelect({
             if (error) throw error;
             setTypes(data || []);
         } catch (error) {
-            console.error("Error fetching tournament types:", error);
+            if (import.meta.env.DEV) console.error("Error fetching tournament types:", error);
         } finally {
             setLoading(false);
         }

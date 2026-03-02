@@ -33,7 +33,7 @@ export function getSafeErrorMessage(error: unknown): string {
   if (message.includes('timeout')) return 'La operación tardó demasiado. Intenta nuevamente.';
 
   // Log the full error for debugging (server-side)
-  console.error('Unhandled error:', err);
+  if (import.meta.env.DEV) console.error('Unhandled error:', err);
 
   // Generic fallback - never expose internal details
   return 'Ha ocurrido un error. Por favor, intenta nuevamente.';

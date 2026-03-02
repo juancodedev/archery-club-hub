@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchMember = async (userId: string, userEmail?: string) => {
     try {
-      console.log("Cargando membresías para userId:", userId);
+      if (import.meta.env.DEV) console.log("Cargando membresías para userId:", userId);
 
       const { data: membersData, error: membersError } = await supabase
         .from("members")
@@ -27,10 +27,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId);
 
       if (membersError) {
-        console.error("Error al obtener membresías:", membersError);
+        if (import.meta.env.DEV) console.error("Error al obtener membresías:", membersError);
       }
 
-      console.log("Datos de membresía recibidos:", membersData);
+      if (import.meta.env.DEV) console.log("Datos de membresía recibidos:", membersData);
 
       if (membersData && membersData.length > 0) {
         const allMemberships: MemberInfo[] = await Promise.all(
@@ -77,15 +77,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setMember(allMemberships[0]);
           localStorage.setItem("activeClubId", allMemberships[0].club_id);
         }
-        console.log("Miembro activo establecido:", restored || allMemberships[0]);
+        if (import.meta.env.DEV) console.log("Miembro activo establecido:", restored || allMemberships[0]);
       } else {
-        console.warn("No se encontraron membresías para este usuario.");
+        if (import.meta.env.DEV) console.warn("No se encontraron membresías para este usuario.");
         setMemberships([]);
         setMember(null);
       }
-      console.log("fetchMember finalizado.");
+      if (import.meta.env.DEV) console.log("fetchMember finalizado.");
     } catch (e) {
-      console.error("Error crítico en AuthContext:", e);
+      if (import.meta.env.DEV) console.error("Error crítico en AuthContext:", e);
       setMemberships([]);
       setMember(null);
     }
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("🔔 [AuthContext] Auth session changed:", event);
+        if (import.meta.env.DEV) console.log("🔔 [AuthContext] Auth session changed:", event);
         setSession(session);
         const currentUser = session?.user ?? null;
         setUser(currentUser);
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchMember(currentUser.id, currentUser.email);
         }
       } catch (err) {
-        console.error("Error initializing session:", err);
+        if (import.meta.env.DEV) console.error("Error initializing session:", err);
         setLoading(false);
       }
     };

@@ -84,7 +84,7 @@ export default function AttendanceMarkPage() {
                 toast({ title: "Asistencia confirmada", description: "Tu participación ha sido registrada." });
 
             } catch (error: unknown) {
-                console.error("Error marking attendance:", error);
+                if (import.meta.env.DEV) console.error("Error marking attendance:", error);
                 setStatus("error");
                 setMessage((error as Error).message || "Ocurrió un error al registrar la asistencia");
             }
