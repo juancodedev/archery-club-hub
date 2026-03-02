@@ -52,7 +52,6 @@ export default function ClubSettingsPage() {
 
   const [inscriptionFee, setInscriptionFee] = useState("");
   const [monthlyFee, setMonthlyFee] = useState("");
-  const [defaultPassword, setDefaultPassword] = useState("");
   const [allowSuperAdminFinances, setAllowSuperAdminFinances] = useState(false);
   const [feeInit, setFeeInit] = useState(false);
 
@@ -61,7 +60,6 @@ export default function ClubSettingsPage() {
     if (club) {
       setInscriptionFee(String(club.inscription_fee || 0));
       setMonthlyFee(String(club.monthly_fee || 0));
-      setDefaultPassword(club.default_member_password || "");
       setAllowSuperAdminFinances(club.allow_superadmin_finances || false);
       setFeeInit(true);
     }
@@ -75,7 +73,6 @@ export default function ClubSettingsPage() {
         .update({
           inscription_fee: Number(inscriptionFee) || 0,
           monthly_fee: Number(monthlyFee) || 0,
-          default_member_password: defaultPassword,
           allow_superadmin_finances: allowSuperAdminFinances,
         })
         .eq("id", selectedClubId);
@@ -190,21 +187,6 @@ export default function ClubSettingsPage() {
                 <Label>Mensualidad</Label>
                 <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="flex items-center gap-1">
-                  Password por defecto para nuevos miembros
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  value={defaultPassword}
-                  onChange={(e) => setDefaultPassword(e.target.value)}
-                  placeholder="Establece una contraseña segura"
-                  required
-                />
-                <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
-              </div>
-
               <div className="space-y-4 sm:col-span-2 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
