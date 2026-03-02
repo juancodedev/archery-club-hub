@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeCanvas } from "qrcode.react";
@@ -84,7 +85,7 @@ export default function ClubSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["club-settings"] });
       toast({ title: "Configuración actualizada" });
     },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" }),
   });
 
   // Invitations
@@ -124,7 +125,7 @@ export default function ClubSettingsPage() {
       toast({ title: "Invitación creada" });
       setInvEmail("");
     },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" }),
   });
 
   const copyLink = (token: string) => {
