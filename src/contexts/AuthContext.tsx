@@ -78,21 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem("activeClubId", allMemberships[0].club_id);
         }
         console.log("Miembro activo establecido:", restored || allMemberships[0]);
-      } else if (userEmail === 'cl.jmunoz@gmail.com') {
-        // Fallback for super admin
-        console.log("Usuario es Super Admin de respaldo");
-        const adminMember: MemberInfo = {
-          id: '00000000-0000-0000-0000-000000000000',
-          user_id: userId,
-          club_id: null,
-          full_name: 'Super Administrador',
-          email: userEmail || '',
-          status: 'activo',
-          roles: ['administrador'],
-          is_super_admin: true
-        };
-        setMemberships([adminMember]);
-        setMember(adminMember);
       } else {
         console.warn("No se encontraron membresías para este usuario.");
         setMemberships([]);
