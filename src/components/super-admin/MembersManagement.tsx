@@ -118,8 +118,8 @@ export default function MembersManagement() {
             if (error) throw error;
             return { defaultPassword };
         },
-        onSuccess: (data) => {
-            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${data.defaultPassword}`);
+        onSuccess: () => {
+            toast.success("Contraseña reseteada exitosamente. El miembro puede iniciar sesión con la contraseña por defecto del club.");
         },
         onError: (error: Error) => {
             toast.error(getSafeErrorMessage(error));
