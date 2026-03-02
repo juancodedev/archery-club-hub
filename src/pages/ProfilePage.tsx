@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { formatRUT } from "@/lib/rut";
 import { formatCurrency, cn } from "@/lib/utils";
 import { calculateFinancialStatus, isMembershipCategory, MemberForStatus } from "@/lib/membershipUtils";
@@ -217,7 +218,7 @@ export default function ProfilePage() {
         queryClient.invalidateQueries({ queryKey: ["member-profile", selectedMemberId] });
       }
     } catch (error: unknown) {
-      toast.error("Error al subir imagen: " + (error as Error).message);
+      toast.error("Error al subir imagen: " + getSafeErrorMessage(error));
     }
   };
 
@@ -239,7 +240,7 @@ export default function ProfilePage() {
       toast.success("Perfil actualizado");
       setIsEditing(false);
     },
-    onError: (e: Error) => toast.error("Error: " + e.message)
+    onError: (e: Error) => toast.error(getSafeErrorMessage(e))
   });
 
   const infoItems = fullMember
