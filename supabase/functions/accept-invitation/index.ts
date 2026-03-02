@@ -1,0 +1,122 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    const body = await req.json();
+    const {
+      token, user_id, full_name, email, password, phone,
+      date_of_birth, identification, address, medical_history,
+      emergency_contact_name, emergency_contact_phone,
+      shirt_size, windbreaker_size, display_name,
+      guardian_name, guardian_phone, guardian_email,
+    } = body;
+
+    if (!token || !full_name) {
+      return new Response(JSON.stringify({ error: 'Token y nombre son obligatorios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Validate invitation
+    const { data: invRows, error: invError } = await adminClient
+      .from('member_invitations')
+      .select('*')
+      .eq('token', token)
+      .is('used_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .limit(1);
+
+    if (invError || !invRows || invRows.length === 0) {
+      return new Response(JSON.stringify({ error: 'Invitación inválida o expirada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const invitation = invRows[0];
+    let effectiveUserId = user_id || null;
+    const effectiveEmail = email?.trim() || null;
+
+    // If no user_id provided (minor without email or no-email flow), create a placeholder auth account
+    if (!effectiveUserId) {
+      const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
+      const authPassword = password?.trim() || `Invitado${Math.floor(Math.random() * 9000 + 1000)}`;
+
+      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+        email: authEmail,
+        password: authPassword,
+        email_confirm: true,
+        user_metadata: { full_name },
+      });
+
+      if (authError) {
+        if (authError.message?.includes('already been registered')) {
+          return new Response(JSON.stringify({ error: `Ya existe un usuario con este correo electrónico` }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        throw authError;
+      }
+      effectiveUserId = authData.user.id;
+    }
+
+    // Create member record
+    const { data: memberData, error: memberError } = await adminClient
+      .from('members')
+      .insert({
+        user_id: effectiveUserId,
+        club_id: invitation.club_id,
+        full_name: full_name.trim(),
+        email: effectiveEmail,
+        phone: phone || null,
+        date_of_birth: date_of_birth || null,
+        identification: identification || null,
+        address: address || null,
+        medical_history: medical_history || null,
+        emergency_contact_name: emergency_contact_name || null,
+        emergency_contact_phone: emergency_contact_phone || null,
+        shirt_size: shirt_size || null,
+        windbreaker_size: windbreaker_size || null,
+        display_name: display_name || null,
+        guardian_name: guardian_name || null,
+        guardian_phone: guardian_phone || null,
+        guardian_email: guardian_email || null,
+        status: 'activo',
+      })
+      .select('id')
+      .single();
+
+    if (memberError) {
+      // Cleanup auth user if we created it
+      if (!user_id) await adminClient.auth.admin.deleteUser(effectiveUserId);
+      throw memberError;
+    }
+
+    // Assign default role
+    await adminClient.from('member_roles').insert({
+      member_id: memberData.id,
+      club_id: invitation.club_id,
+      role: 'arquero',
+    });
+
+    // Mark invitation as used
+    await adminClient.from('member_invitations').update({ used_at: new Date().toISOString() }).eq('id', invitation.id);
+
+    return new Response(JSON.stringify({
+      success: true,
+      member_id: memberData.id,
+      user_id: effectiveUserId,
+      is_placeholder: !user_id,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+  } catch (error) {
+    console.error('Error accepting invitation:', error);
+    return new Response(JSON.stringify({ error: 'Error al procesar la invitación. Intenta nuevamente.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+});
