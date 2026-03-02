@@ -115,15 +115,13 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (!data?.success) throw new Error("No se pudo crear el miembro");
-
-      return { defaultPassword };
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       queryClient.invalidateQueries({ queryKey: ["all-members"] });
       toast({
         title: "✅ Miembro agregado exitosamente",
-        description: `La cuenta está lista para usar inmediatamente con la contraseña: ${data.defaultPassword} (sin necesidad de validar el correo electrónico)`
+        description: "La cuenta está lista. El miembro puede iniciar sesión con la contraseña por defecto del club."
       });
       setOpen(false);
       // Reset all fields

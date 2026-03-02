@@ -133,7 +133,6 @@ Deno.serve(async (req) => {
       success: true,
       user_id: userId,
       member_id: memberData.id,
-      password_used: effectivePassword,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error) {
