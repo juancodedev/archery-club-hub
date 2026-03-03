@@ -22,7 +22,6 @@ export type Database = {
           contact_email: string | null
           country: string | null
           created_at: string | null
-          default_member_password: string | null
           id: string
           inscription_fee: number | null
           logo_url: string | null
@@ -40,7 +39,6 @@ export type Database = {
           contact_email?: string | null
           country?: string | null
           created_at?: string | null
-          default_member_password?: string | null
           id?: string
           inscription_fee?: number | null
           logo_url?: string | null
@@ -58,7 +56,6 @@ export type Database = {
           contact_email?: string | null
           country?: string | null
           created_at?: string | null
-          default_member_password?: string | null
           id?: string
           inscription_fee?: number | null
           logo_url?: string | null
@@ -1097,10 +1094,6 @@ export type Database = {
           p_windbreaker_size?: string
         }
         Returns: Json
-      }
-      get_club_default_password: {
-        Args: { p_club_id: string }
-        Returns: string
       }
       get_invitation_by_token: {
         Args: { p_token: string }
