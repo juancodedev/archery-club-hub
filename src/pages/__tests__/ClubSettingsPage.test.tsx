@@ -30,7 +30,7 @@ vi.mock('@/integrations/supabase/client', () => ({
                                     name: 'Test Club',
                                     inscription_fee: 5000,
                                     monthly_fee: 10000,
-                                    default_member_password: 'test123',
+                                    
                                 },
                             }),
                         }),
