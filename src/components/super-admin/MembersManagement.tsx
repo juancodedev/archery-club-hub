@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import AddMemberDialog from "@/components/admin/AddMemberDialog";
+import AddMemberDialog from "@/AddMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 
