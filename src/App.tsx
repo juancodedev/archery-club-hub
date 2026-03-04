@@ -24,6 +24,7 @@ import TrainingSessionsPage from "./pages/TrainingSessionsPage";
 import ClubSettingsPage from "./pages/ClubSettingsPage";
 import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
+import TournamentsPage from "./pages/TournamentsPage";
 import NotFound from "./pages/NotFound";
 
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
@@ -97,6 +98,10 @@ const App = () => (
             <Route
               path="/admin/memberships"
               element={<ProtectedRoute><AppLayout><MembershipsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/tournaments"
+              element={<ProtectedRoute><AppLayout><TournamentsPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/super-admin/*"

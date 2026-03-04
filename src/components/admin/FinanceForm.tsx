@@ -25,7 +25,7 @@ import {
     User,
     CalendarDays
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency, parseChileanCurrency } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
@@ -58,7 +58,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : "");
+    const [amount, setAmount] = useState(initialData?.amount ? formatCurrency(initialData.amount).replace("$", "").trim() : "");
     const [category, setCategory] = useState(initialData?.category || "");
     const [description, setDescription] = useState(initialData?.description || "");
     const [date, setDate] = useState(initialData?.entry_date || new Date().toISOString().split("T")[0]);
@@ -144,7 +144,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                 club_id: clubId,
                 type,
                 category,
-                amount: Number(amount),
+                amount: parseChileanCurrency(amount),
                 description,
                 entry_date: date,
                 receipt_url: receiptUrl,
@@ -223,9 +223,19 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                         <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                type="number"
+                                type="text"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                                    // Basic formatting helper as they type if needed
+                                    setAmount(val);
+                                }}
+                                onBlur={() => {
+                                    const numeric = parseChileanCurrency(amount);
+                                    if (numeric > 0) {
+                                        setAmount(formatCurrency(numeric).replace("$", "").trim());
+                                    }
+                                }}
                                 className="pl-9 rounded-xl"
                                 placeholder="0"
                                 required
@@ -308,6 +318,13 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                             className="rounded-xl"
                             required
                         />
+                    </div>
+
+                    <div className="space-y-2 pt-2">
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            Registrado por: <span className="font-bold text-foreground">{member?.full_name || "Usuario del sistema"}</span>
+                        </p>
                     </div>
 
                     <div className="space-y-2">
