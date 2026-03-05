@@ -84,7 +84,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="mb-4 text-4xl font-display font-bold text-primary-foreground">
-            Archery<span className="text-primary">Hub</span>
+            Quiver<span className="text-primary">App</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-sm">
             {isSuperAdminSubdomain
