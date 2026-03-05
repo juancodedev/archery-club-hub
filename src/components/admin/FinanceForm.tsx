@@ -388,6 +388,16 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                 </div>
             </div>
 
+            <div className="px-6 pb-4">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
+                    <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">Registrado por</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{member?.full_name || "Usuario actual"}</p>
+                    </div>
+                </div>
+            </div>
+
             <div className="p-6 border-t border-border/50 bg-muted/20 flex gap-3">
                 <Button
                     type="button"
