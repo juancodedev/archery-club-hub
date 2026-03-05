@@ -25,6 +25,7 @@ import ClubSettingsPage from "./pages/ClubSettingsPage";
 import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
 import TournamentsPage from "./pages/TournamentsPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/register-club" element={<RegisterClubPage />} />
             <Route path="/join" element={<InvitationRegisterPage />} />
             <Route path="/attendance/:sessionId" element={<AttendanceMarkPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/dashboard"
               element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>}
