@@ -52,24 +52,57 @@ Deno.serve(async (req) => {
     const effectiveEmail = email?.trim() || null;
     const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
 
-    console.log('Creating auth user:', authEmail);
+    console.log('Creating/Recovering auth user:', authEmail);
+    let userId: string;
+
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: authEmail,
-      password: 'Arq!' + crypto.randomUUID().split('-')[0] + '123!', // Simpler password generation for reliability
+      password: 'Arq!' + crypto.randomUUID().split('-')[0] + '123!',
       email_confirm: true,
       user_metadata: { full_name },
     });
 
     if (authError) {
-      console.error('Auth error:', authError);
       if (authError.message?.includes('already been registered')) {
-        return new Response(JSON.stringify({ error: `Ya existe un usuario con el correo: ${authEmail}` }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        console.log('User already exists in Auth, checking if they are a member...');
+        // Try to get the existing user
+        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
+        if (listError) throw listError;
+
+        const existingUser = users.find(u => u.email === authEmail);
+        if (!existingUser) {
+          throw new Error("User conflict reported but user not found in list");
+        }
+
+        userId = existingUser.id;
+
+        // Check if this user is already a member of ANY club
+        const { data: existingMember, error: checkError } = await adminClient
+          .from('members')
+          .select('id, club_id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (checkError) throw checkError;
+
+        if (existingMember) {
+          return new Response(JSON.stringify({
+            error: `El usuario con correo ${authEmail} ya está registrado como miembro en un club.`,
+            member_id: existingMember.id,
+            club_id: existingMember.club_id
+          }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        console.log('User exists in Auth but not in members. Proceeding with link.');
+      } else {
+        console.error('Auth error:', authError);
+        throw authError;
       }
-      throw authError;
+    } else {
+      userId = authData.user.id;
     }
 
-    const userId = authData.user.id;
-    console.log('User created:', userId);
+    console.log('User ID to use:', userId);
 
     console.log('Inserting member...');
     const { data: memberData, error: memberError } = await adminClient
