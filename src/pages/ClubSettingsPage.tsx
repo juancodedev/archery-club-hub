@@ -68,13 +68,35 @@ export default function ClubSettingsPage() {
   const updateSettings = useMutation({
     mutationFn: async () => {
       if (!selectedClubId) throw new Error("No club selected");
+
+      const updateData: any = {
+        inscription_fee: Number(inscriptionFee) || 0,
+        monthly_fee: Number(monthlyFee) || 0,
+        allow_superadmin_finances: allowSuperAdminFinances,
+      };
+
+      // If enabling support, set expiration to 24h from now
+      if (allowSuperAdminFinances && !club?.allow_superadmin_finances) {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 24);
+        updateData.financial_support_expires_at = expiresAt.toISOString();
+
+        // Create a contact request for support visibility
+        await supabase.from("contact_requests").insert({
+          club_id: selectedClubId,
+          member_id: member?.id,
+          type: "financial_support",
+          message: `El administrador ha habilitado el acceso a finanzas por 24 horas para soporte técnico.`,
+          status: "pending"
+        });
+      } else if (!allowSuperAdminFinances) {
+        // If disabling, clear expiration
+        updateData.financial_support_expires_at = null;
+      }
+
       const { error } = await supabase
         .from("clubs")
-        .update({
-          inscription_fee: Number(inscriptionFee) || 0,
-          monthly_fee: Number(monthlyFee) || 0,
-          allow_superadmin_finances: allowSuperAdminFinances,
-        })
+        .update(updateData)
         .eq("id", selectedClubId);
       if (error) throw error;
     },
