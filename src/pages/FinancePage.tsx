@@ -42,7 +42,7 @@ import { formatCurrency, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import FinanceForm from "@/components/admin/FinanceForm";
 
-interface Club { id: string; name: string; allow_superadmin_finances: boolean; }
+interface Club { id: string; name: string; allow_superadmin_finances: boolean; financial_support_expires_at?: string | null; }
 interface FinancialEntry {
     id: string;
     type: "income" | "expense";
@@ -77,8 +77,9 @@ export default function FinancePage() {
     const fetchClubs = async () => {
         const { data } = await supabase
             .from("clubs")
-            .select("id, name, allow_superadmin_finances")
+            .select("id, name, allow_superadmin_finances, financial_support_expires_at")
             .eq("allow_superadmin_finances", true)
+            .or(`financial_support_expires_at.is.null,financial_support_expires_at.gt.${new Date().toISOString()}`)
             .order("name");
 
         if (data) {

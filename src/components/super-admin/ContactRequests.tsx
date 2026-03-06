@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle, Clock } from "lucide-react";
+import { CheckedState } from "@radix-ui/react-checkbox";
+import { Loader2, CheckCircle, Clock, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface ContactRequest {
     id: string;
@@ -19,11 +21,13 @@ interface ContactRequest {
     status: string;
     type: string;
     message: string;
+    club_id: string;
     clubs?: { name: string };
     members?: { full_name: string };
 }
 
 export default function ContactRequests() {
+    const navigate = useNavigate();
     const [requests, setRequests] = useState<ContactRequest[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -108,11 +112,23 @@ export default function ContactRequests() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        {req.status === "pending" && (
-                                            <Button variant="ghost" size="sm" onClick={() => resolveRequest(req.id)} className="gap-1">
-                                                <CheckCircle className="h-4 w-4" /> Resolver
-                                            </Button>
-                                        )}
+                                        <div className="flex items-center justify-end gap-2">
+                                            {req.type === "financial_support" && req.status === "pending" && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-1 border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10"
+                                                    onClick={() => navigate(`/finance?club=${req.club_id}`)}
+                                                >
+                                                    <DollarSign className="h-4 w-4" /> Ver Finanzas
+                                                </Button>
+                                            )}
+                                            {req.status === "pending" && (
+                                                <Button variant="ghost" size="sm" onClick={() => resolveRequest(req.id)} className="gap-1">
+                                                    <CheckCircle className="h-4 w-4" /> Resolver
+                                                </Button>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
