@@ -1,8 +1,10 @@
 -- Manual update for superadmin password
 -- Target user: jmunoz@juancode.dev
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 UPDATE auth.users
-SET encrypted_password = crypt('AdminQuiver2024*', gen_salt('bf')),
+SET encrypted_password = extensions.crypt('AdminQuiver2024*', extensions.gen_salt('bf')),
     updated_at = now()
 WHERE email = 'jmunoz@juancode.dev';
 
