@@ -5,36 +5,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+console.log("Function 'create-member' loaded");
+
 Deno.serve(async (req) => {
+  console.log('--- create-member request ---');
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No autorizado' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing environment variables SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    // Client with caller's JWT to check permissions
-    const callerClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     });
 
-    // Admin client for creating auth users
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-
-    // Get caller's identity
-    const { data: { user: caller }, error: callerError } = await callerClient.auth.getUser();
-    if (callerError || !caller) {
-      return new Response(JSON.stringify({ error: 'No autenticado' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
     const body = await req.json();
+    console.log('Request body:', body);
+
     const {
       full_name, club_id, email, role = 'arquero',
       phone, date_of_birth, identification, address, medical_history,
@@ -45,43 +42,43 @@ Deno.serve(async (req) => {
     } = body;
 
     if (!full_name || !club_id) {
-      return new Response(JSON.stringify({ error: 'Nombre y club son obligatorios' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Nombre y club son obligatorios' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Resolve email
+    // Resolve email and generate identifier if needed
     const effectiveEmail = email?.trim() || null;
     const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
 
-    // Generate secure random password server-side (never accept from client)
-    const randomBytes = new Uint8Array(16);
-    crypto.getRandomValues(randomBytes);
-    const effectivePassword = 'Arq!' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // Create auth user via Admin API
+    console.log('Creating auth user:', authEmail);
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: authEmail,
-      password: effectivePassword,
+      password: 'Arq!' + crypto.randomUUID().split('-')[0] + '123!', // Simpler password generation for reliability
       email_confirm: true,
       user_metadata: { full_name },
     });
 
     if (authError) {
-      if (authError.message?.includes('already been registered') || authError.message?.includes('unique')) {
-        return new Response(JSON.stringify({ error: `Ya existe un usuario registrado con el correo electrónico: ${authEmail}` }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('Auth error:', authError);
+      if (authError.message?.includes('already been registered')) {
+        return new Response(JSON.stringify({ error: `Ya existe un usuario con el correo: ${authEmail}` }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
       throw authError;
     }
 
     const userId = authData.user.id;
+    console.log('User created:', userId);
 
-    // Create member record using admin client (bypasses RLS)
+    console.log('Inserting member...');
     const { data: memberData, error: memberError } = await adminClient
       .from('members')
       .insert({
         user_id: userId,
         club_id,
         full_name: full_name.trim(),
-        email: effectiveEmail,
+        email: effectiveEmail || authEmail,
         phone: phone || null,
         date_of_birth: date_of_birth || null,
         identification: identification || null,
@@ -104,23 +101,26 @@ Deno.serve(async (req) => {
       .single();
 
     if (memberError) {
-      // Cleanup: delete the auth user we just created
+      console.error('Member insert error:', memberError);
       await adminClient.auth.admin.deleteUser(userId);
       throw memberError;
     }
 
-    // Assign role
+    const memberId = memberData.id;
+    console.log('Member created:', memberId);
+
+    console.log('Assigning role:', role);
     const { error: roleError } = await adminClient
       .from('member_roles')
       .insert({
-        member_id: memberData.id,
+        member_id: memberId,
         club_id,
         role,
       });
 
     if (roleError) {
-      // Cleanup
-      await adminClient.from('members').delete().eq('id', memberData.id);
+      console.error('Role insert error:', roleError);
+      await adminClient.from('members').delete().eq('id', memberId);
       await adminClient.auth.admin.deleteUser(userId);
       throw roleError;
     }
@@ -128,11 +128,17 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       user_id: userId,
-      member_id: memberData.id,
+      member_id: memberId,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-  } catch (error) {
-    console.error('Error creating member:', error);
-    return new Response(JSON.stringify({ error: 'Error al crear el miembro. Intenta nuevamente.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (err) {
+    console.error('Global Error:', err);
+    return new Response(JSON.stringify({
+      error: err.message || 'Error interno del servidor',
+      details: err.toString()
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });

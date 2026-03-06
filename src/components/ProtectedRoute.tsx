@@ -1,7 +1,13 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { Navigate } from "react-router-dom";
 
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+export default function ProtectedRoute({
+  children,
+  requireSuperAdmin = false
+}: {
+  children: React.ReactNode;
+  requireSuperAdmin?: boolean;
+}) {
   const { session, member, loading, signOut } = useAuth();
 
   if (loading) {
@@ -19,6 +25,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
 
   if (member?.is_super_admin) {
     return <>{children}</>;
+  }
+
+  if (requireSuperAdmin && !member?.is_super_admin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const isExpired = member?.subscription_end_date && new Date(member.subscription_end_date) < new Date();

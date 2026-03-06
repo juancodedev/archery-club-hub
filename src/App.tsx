@@ -109,7 +109,7 @@ const App = () => (
             />
             <Route
               path="/super-admin/*"
-              element={<ProtectedRoute><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireSuperAdmin><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
