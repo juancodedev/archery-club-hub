@@ -11,7 +11,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "node scripts/migrate.cjs"
+    "db:migrate": "node scripts/migrate.cjs",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "functions:serve": "supabase functions serve"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
