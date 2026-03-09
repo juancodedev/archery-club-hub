@@ -225,10 +225,11 @@ export default function ProfilePage() {
   const updateProfile = useMutation({
     mutationFn: async () => {
       if (!selectedMemberId) return;
+      const { roles, ...updateData } = formData;
       const { error } = await supabase
         .from("members")
         .update({
-          ...formData,
+          ...updateData,
           billing_day: formData.billing_day ? Number(formData.billing_day) : null,
           grace_days: formData.grace_days ? Number(formData.grace_days) : null,
         } as any)

@@ -1,8 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, Users, Target, Calendar, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BarChart3, TrendingUp, Users, Target, Calendar, Filter, ChevronDown, ChevronUp, CheckCircle2, XCircle, PieChart as PieChartIcon } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -16,6 +16,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend
 } from "recharts";
 
 const COLORS = [
@@ -27,10 +28,13 @@ const COLORS = [
 ];
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 interface ClubItem { id: string; name: string; }
 
@@ -44,6 +48,7 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("performance");
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -58,6 +63,7 @@ export default function ReportsPage() {
     if (data) setClubs(data);
   };
 
+  // --- Performance Data (Scores) ---
   const { data: scores } = useQuery({
     queryKey: ["club-scores-report", selectedClubId, startDate, endDate, selectedMemberId],
     queryFn: async () => {
@@ -74,7 +80,33 @@ export default function ReportsPage() {
       const { data } = await query.order("score_date", { ascending: true });
       return data || [];
     },
-    enabled: !!selectedClubId,
+    enabled: !!selectedClubId && activeTab === "performance",
+  });
+
+  // --- Attendance Data ---
+  const { data: attendanceRaw } = useQuery({
+    queryKey: ["club-attendance-report", selectedClubId, startDate, endDate, selectedMemberId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null") return [];
+      let query = supabase
+        .from("training_enrollments")
+        .select(`
+          id, 
+          attended, 
+          member_id,
+          members!inner(full_name), 
+          training_sessions!inner(name, event_date, division)
+        `)
+        .eq("club_id", selectedClubId);
+
+      if (startDate) query = query.gte("training_sessions.event_date", startDate);
+      if (endDate) query = query.lte("training_sessions.event_date", endDate);
+      if (selectedMemberId && selectedMemberId !== "all") query = query.eq("member_id", selectedMemberId);
+
+      const { data } = await query;
+      return (data || []) as any[];
+    },
+    enabled: !!selectedClubId && activeTab === "attendance",
   });
 
   const { data: membersList } = useQuery({
@@ -90,11 +122,11 @@ export default function ReportsPage() {
     enabled: !!selectedClubId,
   });
 
-  // Chart data: Average score per member (top 10)
-  const memberAvgs = (() => {
+  // --- Performance Calculations ---
+  const memberAvgs = useMemo(() => {
     if (!scores?.length) return [];
     const map: Record<string, { name: string; total: number; count: number }> = {};
-    scores.forEach((s: { member_id: string; total_score: number; members?: { full_name?: string } }) => {
+    scores.forEach((s: any) => {
       const name = s.members?.full_name || "Sin nombre";
       if (!map[s.member_id]) map[s.member_id] = { name, total: 0, count: 0 };
       map[s.member_id].total += s.total_score;
@@ -104,13 +136,12 @@ export default function ReportsPage() {
       .map((m) => ({ name: m.name.split(" ")[0], promedio: Math.round(m.total / m.count), sesiones: m.count }))
       .sort((a, b) => b.promedio - a.promedio)
       .slice(0, 10);
-  })();
+  }, [scores]);
 
-  // Chart data: scores over time (monthly avg)
-  const monthlyTrend = (() => {
+  const monthlyTrend = useMemo(() => {
     if (!scores?.length) return [];
     const map: Record<string, { total: number; count: number }> = {};
-    scores.forEach((s: { score_date: string; total_score: number }) => {
+    scores.forEach((s: any) => {
       const month = s.score_date.substring(0, 7);
       if (!map[month]) map[month] = { total: 0, count: 0 };
       map[month].total += s.total_score;
@@ -119,10 +150,69 @@ export default function ReportsPage() {
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, v]) => ({ mes: month, promedio: Math.round(v.total / v.count) }));
-  })();
+  }, [scores]);
 
-  // Pie: member distribution
-  const statusDist = (() => {
+  // --- Attendance Calculations ---
+  const attendanceStats = useMemo(() => {
+    if (!attendanceRaw?.length) return { overall: 0, count: 0, sessions: 0, byMember: [], byDivision: [], trend: [] };
+
+    let attendedCount = 0;
+    const memberMap: Record<string, { name: string; attended: number; total: number }> = {};
+    const divMap: Record<string, { attended: number; total: number }> = {};
+    const trendMap: Record<string, { attended: number; total: number }> = {};
+
+    attendanceRaw.forEach((row: any) => {
+      if (row.attended) attendedCount++;
+
+      // Member Map
+      const mId = row.member_id;
+      const mName = row.members?.full_name || "Sin nombre";
+      if (!memberMap[mId]) memberMap[mId] = { name: mName, attended: 0, total: 0 };
+      memberMap[mId].total++;
+      if (row.attended) memberMap[mId].attended++;
+
+      // Division Map
+      const div = row.training_sessions?.division || "Sin división";
+      if (!divMap[div]) divMap[div] = { attended: 0, total: 0 };
+      divMap[div].total++;
+      if (row.attended) divMap[div].attended++;
+
+      // Trend Map (Monthly)
+      const date = row.training_sessions?.event_date || "";
+      const month = date.substring(0, 7);
+      if (month) {
+        if (!trendMap[month]) trendMap[month] = { attended: 0, total: 0 };
+        trendMap[month].total++;
+        if (row.attended) trendMap[month].attended++;
+      }
+    });
+
+    const byMember = Object.values(memberMap)
+      .map(m => ({ name: m.name.split(" ")[0], tasa: Math.round((m.attended / m.total) * 100), total: m.total }))
+      .sort((a, b) => b.tasa - a.tasa)
+      .slice(0, 10);
+
+    const byDivision = Object.entries(divMap).map(([name, v]) => ({
+      name,
+      value: Math.round((v.attended / v.total) * 100)
+    }));
+
+    const trend = Object.entries(trendMap)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, v]) => ({ mes: month, tasa: Math.round((v.attended / v.total) * 100) }));
+
+    return {
+      overall: Math.round((attendedCount / attendanceRaw.length) * 100),
+      count: attendedCount,
+      total: attendanceRaw.length,
+      byMember,
+      byDivision,
+      trend
+    };
+  }, [attendanceRaw]);
+
+  // Distribution
+  const statusDist = useMemo(() => {
     if (!membersList?.length) return [];
     const active = membersList.filter((m) => m.status === "activo").length;
     const inactive = membersList.filter((m) => m.status !== "activo").length;
@@ -130,39 +220,24 @@ export default function ReportsPage() {
       { name: "Activos", value: active },
       { name: "Inactivos", value: inactive },
     ].filter((d) => d.value > 0);
-  })();
+  }, [membersList]);
 
-  // Pie: role distribution
-  const roleDist = (() => {
+  const roleDist = useMemo(() => {
     if (!membersList?.length) return [];
     const map: Record<string, number> = {};
-    membersList.forEach((m: { member_roles?: { role: string }[] }) => {
-      (m.member_roles)?.forEach((r: { role: string }) => {
+    membersList.forEach((m: any) => {
+      (m.member_roles)?.forEach((r: any) => {
         map[r.role] = (map[r.role] || 0) + 1;
       });
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  })();
+  }, [membersList]);
 
   const totalMembers = membersList?.length || 0;
   const totalScores = scores?.length || 0;
-  const avgScore = totalScores > 0
-    ? Math.round(scores!.reduce((s, sc) => s + sc.total_score, 0) / totalScores)
-    : 0;
-  const bestScore = totalScores > 0
-    ? Math.max(...scores!.map((s) => s.total_score))
-    : 0;
+  const avgScore = totalScores > 0 ? Math.round(scores!.reduce((s, sc) => s + sc.total_score, 0) / totalScores) : 0;
+  const bestScore = totalScores > 0 ? Math.max(...scores!.map((s) => s.total_score)) : 0;
 
-  const stats = [
-    { icon: Users, label: "Miembros", value: totalMembers, color: "text-primary" },
-    { icon: Target, label: "Registros", value: totalScores, color: "text-amber-500" },
-    { icon: TrendingUp, label: "Promedio", value: avgScore, color: "text-emerald-500" },
-    { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-400" },
-  ];
-
-  function cn(baseClass: string, colorClass: string): string {
-    return `${baseClass} ${colorClass}`;
-  }
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -175,7 +250,21 @@ export default function ReportsPage() {
         </div>
       </motion.div>
 
-      {/* Filters Panel - Mobile First Collapsible */}
+      {/* Tabs Selector */}
+      <div className="flex justify-center sm:justify-start">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+          <TabsList className="glass border-white/5 p-1 h-12">
+            <TabsTrigger value="performance" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 h-10 px-6 rounded-lg transition-all">
+              <Target className="h-4 w-4" /> Rendimiento
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 h-10 px-6 rounded-lg transition-all">
+              <Calendar className="h-4 w-4" /> Asistencias
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {/* Filters Panel */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
@@ -222,133 +311,219 @@ export default function ReportsPage() {
         )}
       </motion.div>
 
-      {/* Stats Cards - Grid Layout */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map(({ icon: Icon, label, value, color }, i) => (
+      <AnimatePresence mode="wait">
+        {activeTab === "performance" ? (
           <motion.div
-            key={label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.08 }}
-            className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden group shadow-lg"
+            key="perf"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="space-y-6"
           >
-            <div className={cn("absolute -top-6 -right-6 h-16 w-16 rounded-full opacity-5 bg-current", color.replace('text-', 'bg-'))} />
-            <Icon className={cn("h-5 w-5 mb-2", color)} />
-            <div>
-              <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { icon: Users, label: "Miembros", value: totalMembers, color: "text-primary" },
+                { icon: Target, label: "Registros", value: totalScores, color: "text-amber-500" },
+                { icon: TrendingUp, label: "Promedio", value: avgScore, color: "text-emerald-500" },
+                { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-400" },
+              ].map(({ icon: Icon, label, value, color }, i) => (
+                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
+                  <Icon className={cn("h-5 w-5 mb-2", color)} />
+                  <div>
+                    <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+              {/* Bar: member performance */}
+              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <h3 className="font-display font-bold text-foreground">Top 10 Rendimiento</h3>
+                </div>
+                <div className="h-[300px] w-full mt-4">
+                  {memberAvgs.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={memberAvgs}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: "bold" }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px" }}
+                          cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                        />
+                        <Bar dataKey="promedio" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={30} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">Sin datos para graficar</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Line: progress trend */}
+              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp className="h-5 w-5 text-accent" />
+                  <h3 className="font-display font-bold text-foreground">Tendencia de Progreso</h3>
+                </div>
+                <div className="h-[300px] w-full mt-4">
+                  {monthlyTrend.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={monthlyTrend}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                        <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px" }} />
+                        <Line type="monotone" dataKey="promedio" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--accent))", strokeWidth: 0 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">Sin registros mensuales...</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status & Role Distribution */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
+                <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Estado de Miembros</h3>
+                  <div className="h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={statusDist} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value" stroke="none">
+                          {statusDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Distribución de Roles</h3>
+                  <div className="h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={roleDist} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value" stroke="none">
+                          {roleDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
-        ))}
-      </div>
-
-      {/* Charts Grid - Adaptive */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
-        {/* Bar: avg per member */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-3xl p-5 sm:p-6 border-white/5 shadow-xl relative overflow-hidden">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <BarChart3 className="h-4 w-4" />
+        ) : (
+          <motion.div
+            key="attendance"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            {/* Attendance Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {[
+                { icon: CheckCircle2, label: "Tasa General", value: `${attendanceStats.overall}%`, color: "text-emerald-500" },
+                { icon: XCircle, label: "Total Faltas", value: attendanceStats.total - attendanceStats.count, color: "text-rose-500" },
+                { icon: Calendar, label: "Total Sesiones", value: attendanceRaw?.length || 0, color: "text-primary" },
+                { icon: Users, label: "Presentes", value: attendanceStats.count, color: "text-amber-500" },
+              ].map(({ icon: Icon, label, value, color }, i) => (
+                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
+                  <Icon className={cn("h-5 w-5 mb-2", color)} />
+                  <div>
+                    <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <h3 className="font-display font-bold text-foreground">Top 10 Rendimiento</h3>
-          </div>
-          <div className="h-[300px] w-full mt-4">
-            {memberAvgs.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={memberAvgs}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: "bold" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(15, 23, 42, 0.9)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "16px",
-                      fontSize: "12px"
-                    }}
-                    cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                  />
-                  <Bar dataKey="promedio" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full opacity-30 italic text-sm">Sin datos para graficar</div>
-            )}
-          </div>
-        </motion.div>
 
-        {/* Line: monthly trend */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-3xl p-5 sm:p-6 border-white/5 shadow-xl">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <h3 className="font-display font-bold text-foreground">Tendencia de Progreso</h3>
-          </div>
-          <div className="h-[300px] w-full mt-4">
-            {monthlyTrend.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "rgba(15, 23, 42, 0.9)",
-                      backdropFilter: "blur(8px)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "16px"
-                    }}
-                  />
-                  <Line type="monotone" dataKey="promedio" stroke="hsl(var(--accent))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--accent))", strokeWidth: 0 }} activeDot={{ r: 6, strokeWidth: 0 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full opacity-30 italic text-sm">Esperando registros mensuales...</div>
-            )}
-          </div>
-        </motion.div>
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+              {/* Member Attendance Bar */}
+              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <Users className="h-5 w-5 text-amber-500" />
+                  <h3 className="font-display font-bold text-foreground">Ranking de Asistencia (%)</h3>
+                </div>
+                <div className="h-[300px] w-full mt-4">
+                  {attendanceStats.byMember.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={attendanceStats.byMember} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <YAxis dataKey="name" type="category" width={80} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px" }}
+                        />
+                        <Bar dataKey="tasa" fill="hsl(var(--amber-500))" radius={[0, 4, 4, 0]} barSize={20}>
+                          {attendanceStats.byMember.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.tasa > 80 ? 'hsl(142, 70%, 45%)' : entry.tasa > 50 ? 'hsl(38, 92%, 50%)' : 'hsl(346, 84%, 61%)'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">Sin datos de asistencia</div>
+                  )}
+                </div>
+              </div>
 
-        {/* Pie Charts - Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4 sm:gap-6">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }} className="glass rounded-3xl p-5 border-white/5 shadow-xl">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Estado de Miembros</h3>
-            <div className="h-[220px]">
-              {statusDist.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={statusDist} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value" stroke="none">
-                      {statusDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full opacity-20 italic">Sin datos</div>
-              )}
-            </div>
-          </motion.div>
+              {/* Attendance Trend Line */}
+              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  <h3 className="font-display font-bold text-foreground">Evolución de Asistencia (%)</h3>
+                </div>
+                <div className="h-[300px] w-full mt-4">
+                  {attendanceStats.trend.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={attendanceStats.trend}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                        <XAxis dataKey="mes" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <Tooltip contentStyle={{ backgroundColor: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "16px" }} />
+                        <Line type="monotone" dataKey="tasa" stroke="hsl(142, 70%, 45%)" strokeWidth={3} dot={{ r: 4 }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">Iniciando seguimiento...</div>
+                  )}
+                </div>
+              </div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }} className="glass rounded-3xl p-5 border-white/5 shadow-xl">
-            <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Distribución de Roles</h3>
-            <div className="h-[220px]">
-              {roleDist.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={roleDist} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value" stroke="none">
-                      {roleDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full opacity-20 italic">Sin datos</div>
-              )}
+              {/* Attendance by Division */}
+              <div className="lg:col-span-2 glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="flex items-center gap-2 mb-6">
+                  <PieChartIcon className="h-5 w-5 text-indigo-400" />
+                  <h3 className="font-display font-bold text-foreground font-display">Asistencia por División (%)</h3>
+                </div>
+                <div className="h-[250px] w-full">
+                  {attendanceStats.byDivision.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={attendanceStats.byDivision}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                        <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <YAxis domain={[0, 100]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="hsl(var(--indigo-400))" radius={[4, 4, 0, 0]} barSize={40} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full opacity-30 italic text-sm">No hay datos por división</div>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
