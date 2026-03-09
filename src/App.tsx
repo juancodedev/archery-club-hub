@@ -33,6 +33,7 @@ import AttendanceMarkPage from "./pages/AttendanceMarkPage";
 import BillingPage from "./pages/BillingPage";
 import FinancePage from "./pages/FinancePage";
 import MembershipsPage from "./pages/MembershipsPage";
+import BirthdaysPage from "./pages/BirthdaysPage";
 
 const queryClient = new QueryClient();
 
@@ -106,6 +107,10 @@ const App = () => (
             <Route
               path="/admin/tournaments"
               element={<ProtectedRoute><AppLayout><TournamentsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/birthdays"
+              element={<ProtectedRoute><AppLayout><BirthdaysPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/super-admin/*"

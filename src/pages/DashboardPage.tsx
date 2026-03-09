@@ -1,12 +1,13 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { Target, TrendingUp, Calendar, Award, BarChart3, Shield } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Target, TrendingUp, Calendar, Award, BarChart3, Shield, Cake } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DashboardPage() {
   const { member, memberships, setActiveMembership } = useAuth();
@@ -52,6 +53,27 @@ export default function DashboardPage() {
       return count || 0;
     },
     enabled: !!member && !!member.club_id,
+  });
+
+  const { data: todaysBirthdays } = useQuery({
+    queryKey: ["todays-birthdays", member?.club_id],
+    queryFn: async () => {
+      if (!member?.club_id) return [];
+      const { data } = await supabase
+        .from("members")
+        .select("id, full_name, date_of_birth, avatar_url")
+        .eq("club_id", member.club_id)
+        .not("date_of_birth", "is", null);
+
+      if (!data) return [];
+
+      const today = new Date();
+      return data.filter(m => {
+        const dob = new Date(m.date_of_birth);
+        return dob.getUTCDate() === today.getDate() && dob.getUTCMonth() === today.getMonth();
+      });
+    },
+    enabled: !!member?.club_id,
   });
 
   const bestScore = scores?.length
@@ -116,46 +138,78 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Today's Birthdays Widget */}
+      <AnimatePresence>
+        {todaysBirthdays && todaysBirthdays.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-4"
+          >
+            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Cumpleaños de Hoy 🎂</h2>
+            <div className="flex flex-wrap gap-3">
+              {todaysBirthdays.map((m) => (
+                <Link key={m.id} to="/birthdays">
+                  <div className="glass rounded-2xl p-3 pl-3 pr-5 flex items-center gap-3 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group">
+                    <Avatar className="h-10 w-10 border-2 border-primary/30 group-hover:scale-110 transition-transform">
+                      <AvatarImage src={supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {m.full_name?.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-bold text-foreground leading-tight">{m.full_name}</p>
+                      <p className="text-[10px] text-primary font-black uppercase tracking-widest">¡Felicidades!</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Quick Actions - Mobile First */}
       <div className="space-y-4">
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Operaciones Tácticas</h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 md:flex flex-wrap gap-3">
-            <Link to="/scores/new" className="w-full md:w-auto">
+          <Link to="/scores/new" className="w-full md:w-auto">
             <Button className="w-full h-12 gap-2 rounded-2xl font-black shadow-lg shadow-primary/30">
-                <Target className="h-5 w-5" />
-                NUEVO PUNTAJE
+              <Target className="h-5 w-5" />
+              NUEVO PUNTAJE
             </Button>
-            </Link>
-            <Link to="/training" className="w-full md:w-auto">
+          </Link>
+          <Link to="/training" className="w-full md:w-auto">
             <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card">
-                <Calendar className="h-5 w-5" />
-                ENTRENAMIENTOS
+              <Calendar className="h-5 w-5" />
+              ENTRENAMIENTOS
             </Button>
-            </Link>
-            {isPresidente && (
+          </Link>
+          {isPresidente && (
             <Link to="/reports" className="w-full md:w-auto">
-                <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card">
+              <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card">
                 <BarChart3 className="h-5 w-5" />
                 REPORTES
-                </Button>
+              </Button>
             </Link>
-            )}
-            {isAdmin && (
+          )}
+          {isAdmin && (
             <Link to="/admin" className="w-full md:w-auto">
-                <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card border-primary/20">
+              <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card border-primary/20">
                 <Shield className="h-5 w-5" />
                 ADMINISTRACIÓN
-                </Button>
+              </Button>
             </Link>
-            )}
+          )}
         </div>
       </div>
 
       {/* Recent Activity */}
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between px-1">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Últimos Registros</h2>
-            <Link to="/scores" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Ver Todo</Link>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Últimos Registros</h2>
+          <Link to="/scores" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Ver Todo</Link>
         </div>
 
         {scores && scores.length > 0 ? (
@@ -169,18 +223,18 @@ export default function DashboardPage() {
                 className="glass rounded-2xl p-4 sm:p-5 flex items-center justify-between border-white/5 shadow-sm hover:border-primary/20 transition-colors cursor-default"
               >
                 <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/10">
-                        {score.total_score >= 300 ? "🎯" : "🏹"}
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/10">
+                    {score.total_score >= 300 ? "🎯" : "🏹"}
+                  </div>
+                  <div>
+                    <p className="font-bold text-foreground text-sm sm:text-base leading-tight">{score.event_name || "Entrenamiento"}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] text-muted-foreground font-medium">
+                        {new Date(score.score_date).toLocaleDateString("es-CL", { day: 'numeric', month: 'short' })}
+                      </p>
+                      {score.division && <Badge variant="secondary" className="text-[8px] h-4 px-1.5 font-bold uppercase">{score.division}</Badge>}
                     </div>
-                    <div>
-                        <p className="font-bold text-foreground text-sm sm:text-base leading-tight">{score.event_name || "Entrenamiento"}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                            <p className="text-[10px] text-muted-foreground font-medium">
-                                {new Date(score.score_date).toLocaleDateString("es-CL", { day: 'numeric', month: 'short' })}
-                            </p>
-                            {score.division && <Badge variant="secondary" className="text-[8px] h-4 px-1.5 font-bold uppercase">{score.division}</Badge>}
-                        </div>
-                    </div>
+                  </div>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-display font-black text-primary tabular-nums tracking-tighter">{score.total_score}</p>
