@@ -38,6 +38,29 @@ import { cn } from "@/lib/utils";
 
 interface ClubItem { id: string; name: string; }
 
+interface ScoreReport {
+  id: string;
+  member_id: string;
+  total_score: number;
+  score_date: string;
+  members: { full_name: string };
+}
+
+interface AttendanceReport {
+  id: string;
+  attended: boolean;
+  member_id: string;
+  members: { full_name: string };
+  training_sessions: { name: string; event_date: string; division: string };
+}
+
+interface MemberReport {
+  id: string;
+  full_name: string;
+  status: string;
+  member_roles: { role: string }[];
+}
+
 export default function ReportsPage() {
   const { member } = useAuth();
   const isSuperAdmin = !!member?.is_super_admin;
@@ -53,18 +76,18 @@ export default function ReportsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.club_id) {
+    } else if (member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedClubId]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) setClubs(data as ClubItem[]);
   };
 
   // --- Performance Data (Scores) ---
-  const { data: scores } = useQuery({
+  const { data: scores } = useQuery<ScoreReport[]>({
     queryKey: ["club-scores-report", selectedClubId, startDate, endDate, selectedMemberId],
     queryFn: async () => {
       if (!selectedClubId || selectedClubId === "null") return [];
@@ -77,14 +100,15 @@ export default function ReportsPage() {
       if (endDate) query = query.lte("score_date", endDate);
       if (selectedMemberId && selectedMemberId !== "all") query = query.eq("member_id", selectedMemberId);
 
-      const { data } = await query.order("score_date", { ascending: true });
-      return data || [];
+      const { data, error } = await query.order("score_date", { ascending: true });
+      if (error) throw error;
+      return (data || []) as unknown as ScoreReport[];
     },
     enabled: !!selectedClubId && activeTab === "performance",
   });
 
   // --- Attendance Data ---
-  const { data: attendanceRaw } = useQuery({
+  const { data: attendanceRaw } = useQuery<AttendanceReport[]>({
     queryKey: ["club-attendance-report", selectedClubId, startDate, endDate, selectedMemberId],
     queryFn: async () => {
       if (!selectedClubId || selectedClubId === "null") return [];
@@ -103,21 +127,23 @@ export default function ReportsPage() {
       if (endDate) query = query.lte("training_sessions.event_date", endDate);
       if (selectedMemberId && selectedMemberId !== "all") query = query.eq("member_id", selectedMemberId);
 
-      const { data } = await query;
-      return (data || []) as any[];
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as unknown as AttendanceReport[];
     },
     enabled: !!selectedClubId && activeTab === "attendance",
   });
 
-  const { data: membersList } = useQuery({
+  const { data: membersList } = useQuery<MemberReport[]>({
     queryKey: ["club-members-report", selectedClubId],
     queryFn: async () => {
       if (!selectedClubId || selectedClubId === "null") return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("members")
         .select("id, full_name, status, member_roles(role)")
         .eq("club_id", selectedClubId);
-      return data || [];
+      if (error) throw error;
+      return (data || []) as unknown as MemberReport[];
     },
     enabled: !!selectedClubId,
   });
@@ -126,7 +152,7 @@ export default function ReportsPage() {
   const memberAvgs = useMemo(() => {
     if (!scores?.length) return [];
     const map: Record<string, { name: string; total: number; count: number }> = {};
-    scores.forEach((s: any) => {
+    scores.forEach((s) => {
       const name = s.members?.full_name || "Sin nombre";
       if (!map[s.member_id]) map[s.member_id] = { name, total: 0, count: 0 };
       map[s.member_id].total += s.total_score;
@@ -141,7 +167,7 @@ export default function ReportsPage() {
   const monthlyTrend = useMemo(() => {
     if (!scores?.length) return [];
     const map: Record<string, { total: number; count: number }> = {};
-    scores.forEach((s: any) => {
+    scores.forEach((s) => {
       const month = s.score_date.substring(0, 7);
       if (!map[month]) map[month] = { total: 0, count: 0 };
       map[month].total += s.total_score;
@@ -161,7 +187,7 @@ export default function ReportsPage() {
     const divMap: Record<string, { attended: number; total: number }> = {};
     const trendMap: Record<string, { attended: number; total: number }> = {};
 
-    attendanceRaw.forEach((row: any) => {
+    attendanceRaw.forEach((row) => {
       if (row.attended) attendedCount++;
 
       // Member Map
@@ -225,8 +251,8 @@ export default function ReportsPage() {
   const roleDist = useMemo(() => {
     if (!membersList?.length) return [];
     const map: Record<string, number> = {};
-    membersList.forEach((m: any) => {
-      (m.member_roles)?.forEach((r: any) => {
+    membersList.forEach((m) => {
+      (m.member_roles)?.forEach((r) => {
         map[r.role] = (map[r.role] || 0) + 1;
       });
     });

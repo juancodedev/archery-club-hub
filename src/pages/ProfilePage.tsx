@@ -85,35 +85,37 @@ export default function ProfilePage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.id) {
+    } else if (member?.id && (!selectedMemberId || !selectedClubId)) {
       setSelectedMemberId(member.id);
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedMemberId, selectedClubId]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) setClubs(data as ClubItem[]);
   };
 
   const fetchMembers = async (clubId: string) => {
     if (!clubId || clubId === "null") return;
     const { data } = await supabase.from("members").select("id, full_name").eq("club_id", clubId).order("full_name");
-    if (data) setMembersList(data);
+    if (data) setMembersList(data as MemberItem[]);
   };
 
   const { data: fullMember, isLoading: loadingMember } = useQuery<FullMember | null>({
     queryKey: ["member-profile", selectedMemberId],
     queryFn: async () => {
       if (!selectedMemberId || selectedMemberId === "null" || selectedMemberId === "00000000-0000-0000-0000-000000000000") return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("members")
         .select("*, member_roles(role)")
         .eq("id", selectedMemberId)
         .single();
 
+      if (error) throw error;
+
       if (data) {
-        const d = data as any;
+        const d = data as unknown as FullMember;
         setFormData({
           full_name: d.full_name || "",
           phone: d.phone || "",
@@ -128,10 +130,10 @@ export default function ProfilePage() {
           windbreaker_size: d.windbreaker_size || "",
           display_name: d.display_name || "",
           avatar_url: d.avatar_url || "",
-          roles: d.member_roles?.map((r: { role: string }) => r.role) || [],
+          roles: d.member_roles?.map((r) => r.role) || [],
           billing_day: String(d.billing_day || ""),
           grace_days: String(d.grace_days ?? "7")
-        } as typeof formData & { roles: string[]; billing_day: string; grace_days: string });
+        });
       }
       return data as unknown as FullMember;
     },

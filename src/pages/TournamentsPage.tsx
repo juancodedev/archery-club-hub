@@ -80,6 +80,11 @@ function MemberAvatar({ name, avatarUrl, size = "sm" }: { name: string; avatarUr
     );
 }
 
+interface TournamentType {
+    id: string;
+    name: string;
+}
+
 export default function TournamentsPage() {
     const { member } = useAuth();
     const { toast } = useToast();
@@ -96,12 +101,13 @@ export default function TournamentsPage() {
     const isManager = roles.some(r => ["gestor_torneos", "administrador", "presidente"].includes(r));
 
     // --- Tournaments ---
-    const { data: tournaments, isLoading } = useQuery({
+    const { data: tournaments, isLoading } = useQuery<Tournament[]>({
         queryKey: ["tournaments", clubId],
         queryFn: async () => {
             if (!clubId) return [];
+            // We use unknown cast for table names not present in the generated types
             const { data, error } = await supabase
-                .from("tournaments" as any)
+                .from("tournaments" as unknown as "members")
                 .select("*, tournament_types(name)")
                 .eq("club_id", clubId)
                 .order("start_date", { ascending: true });
@@ -112,12 +118,12 @@ export default function TournamentsPage() {
     });
 
     // --- Registrations ---
-    const { data: registrations } = useQuery({
+    const { data: registrations } = useQuery<Registration[]>({
         queryKey: ["tournament-registrations", clubId],
         queryFn: async () => {
             if (!clubId) return [];
             const { data, error } = await supabase
-                .from("tournament_registrations" as any)
+                .from("tournament_registrations" as unknown as "members")
                 .select("*, members(id, full_name, avatar_url)")
                 .order("created_at", { ascending: false });
             if (error) throw error;
@@ -127,7 +133,7 @@ export default function TournamentsPage() {
     });
 
     // --- Tournament Types ---
-    const { data: tournamentTypes } = useQuery({
+    const { data: tournamentTypes } = useQuery<TournamentType[]>({
         queryKey: ["tournament-types"],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -135,7 +141,7 @@ export default function TournamentsPage() {
                 .select("id, name")
                 .order("name");
             if (error) throw error;
-            return data;
+            return data as TournamentType[];
         },
     });
 
@@ -152,7 +158,7 @@ export default function TournamentsPage() {
     const createMutation = useMutation({
         mutationFn: async () => {
             if (!clubId) return;
-            const { error } = await supabase.from("tournaments" as any).insert({
+            const { error } = await supabase.from("tournaments" as unknown as "members").insert({
                 club_id: clubId, name, description, start_date: startDate, end_date: endDate, location,
                 tournament_type_id: typeId, created_by: memberId
             });
@@ -171,7 +177,7 @@ export default function TournamentsPage() {
     const registerMutation = useMutation({
         mutationFn: async (tournamentId: string) => {
             if (!memberId) return;
-            const { error } = await supabase.from("tournament_registrations" as any).insert({
+            const { error } = await supabase.from("tournament_registrations" as unknown as "members").insert({
                 tournament_id: tournamentId, member_id: memberId
             });
             if (error) throw error;
@@ -186,7 +192,7 @@ export default function TournamentsPage() {
     // --- Cancel registration ---
     const cancelMutation = useMutation({
         mutationFn: async (regId: string) => {
-            const { error } = await supabase.from("tournament_registrations" as any).delete().eq("id", regId);
+            const { error } = await supabase.from("tournament_registrations" as unknown as "members").delete().eq("id", regId);
             if (error) throw error;
         },
         onSuccess: () => {
@@ -198,7 +204,7 @@ export default function TournamentsPage() {
     // --- Update status (manager) ---
     const updateStatusMutation = useMutation({
         mutationFn: async ({ regId, status }: { regId: string; status: string }) => {
-            const { error } = await supabase.from("tournament_registrations" as any).update({ status }).eq("id", regId);
+            const { error } = await supabase.from("tournament_registrations" as unknown as "members").update({ status }).eq("id", regId);
             if (error) throw error;
         },
         onSuccess: () => {

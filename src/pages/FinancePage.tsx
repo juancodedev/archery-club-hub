@@ -72,7 +72,7 @@ export default function FinancePage() {
         } else if (member?.club_id) {
             setSelectedClubId(member.club_id);
         }
-    }, [member, isSuperAdmin]);
+    }, [member, isSuperAdmin, selectedClubId]);
 
     const fetchClubs = async () => {
         const { data } = await supabase
@@ -83,13 +83,13 @@ export default function FinancePage() {
             .order("name");
 
         if (data) {
-            setClubs(data);
+            setClubs(data as unknown as Club[]);
         }
     };
 
     const clubId = selectedClubId;
 
-    const { data: entries, isLoading } = useQuery({
+    const { data: entries, isLoading } = useQuery<FinancialEntry[]>({
         queryKey: ["financial-entries", clubId, categoryFilter],
         queryFn: async () => {
             if (!clubId) return [];
@@ -109,7 +109,7 @@ export default function FinancePage() {
             const { data, error } = await query.order("entry_date", { ascending: false });
 
             if (error) throw error;
-            return data;
+            return data as unknown as FinancialEntry[];
         },
         enabled: !!clubId,
     });
@@ -356,7 +356,7 @@ export default function FinancePage() {
                                                     <Receipt className="h-4 w-4" />
                                                 </Button>
                                             )}
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry as any)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}>
@@ -419,7 +419,7 @@ export default function FinancePage() {
                                     )}
                                 </div>
                                 <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type as "expense" | "income", entry as any)}>
+                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type as "expense" | "income", entry)}>
                                         <Pencil className="h-3.5 w-3.5" /> EDITAR
                                     </Button>
                                     <Button
