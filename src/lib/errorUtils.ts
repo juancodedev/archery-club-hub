@@ -3,9 +3,16 @@
  * Prevents leaking internal schema details (table names, columns, constraints).
  */
 export function getSafeErrorMessage(error: unknown): string {
-  const err = error as any;
-  const code = err?.code;
-  const message = err?.message || '';
+  let code = "";
+  let message = "";
+
+  if (error instanceof Error) {
+    message = error.message;
+  } else if (typeof error === 'object' && error !== null) {
+    const err = error as Record<string, unknown>;
+    code = String(err.code || "");
+    message = String(err.message || "");
+  }
 
   // PostgreSQL error codes
   if (code === '23505') return 'Este registro ya existe. Verifica los datos e intenta nuevamente.';
@@ -33,7 +40,7 @@ export function getSafeErrorMessage(error: unknown): string {
   if (message.includes('timeout')) return 'La operación tardó demasiado. Intenta nuevamente.';
 
   // Log the full error for debugging (server-side)
-  if (import.meta.env.DEV) console.error('Unhandled error:', err);
+  if (import.meta.env.DEV) console.error('Unhandled error:', error);
 
   // Generic fallback - never expose internal details
   return 'Ha ocurrido un error. Por favor, intenta nuevamente.';

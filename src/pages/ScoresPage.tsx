@@ -14,6 +14,20 @@ import { cn } from "@/lib/utils";
 import type { Club, MemberBasic } from "@/types/archery";
 
 
+interface Score {
+  id: string;
+  member_id: string;
+  club_id: string;
+  total_score: number;
+  event_name: string | null;
+  score_date: string;
+  division: string | null;
+  ends: string[][] | null;
+  detail: string | null;
+  members: { full_name: string } | null;
+  clubs: { name: string } | null;
+}
+
 export default function ScoresPage() {
   const { member } = useAuth();
   const isSuperAdmin = member?.is_super_admin ?? false;
@@ -35,10 +49,10 @@ export default function ScoresPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.club_id) {
+    } else if (member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedClubId]);
 
   useEffect(() => {
     if (selectedClubId && (isAdmin || isSuperAdmin)) {
@@ -48,7 +62,7 @@ export default function ScoresPage() {
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) setClubs(data as unknown as Club[]);
   };
 
   const fetchMembers = async (clubId: string) => {
@@ -57,10 +71,10 @@ export default function ScoresPage() {
       .select("id, full_name")
       .eq("club_id", clubId)
       .order("full_name");
-    if (data) setMembersList(data);
+    if (data) setMembersList(data as unknown as MemberBasic[]);
   };
 
-  const { data: scores, isLoading } = useQuery({
+  const { data: scores, isLoading } = useQuery<Score[]>({
     queryKey: ["all-scores", selectedClubId, selectedMemberId, startDate, endDate, modality],
     queryFn: async () => {
       let query = supabase.from("scores").select(`
@@ -74,26 +88,27 @@ export default function ScoresPage() {
           query = query.eq("club_id", selectedClubId);
         }
       } else {
-        query = query.eq("club_id", member?.club_id);
+        query = query.eq("club_id", member?.club_id || "");
       }
 
       if (selectedMemberId !== "all") {
         query = query.eq("member_id", selectedMemberId);
       } else if (!isAdmin && !isSuperAdmin) {
-        query = query.eq("member_id", member?.id);
+        query = query.eq("member_id", member?.id || "");
       }
 
       if (startDate) query = query.gte("score_date", startDate);
       if (endDate) query = query.lte("score_date", endDate);
-      // Nota: el filtro por discipline se hace a través del join con tournament_types
-      if (modality !== "all") {
-        query = (query as any).eq("tournament_types.discipline", modality);
-      }
 
+      // Filter by modality if applicable. Since this might involve a join not explicitly typed in standard supabase client, 
+      // we use unknown cast to allow the eq check if the column exists in the joined table.
+      if (modality !== "all") {
+        query = (query as unknown as { eq: (col: string, val: string) => typeof query }).eq("tournament_types.discipline", modality);
+      }
 
       const { data, error } = await query.order("score_date", { ascending: false });
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as Score[];
     },
     enabled: !!member,
   });

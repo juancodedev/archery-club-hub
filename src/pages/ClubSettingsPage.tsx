@@ -16,6 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DivisionsManager from "@/components/admin/DivisionsManager";
 import TournamentTypesManager from "@/components/admin/TournamentTypesManager";
 import { Switch } from "@/components/ui/switch";
+import { Database } from "@/integrations/supabase/types";
+
+type ClubUpdate = Database["public"]["Tables"]["clubs"]["Update"] & {
+  financial_support_expires_at?: string | null;
+};
 
 export default function ClubSettingsPage() {
   const { member } = useAuth();
@@ -30,10 +35,10 @@ export default function ClubSettingsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.club_id) {
+    } else if (member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedClubId]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
@@ -69,7 +74,7 @@ export default function ClubSettingsPage() {
     mutationFn: async () => {
       if (!selectedClubId) throw new Error("No club selected");
 
-      const updateData: any = {
+      const updateData: ClubUpdate = {
         inscription_fee: Number(inscriptionFee) || 0,
         monthly_fee: Number(monthlyFee) || 0,
         allow_superadmin_finances: allowSuperAdminFinances,
@@ -96,7 +101,7 @@ export default function ClubSettingsPage() {
 
       const { error } = await supabase
         .from("clubs")
-        .update(updateData)
+        .update(updateData as unknown as Database["public"]["Tables"]["clubs"]["Update"])
         .eq("id", selectedClubId);
       if (error) throw error;
     },

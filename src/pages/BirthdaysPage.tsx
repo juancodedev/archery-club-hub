@@ -11,6 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+interface BirthdayMember {
+    id: string;
+    full_name: string;
+    date_of_birth: string;
+    avatar_url: string | null;
+    club_id: string;
+}
+
 export default function BirthdaysPage() {
     const { member, isSuperAdminSubdomain } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -20,7 +28,7 @@ export default function BirthdaysPage() {
         if (member?.club_id && !selectedClubId) {
             setSelectedClubId(member.club_id);
         }
-    }, [member?.club_id]);
+    }, [member?.club_id, selectedClubId]);
 
     const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
     const roles = member?.roles || [];
@@ -39,7 +47,7 @@ export default function BirthdaysPage() {
     });
 
     // Fetch members with birthdays
-    const { data: members, isLoading } = useQuery({
+    const { data: members, isLoading } = useQuery<BirthdayMember[]>({
         queryKey: ["club-birthdays", selectedClubId],
         queryFn: async () => {
             if (!selectedClubId) return [];
@@ -49,7 +57,7 @@ export default function BirthdaysPage() {
                 .eq("club_id", selectedClubId)
                 .not("date_of_birth", "is", null);
             if (error) throw error;
-            return data;
+            return data as unknown as BirthdayMember[];
         },
         enabled: !!selectedClubId,
     });
@@ -70,7 +78,7 @@ export default function BirthdaysPage() {
 
     const birthdaysByDay = useMemo(() => {
         if (!members) return {};
-        const map: Record<number, any[]> = {};
+        const map: Record<number, BirthdayMember[]> = {};
         members.forEach(m => {
             const dob = new Date(m.date_of_birth);
             const day = dob.getUTCDate();
@@ -83,7 +91,7 @@ export default function BirthdaysPage() {
         return map;
     }, [members, currentDate]);
 
-    const today = new Date();
+    const today = useMemo(() => new Date(), []);
     const isToday = (day: number) => {
         return day === today.getDate() && currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
     };
@@ -97,7 +105,7 @@ export default function BirthdaysPage() {
             const dob = new Date(m.date_of_birth);
             return dob.getUTCDate() === today.getDate() && dob.getUTCMonth() === today.getMonth();
         });
-    }, [members]);
+    }, [members, today]);
 
     if (isArcherOnly) {
         return (
