@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,12 @@ export default function BirthdaysPage() {
     const { member, isSuperAdminSubdomain } = useAuth();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedClubId, setSelectedClubId] = useState<string | null>(member?.club_id || null);
+
+    useEffect(() => {
+        if (member?.club_id && !selectedClubId) {
+            setSelectedClubId(member.club_id);
+        }
+    }, [member?.club_id]);
 
     const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
     const roles = member?.roles || [];
