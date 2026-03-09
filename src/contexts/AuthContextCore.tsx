@@ -13,6 +13,7 @@ export interface MemberInfo {
     club_status?: string;
     subscription_end_date?: string | null;
     club_name?: string;
+    avatar_url?: string | null;
 }
 
 export interface AuthContextType {

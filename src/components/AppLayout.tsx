@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -149,9 +151,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="p-4 border-t border-border bg-muted/20">
-          <div className="mb-3 px-3">
-            <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
-            <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
+          <div className="flex items-center gap-3 px-3 mb-4">
+            <Avatar className="h-10 w-10 border border-border/50">
+              <AvatarImage src={member?.avatar_url ? (member.avatar_url.startsWith('http') ? member.avatar_url : supabase.storage.from("avatars").getPublicUrl(member.avatar_url).data.publicUrl) : undefined} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {member?.full_name?.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={signOut}>
             <LogOut className="h-4 w-4" />
@@ -188,9 +198,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             {member?.id && (
               <Link to="/profile">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary hover:bg-primary/20 transition-colors">
-                  <User className="h-4 w-4" />
-                </div>
+                <Avatar className="h-8 w-8 border border-primary/20 hover:scale-105 transition-transform">
+                  <AvatarImage src={member?.avatar_url ? (member.avatar_url.startsWith('http') ? member.avatar_url : supabase.storage.from("avatars").getPublicUrl(member.avatar_url).data.publicUrl) : undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                    {member?.full_name?.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </Link>
             )}
           </div>
