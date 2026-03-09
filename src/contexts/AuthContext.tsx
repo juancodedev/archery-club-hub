@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: membersData, error: membersError } = await supabase
         .from("members")
         .select(`
-          id, user_id, club_id, full_name, email, status, is_super_admin,
+          id, user_id, club_id, full_name, email, status, is_super_admin, avatar_url,
           clubs (name, subscription_status, subscription_end_date)
         `)
         .eq("user_id", userId);
@@ -34,16 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (membersData && membersData.length > 0) {
         const allMemberships: MemberInfo[] = await Promise.all(
-          membersData.map(async (m: {
-            id: string;
-            user_id: string;
-            club_id: string;
-            full_name: string;
-            email: string;
-            status: string;
-            is_super_admin: boolean;
-            clubs?: { subscription_status?: string; subscription_end_date?: string | null; name?: string } | null;
-          }) => {
+          membersData.map(async (m) => {
             const { data: rolesData } = await supabase
               .from("member_roles")
               .select("role")
@@ -60,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               is_super_admin: m.is_super_admin ?? false,
               club_status: m.clubs?.subscription_status || 'activo',
               subscription_end_date: m.clubs?.subscription_end_date,
-              club_name: m.clubs?.name
+              club_name: m.clubs?.name,
+              avatar_url: m.avatar_url
             };
           })
         );
