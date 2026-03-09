@@ -116,7 +116,7 @@ export default function BirthdaysPage() {
                             >
                                 <div className="relative">
                                     <Avatar className="h-24 w-24 border-4 border-primary/30">
-                                        <AvatarImage src={supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl} />
+                                        <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
                                         <AvatarFallback className="bg-primary/10 text-primary text-2xl font-black">
                                             {m.full_name?.substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
@@ -234,7 +234,7 @@ export default function BirthdaysPage() {
                                             className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-white/5 hover:border-primary/30 transition-colors"
                                         >
                                             <Avatar className="h-5 w-5 border border-primary/20">
-                                                <AvatarImage src={supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl} />
+                                                <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
                                                 <AvatarFallback className="text-[8px] font-bold">
                                                     {m.full_name?.substring(0, 2).toUpperCase()}
                                                 </AvatarFallback>
