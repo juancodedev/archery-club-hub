@@ -57,3 +57,6 @@ INSERT INTO public.financial_categories (club_id, name, type)
 SELECT id, cat, 'expense'
 FROM public.clubs, UNNEST(ARRAY['Mantenimiento', 'Alquiler', 'Equipamiento', 'Premiación', 'Servicios', 'Insumos']) cat
 ON CONFLICT DO NOTHING;
+
+-- Reload cache
+NOTIFY pgrst, 'reload schema';

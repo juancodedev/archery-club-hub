@@ -225,14 +225,25 @@ export default function ProfilePage() {
   const updateProfile = useMutation({
     mutationFn: async () => {
       if (!selectedMemberId) return;
-      const { roles, ...updateData } = formData;
+
       const { error } = await supabase
         .from("members")
         .update({
-          ...updateData,
+          full_name: formData.full_name,
+          phone: formData.phone || null,
+          address: formData.address || null,
+          identification: formData.identification || null,
+          medical_history: formData.medical_history || null,
+          guardian_name: formData.guardian_name || null,
+          guardian_phone: formData.guardian_phone || null,
+          emergency_contact_name: formData.emergency_contact_name || null,
+          emergency_contact_phone: formData.emergency_contact_phone || null,
+          shirt_size: formData.shirt_size || null,
+          windbreaker_size: formData.windbreaker_size || null,
+          display_name: formData.display_name || null,
           billing_day: formData.billing_day ? Number(formData.billing_day) : null,
           grace_days: formData.grace_days ? Number(formData.grace_days) : null,
-        } as any)
+        })
         .eq("id", selectedMemberId);
       if (error) throw error;
     },
