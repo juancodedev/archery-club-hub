@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,7 +23,8 @@ import {
     CreditCard,
     Ticket,
     User,
-    CalendarDays
+    CalendarDays,
+    Plus
 } from "lucide-react";
 import { cn, formatCurrency, parseChileanCurrency } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -35,10 +36,7 @@ interface FinanceFormProps {
     onCancel: () => void;
 }
 
-const CATEGORIES = {
-    income: ["Membresía", "Otros Pagos", "Torneo", "Venta Equipamiento", "Capacitación", "Otro"],
-    expense: ["Mantenimiento", "Alquiler", "Equipamiento", "Premiación", "Servicios", "Insumos", "Otro"]
-};
+
 
 interface InitialData {
     id?: string;
@@ -60,6 +58,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
     const [amount, setAmount] = useState(initialData?.amount ? formatCurrency(initialData.amount).replace("$", "").trim() : "");
     const [category, setCategory] = useState(initialData?.category || "");
+    const [customCategory, setCustomCategory] = useState("");
     const [description, setDescription] = useState(initialData?.description || "");
     const [date, setDate] = useState(initialData?.entry_date || new Date().toISOString().split("T")[0]);
     const [receiptUrl, setReceiptUrl] = useState<string | null>(initialData?.receipt_url || null);
@@ -96,6 +95,32 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         },
         enabled: !!clubId,
     });
+
+    // Fetch dynamic categories
+    const { data: dbCategories, isLoading: loadingCategories } = useQuery({
+        queryKey: ["financial-categories", clubId, type],
+        queryFn: async () => {
+            if (!clubId) return [];
+            const { data, error } = await supabase
+                .from("financial_categories")
+                .select("name")
+                .eq("club_id", clubId)
+                .eq("type", type)
+                .order("name", { ascending: true })
+                .limit(10);
+            if (error) throw error;
+            return data.map(c => c.name);
+        },
+        enabled: !!clubId,
+    });
+
+    const categories = useMemo(() => {
+        const list = dbCategories || [];
+        if (!list.includes("Otro")) {
+            return [...list, "Otro"];
+        }
+        return list;
+    }, [dbCategories]);
 
     const handleCategoryChange = (val: string) => {
         setCategory(val);
@@ -140,10 +165,41 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
         try {
             setLoading(true);
+
+            let finalCategory = category;
+
+            // If "Otro" is selected, create the new category first
+            if (category === "Otro" && customCategory.trim()) {
+                const categoryName = customCategory.trim();
+
+                // Check if it already exists to avoid redundant inserts
+                const { data: existing } = await supabase
+                    .from("financial_categories")
+                    .select("name")
+                    .eq("club_id", clubId)
+                    .eq("type", type)
+                    .eq("name", categoryName)
+                    .maybeSingle();
+
+                if (!existing) {
+                    const { error: catError } = await supabase
+                        .from("financial_categories")
+                        .insert({
+                            club_id: clubId,
+                            name: categoryName,
+                            type: type
+                        });
+
+                    if (catError) throw catError;
+                }
+
+                finalCategory = categoryName;
+            }
+
             const payload = {
                 club_id: clubId,
                 type,
-                category,
+                category: finalCategory,
                 amount: parseChileanCurrency(amount),
                 description,
                 entry_date: date,
@@ -209,12 +265,31 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                 <SelectValue placeholder="Seleccionar categoría" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                                {CATEGORIES[type].map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                ))}
+                                {loadingCategories ? (
+                                    <div className="p-2 text-xs text-center text-muted-foreground animate-pulse">Cargando...</div>
+                                ) : (
+                                    categories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {category === "Otro" && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                            <Label className="flex items-center gap-2">
+                                <Plus className="h-4 w-4 text-muted-foreground" /> Nombre de la Nueva Categoría
+                            </Label>
+                            <Input
+                                value={customCategory}
+                                onChange={(e) => setCustomCategory(e.target.value)}
+                                placeholder="Ej: Publicidad, Gasolina..."
+                                className="rounded-xl"
+                                required
+                            />
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
