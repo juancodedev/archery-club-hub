@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <Link key={m.id} to="/birthdays">
                   <div className="glass rounded-2xl p-3 pl-3 pr-5 flex items-center gap-3 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group">
                     <Avatar className="h-10 w-10 border-2 border-primary/30 group-hover:scale-110 transition-transform">
-                      <AvatarImage src={supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl} />
+                      <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
                         {m.full_name?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
