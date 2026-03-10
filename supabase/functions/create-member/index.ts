@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
       emergency_contact_name, emergency_contact_phone,
       shirt_size, windbreaker_size, display_name,
       guardian_name, guardian_phone, guardian_email,
-      billing_day, grace_days
+      billing_day, grace_days,
+      ifaa_number, shirt_gender, enrollment_date
     } = body;
 
     if (!full_name || !club_id) {
@@ -126,9 +127,11 @@ Deno.serve(async (req) => {
         guardian_phone: guardian_phone || null,
         guardian_email: guardian_email || null,
         status: 'activo',
-        enrollment_date: new Date().toISOString().split('T')[0],
+        enrollment_date: enrollment_date || new Date().toISOString().split('T')[0],
         billing_day: billing_day || null,
         grace_days: grace_days ?? 7,
+        ifaa_number: ifaa_number || null,
+        shirt_gender: shirt_gender || null,
       })
       .select('id')
       .single();

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Wallet } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatRUT } from "@/lib/rut";
@@ -29,6 +30,9 @@ interface MemberData {
   guardian_email?: string | null;
   billing_day?: number | null;
   grace_days?: number | null;
+  ifaa_number?: string | null;
+  shirt_gender?: string | null;
+  enrollment_date?: string | null;
 }
 
 interface Props {
@@ -58,6 +62,9 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
   const [guardianEmail, setGuardianEmail] = useState("");
   const [billingDay, setBillingDay] = useState("");
   const [graceDays, setGraceDays] = useState("7");
+  const [ifaaNumber, setIfaaNumber] = useState("");
+  const [shirtGender, setShirtGender] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState("");
 
   useEffect(() => {
     if (member) {
@@ -79,6 +86,9 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       setGuardianEmail(member.guardian_email || "");
       setBillingDay(String(member.billing_day || ""));
       setGraceDays(String(member.grace_days ?? "7"));
+      setIfaaNumber(member.ifaa_number || "");
+      setShirtGender(member.shirt_gender || "");
+      setEnrollmentDate(member.enrollment_date || "");
     }
   }, [member]);
 
@@ -106,6 +116,9 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
           guardian_email: guardianEmail || null,
           billing_day: billingDay ? Number(billingDay) : null,
           grace_days: graceDays ? Number(graceDays) : 7,
+          ifaa_number: ifaaNumber || null,
+          shirt_gender: shirtGender || null,
+          enrollment_date: enrollmentDate || null,
         })
         .eq("id", member.id);
       if (error) throw error;
@@ -162,6 +175,26 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             <div className="space-y-2">
               <Label>Tel. Emergencia</Label>
               <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Número IFAA</Label>
+              <Input value={ifaaNumber} onChange={(e) => setIfaaNumber(e.target.value)} placeholder="Ej: CL-1234" />
+            </div>
+            <div className="space-y-2">
+              <Label>Fecha de Incorporación</Label>
+              <Input type="date" value={enrollmentDate} onChange={(e) => setEnrollmentDate(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Corte Polera/Cortavientos</Label>
+              <Select value={shirtGender} onValueChange={setShirtGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar corte" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="femenino">Femenino</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Talla Polera</Label>
