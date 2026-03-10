@@ -45,6 +45,8 @@ interface FullMember extends MemberForStatus {
   grace_days: number | null;
   membership_category: string | null;
   membership_fee: number | null;
+  ifaa_number: string | null;
+  shirt_gender: string | null;
 }
 
 export default function ProfilePage() {
@@ -80,6 +82,9 @@ export default function ProfilePage() {
     roles: [] as string[],
     billing_day: "",
     grace_days: "7",
+    ifaa_number: "",
+    shirt_gender: "",
+    enrollment_date: "",
   });
 
   useEffect(() => {
@@ -132,7 +137,10 @@ export default function ProfilePage() {
           avatar_url: d.avatar_url || "",
           roles: d.member_roles?.map((r) => r.role) || [],
           billing_day: String(d.billing_day || ""),
-          grace_days: String(d.grace_days ?? "7")
+          grace_days: String(d.grace_days ?? "7"),
+          ifaa_number: d.ifaa_number || "",
+          shirt_gender: d.shirt_gender || "",
+          enrollment_date: d.enrollment_date || "",
         });
       }
       return data as unknown as FullMember;
@@ -245,6 +253,9 @@ export default function ProfilePage() {
           display_name: formData.display_name || null,
           billing_day: formData.billing_day ? Number(formData.billing_day) : null,
           grace_days: formData.grace_days ? Number(formData.grace_days) : null,
+          ifaa_number: formData.ifaa_number || null,
+          shirt_gender: formData.shirt_gender || null,
+          enrollment_date: formData.enrollment_date || null,
         })
         .eq("id", selectedMemberId);
       if (error) throw error;
@@ -262,6 +273,9 @@ export default function ProfilePage() {
       { icon: User, label: "Nombre", value: fullMember.full_name, key: "full_name" },
       { icon: Phone, label: "Teléfono", value: fullMember.phone || "—", key: "phone" },
       { icon: Shield, label: "Identificación", value: fullMember.identification || "—", key: "identification" },
+      { icon: Shield, label: "Núm. IFAA", value: fullMember.ifaa_number || "—", key: "ifaa_number" },
+      { icon: Calendar, label: "Incorporación", value: fullMember.enrollment_date || "—", key: "enrollment_date" },
+      { icon: User, label: "Estilo Polera", value: fullMember.shirt_gender ? (fullMember.shirt_gender === 'masculino' ? 'Masculino' : 'Femenino') : "—", key: "shirt_gender" },
       { icon: MapPin, label: "Dirección", value: fullMember.address || "—", key: "address" },
       { icon: Heart, label: "Contacto Emergencia", value: fullMember.emergency_contact_name || "—", key: "emergency_contact_name" },
       { icon: Phone, label: "Tel. Emergencia", value: fullMember.emergency_contact_phone || "—", key: "emergency_contact_phone" },
@@ -449,6 +463,26 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <Label>Dirección Particular</Label>
                     <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Número IFAA</Label>
+                    <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.ifaa_number} onChange={(e) => setFormData({ ...formData, ifaa_number: e.target.value })} placeholder="Ej: CL-1234" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Fecha de Incorporación</Label>
+                    <input type="date" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.enrollment_date} onChange={(e) => setFormData({ ...formData, enrollment_date: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Corte de Polera/Cortavientos</Label>
+                    <Select value={formData.shirt_gender} onValueChange={(val) => setFormData({ ...formData, shirt_gender: val })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar corte" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="masculino">Masculino</SelectItem>
+                        <SelectItem value="femenino">Femenino</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

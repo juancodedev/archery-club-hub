@@ -44,6 +44,9 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const [ifaaNumber, setIfaaNumber] = useState("");
+  const [shirtGender, setShirtGender] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState(new Date().toISOString().split('T')[0]);
 
   const isMinor = useMemo(() => {
     if (!dateOfBirth) return false;
@@ -97,6 +100,9 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
           guardian_email: isMinor ? guardianEmail : null,
           billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
           grace_days: graceDays ? Number(graceDays) : 7,
+          ifaa_number: ifaaNumber || null,
+          shirt_gender: shirtGender || null,
+          enrollment_date: enrollmentDate || null,
         },
       });
 
@@ -129,6 +135,9 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       setGuardianPhone("");
       setGuardianEmail("");
       setRole("arquero");
+      setIfaaNumber("");
+      setShirtGender("");
+      setEnrollmentDate(new Date().toISOString().split('T')[0]);
     },
     onError: (e: Error) => {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -216,6 +225,14 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
                   rows={3}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Número IFAA</Label>
+                <Input value={ifaaNumber} onChange={(e) => setIfaaNumber(e.target.value)} placeholder="Ej: CL-1234" />
+              </div>
+              <div className="space-y-2">
+                <Label>Fecha de Incorporación</Label>
+                <Input type="date" value={enrollmentDate} onChange={(e) => setEnrollmentDate(e.target.value)} />
+              </div>
             </div>
           </div>
 
@@ -240,6 +257,18 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
           <div className="glass rounded-xl p-4 space-y-4">
             <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Corte de Polera/Cortavientos</Label>
+                <Select value={shirtGender} onValueChange={setShirtGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar corte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="femenino">Femenino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Talla Polera</Label>
                 <Select value={shirtSize} onValueChange={setShirtSize}>

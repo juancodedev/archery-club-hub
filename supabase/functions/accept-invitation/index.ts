@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
       emergency_contact_name, emergency_contact_phone,
       shirt_size, windbreaker_size, display_name,
       guardian_name, guardian_phone, guardian_email,
+      ifaa_number, shirt_gender,
     } = body;
 
     if (!token || !full_name) {
@@ -87,6 +88,8 @@ Deno.serve(async (req) => {
         guardian_name: guardian_name || null,
         guardian_phone: guardian_phone || null,
         guardian_email: guardian_email || null,
+        ifaa_number: ifaa_number || null,
+        shirt_gender: shirt_gender || null,
         status: 'activo',
       })
       .select('id')

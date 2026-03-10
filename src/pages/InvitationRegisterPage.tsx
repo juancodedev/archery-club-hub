@@ -50,6 +50,9 @@ export default function InvitationRegisterPage() {
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
 
+  const [ifaaNumber, setIfaaNumber] = useState("");
+  const [shirtGender, setShirtGender] = useState("");
+
   const [noEmail, setNoEmail] = useState(false);
 
   const isMinor = useMemo(() => {
@@ -154,6 +157,8 @@ export default function InvitationRegisterPage() {
           guardian_name: isMinor ? guardianName : null,
           guardian_phone: isMinor ? guardianPhone : null,
           guardian_email: isMinor ? guardianEmail : null,
+          ifaa_number: ifaaNumber || null,
+          shirt_gender: shirtGender || null,
         },
       });
 
@@ -242,6 +247,15 @@ export default function InvitationRegisterPage() {
                   placeholder="12.345.678-9"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ifaaNumber">Número IFAA</Label>
+                <Input
+                  id="ifaaNumber"
+                  value={ifaaNumber}
+                  onChange={(e) => setIfaaNumber(e.target.value)}
+                  placeholder="Ej: CL-1234"
+                />
+              </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="address">Dirección particular</Label>
                 <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
@@ -283,6 +297,10 @@ export default function InvitationRegisterPage() {
                 <Label htmlFor="medicalHistory">Antecedentes médicos relevantes</Label>
                 <Textarea id="medicalHistory" value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} placeholder="Alergias, condiciones, etc." rows={3} />
               </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="ifaaNumber">Número IFAA</Label>
+                <Input id="ifaaNumber" value={ifaaNumber} onChange={(e) => setIfaaNumber(e.target.value)} placeholder="Ej: CL-1234" />
+              </div>
             </div>
           </div>
 
@@ -307,6 +325,18 @@ export default function InvitationRegisterPage() {
           <div className="glass rounded-xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Corte de Polera/Cortavientos</Label>
+                <Select value={shirtGender} onValueChange={setShirtGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar corte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="femenino">Femenino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Talla Polera</Label>
                 <Select value={shirtSize} onValueChange={setShirtSize}>
