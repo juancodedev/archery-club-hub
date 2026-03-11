@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import AddMemberDialog from "@/AddMemberDialog";
+import AddMemberDialog from "@/components/admin/AddMemberDialog";
 import InviteMemberDialog from "@/components/admin/InviteMemberDialog";
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
@@ -50,8 +50,8 @@ interface AdminMember {
 }
 
 export default function AdminPage() {
-  const { member } = useAuth();
-  const isSuperAdmin = !!member?.is_super_admin;
+  const { member, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");

@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin } from "@/lib/permissions";
 
 interface BirthdayMember {
     id: string;
@@ -32,7 +33,7 @@ export default function BirthdaysPage() {
 
     const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
     const roles = member?.roles || [];
-    const isAdmin = roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
+    const isAdmin = checkIsAdmin(roles, isSuperAdmin);
     const isArcherOnly = roles.includes("arquero") && roles.length === 1 && !isSuperAdmin;
 
     // Fetch clubs for superadmin
@@ -130,7 +131,7 @@ export default function BirthdaysPage() {
                             >
                                 <div className="relative">
                                     <Avatar className="h-24 w-24 border-4 border-primary/30">
-                                        <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
+                                        <AvatarImage src={getAvatarUrl(m.avatar_url)} />
                                         <AvatarFallback className="bg-primary/10 text-primary text-2xl font-black">
                                             {m.full_name?.substring(0, 2).toUpperCase()}
                                         </AvatarFallback>
@@ -248,7 +249,7 @@ export default function BirthdaysPage() {
                                             className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-white/5 hover:border-primary/30 transition-colors"
                                         >
                                             <Avatar className="h-5 w-5 border border-primary/20">
-                                                <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
+                                                <AvatarImage src={getAvatarUrl(m.avatar_url)} />
                                                 <AvatarFallback className="text-[8px] font-bold">
                                                     {m.full_name?.substring(0, 2).toUpperCase()}
                                                 </AvatarFallback>

@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Trophy, Cake, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente, isTesorero as checkIsTesorero, isSecretaria as checkIsSecretaria } from "@/lib/permissions";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,10 +62,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
 
   const roles = member?.roles || [];
-  const isAdmin = roles.includes("administrador") || roles.includes("presidente") || roles.includes("secretaria") || isSuperAdmin;
-  const isPresidente = roles.includes("presidente") || roles.includes("administrador") || isSuperAdmin;
-  const isTesorero = roles.includes("tesorero") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
-  const isSecretaria = roles.includes("secretaria") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
+  const isAdmin = checkIsAdmin(roles, isSuperAdmin);
+  const isPresidente = checkIsPresidente(roles, isSuperAdmin);
+  const isTesorero = checkIsTesorero(roles, isSuperAdmin);
+  const isSecretaria = checkIsSecretaria(roles, isSuperAdmin);
 
   const allAdminItems = isSuperAdmin
     ? superAdminItems
@@ -153,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-t border-border bg-muted/20">
           <div className="flex items-center gap-3 px-3 mb-4">
             <Avatar className="h-10 w-10 border border-border/50">
-              <AvatarImage src={member?.avatar_url ? (member.avatar_url.startsWith('http') ? member.avatar_url : supabase.storage.from("avatars").getPublicUrl(member.avatar_url).data.publicUrl) : undefined} />
+              <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
               <AvatarFallback className="bg-primary/10 text-primary font-bold">
                 {member?.full_name?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -199,7 +200,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {member?.id && (
               <Link to="/profile">
                 <Avatar className="h-8 w-8 border border-primary/20 hover:scale-105 transition-transform">
-                  <AvatarImage src={member?.avatar_url ? (member.avatar_url.startsWith('http') ? member.avatar_url : supabase.storage.from("avatars").getPublicUrl(member.avatar_url).data.publicUrl) : undefined} />
+                  <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
                   <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
                     {member?.full_name?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
