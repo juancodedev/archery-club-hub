@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatRUT } from "@/lib/rut";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface MemberData {
   id: string;
@@ -130,7 +131,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
       onOpenChange(false);
     },
     onError: (e: Error) => {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     },
   });
 

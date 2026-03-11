@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, Calendar, Heart, GraduationCap, Info } from "lucide-react";
 import { formatRUT } from "@/lib/rut";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Invitation { club_id: string; email: string | null; expires_at: string; used_at: string | null; }
 interface ClubInfo { id: string; name: string; inscription_fee?: number; monthly_fee?: number; }
@@ -177,8 +178,8 @@ export default function InvitationRegisterPage() {
         });
       }
       navigate("/login");
-    } catch (error: unknown) {
-      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }

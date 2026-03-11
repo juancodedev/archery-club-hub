@@ -140,7 +140,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       setEnrollmentDate(new Date().toISOString().split('T')[0]);
     },
     onError: (e: Error) => {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     },
   });
 

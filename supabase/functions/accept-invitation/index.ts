@@ -67,6 +67,9 @@ Deno.serve(async (req) => {
       effectiveUserId = authData.user.id;
     }
 
+    const role = body.role || 'arquero';
+    const member_type = role === 'socio' ? 'socio' : 'arquero';
+
     // Create member record
     const { data: memberData, error: memberError } = await adminClient
       .from('members')
@@ -91,6 +94,7 @@ Deno.serve(async (req) => {
         ifaa_number: ifaa_number || null,
         shirt_gender: shirt_gender || null,
         status: 'activo',
+        member_type,
       })
       .select('id')
       .single();
@@ -101,11 +105,11 @@ Deno.serve(async (req) => {
       throw memberError;
     }
 
-    // Assign default role
+    // Assign role
     await adminClient.from('member_roles').insert({
       member_id: memberData.id,
       club_id: invitation.club_id,
-      role: 'arquero',
+      role: role,
     });
 
     // Mark invitation as used

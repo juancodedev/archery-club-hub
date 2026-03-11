@@ -88,9 +88,7 @@ Deno.serve(async (req) => {
 
         if (existingMember) {
           return new Response(JSON.stringify({
-            error: `El usuario con correo ${authEmail} ya está registrado como miembro en un club.`,
-            member_id: existingMember.id,
-            club_id: existingMember.club_id
+            error: `Ya existe un miembro registrado con el correo ${authEmail}.`
           }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
@@ -105,7 +103,10 @@ Deno.serve(async (req) => {
 
     console.log('User ID to use:', userId);
 
-    console.log('Inserting member...');
+    // Map role to member_type for better classification
+    const member_type = role === 'socio' ? 'socio' : 'arquero';
+
+    console.log(`Inserting member with role ${role} and type ${member_type}...`);
     const { data: memberData, error: memberError } = await adminClient
       .from('members')
       .insert({
@@ -132,6 +133,7 @@ Deno.serve(async (req) => {
         grace_days: grace_days ?? 7,
         ifaa_number: ifaa_number || null,
         shirt_gender: shirt_gender || null,
+        member_type,
       })
       .select('id')
       .single();

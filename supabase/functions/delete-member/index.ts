@@ -71,6 +71,28 @@ Deno.serve(async (req) => {
     // Delete division change notifications
     await supabaseAdmin.from('division_change_notifications').delete().eq('member_id', member_id);
 
+    // Nullify or delete other references to avoid constraint errors
+    // Invitations created by this member
+    await supabaseAdmin.from('member_invitations').update({ created_by: null }).eq('created_by', member_id);
+
+    // Training sessions created by this member
+    await supabaseAdmin.from('training_sessions').update({ created_by: null }).eq('created_by', member_id);
+
+    // Tournaments created by this member
+    await supabaseAdmin.from('tournaments').update({ created_by: null }).eq('created_by', member_id);
+
+    // Tournament registrations for this member (delete them as the member is being deleted)
+    await supabaseAdmin.from('tournament_registrations').delete().eq('member_id', member_id);
+
+    // Training enrollments
+    await supabaseAdmin.from('training_enrollments').delete().eq('member_id', member_id);
+
+    // Scores
+    await supabaseAdmin.from('scores').delete().eq('member_id', member_id);
+
+    // Financial entries for this member
+    await supabaseAdmin.from('financial_entries').delete().eq('member_id', member_id);
+
     // Delete member record
     const { error: deleteError } = await supabaseAdmin.from('members').delete().eq('id', member_id);
     if (deleteError) throw deleteError;
