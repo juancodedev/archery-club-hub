@@ -7,11 +7,21 @@ export function getSafeErrorMessage(error: unknown): string {
   let message = "";
 
   if (error instanceof Error) {
+    // Handle Supabase function invocation errors which might be strings or JSON
+    try {
+      const parsed = JSON.parse(error.message);
+      if (parsed.error) return parsed.error;
+    } catch {
+      // Not JSON, continue with normal mapping
+    }
     message = error.message;
   } else if (typeof error === 'object' && error !== null) {
     const err = error as Record<string, unknown>;
     code = String(err.code || "");
     message = String(err.message || "");
+
+    // If it's a function return with an error property
+    if (err.error && typeof err.error === 'string') return err.error;
   }
 
   // PostgreSQL error codes
@@ -34,6 +44,7 @@ export function getSafeErrorMessage(error: unknown): string {
   if (message.includes('Invitación inválida')) return message;
   if (message.includes('Acceso denegado')) return message;
   if (message.includes('Solo el Super Admin')) return message;
+  if (message.includes('Edge Function returned a non-2xx status code')) return 'Error en el servidor. Por favor, intenta nuevamente.';
 
   // Network errors
   if (message.includes('Failed to fetch') || message.includes('NetworkError')) return 'Error de conexión. Verifica tu conexión a internet.';
@@ -43,5 +54,5 @@ export function getSafeErrorMessage(error: unknown): string {
   if (import.meta.env.DEV) console.error('Unhandled error:', error);
 
   // Generic fallback - never expose internal details
-  return 'Ha ocurrido un error. Por favor, intenta nuevamente.';
+  return message || 'Ha ocurrido un error. Por favor, intenta nuevamente.';
 }
