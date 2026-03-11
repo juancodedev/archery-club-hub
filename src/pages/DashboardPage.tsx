@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
 
 export default function DashboardPage() {
-  const { member, memberships, setActiveMembership } = useAuth();
-  const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
-  const isPresidente = member?.roles?.includes("presidente") || member?.roles?.includes("administrador");
+  const { member, memberships, setActiveMembership, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
+  const isAdmin = checkIsAdmin(member?.roles || [], isSuperAdmin);
+  const isPresidente = checkIsPresidente(member?.roles || [], isSuperAdmin);
 
   const { data: scores } = useQuery({
     queryKey: ["my-scores", member?.id],
@@ -87,9 +90,6 @@ export default function DashboardPage() {
     { icon: Award, label: "Rol Actual", value: member?.roles[0] || "Arquero", color: "text-emerald-500", to: "/profile" },
   ];
 
-  function cn(...classes: (string | undefined | null | false)[]): string {
-    return classes.filter(Boolean).join(" ");
-  }
   return (
     <div className="space-y-8 pb-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                 <Link key={m.id} to="/birthdays">
                   <div className="glass rounded-2xl p-3 pl-3 pr-5 flex items-center gap-3 border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors group">
                     <Avatar className="h-10 w-10 border-2 border-primary/30 group-hover:scale-110 transition-transform">
-                      <AvatarImage src={m.avatar_url ? (m.avatar_url.startsWith('http') ? m.avatar_url : supabase.storage.from("avatars").getPublicUrl(m.avatar_url).data.publicUrl) : undefined} />
+                      <AvatarImage src={getAvatarUrl(m.avatar_url)} />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
                         {m.full_name?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>

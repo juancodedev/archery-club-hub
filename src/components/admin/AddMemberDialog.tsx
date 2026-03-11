@@ -13,14 +13,15 @@ import { formatRUT } from "@/lib/rut";
 
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useEffect } from "react";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   clubId: string;
 }
 
 export default function AddMemberDialog({ clubId: initialClubId }: Props) {
-  const { member } = useAuth();
-  const isSuperAdmin = !!member?.is_super_admin;
+  const { member, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);

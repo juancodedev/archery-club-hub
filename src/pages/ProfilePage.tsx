@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { formatRUT } from "@/lib/rut";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
 import { calculateFinancialStatus, isMembershipCategory, MemberForStatus } from "@/lib/membershipUtils";
 
 interface ClubItem { id: string; name: string; }
@@ -50,8 +51,8 @@ interface FullMember extends MemberForStatus {
 }
 
 export default function ProfilePage() {
-  const { member, user } = useAuth();
-  const isSuperAdmin = !!member?.is_super_admin;
+  const { member, user, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const queryClient = useQueryClient();
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
@@ -213,11 +214,9 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const publicUrl = getAvatarUrl(filePath);
 
-      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl || "" }));
 
       if (selectedMemberId) {
         await supabase
@@ -366,13 +365,7 @@ export default function ProfilePage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4 text-center">
             <div className="relative group">
               <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-muted overflow-hidden border-2 border-primary/20 shadow-lg">
-                {formData.avatar_url ? (
-                  <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                    <User className="h-12 w-12 text-primary/40" />
-                  </div>
-                )}
+                <img src={getAvatarUrl(formData.avatar_url)} alt="Profile" className="h-full w-full object-cover" />
               </div>
               <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
                 <span className="text-xs font-medium">Cambiar</span>
