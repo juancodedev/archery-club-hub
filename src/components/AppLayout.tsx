@@ -109,10 +109,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     )}>
       {/* Sidebar - Desktop relative, Mobile fixed overlay */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative overflow-hidden",
         isSidebarOpen
-          ? "translate-x-0 shadow-2xl md:shadow-none md:w-64"
-          : "-translate-x-full md:w-0 md:border-none md:opacity-0"
+          ? "w-64 translate-x-0 shadow-2xl md:shadow-none"
+          : "w-64 -translate-x-full md:w-0 md:border-none md:opacity-0"
       )}>
         <div className="flex items-center gap-3 p-6 border-b border-border min-w-[256px]">
           <div className={cn(
