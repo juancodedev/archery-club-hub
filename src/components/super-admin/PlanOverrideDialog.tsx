@@ -14,6 +14,8 @@ import { Calendar, Users, DollarSign, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { getSafeErrorMessage } from "@/lib/errorUtils";
+
 interface PlanOverrideDialogProps {
     club: {
         id: string;
@@ -56,8 +58,8 @@ export default function PlanOverrideDialog({ club, isOpen, onOpenChange }: PlanO
             toast.success("Excepciones de plan actualizadas correctamente");
             queryClient.invalidateQueries({ queryKey: ["clubs"] });
             onOpenChange(false);
-        } catch (error: any) {
-            toast.error("Error al actualizar excepciones: " + error.message);
+        } catch (error) {
+            toast.error("Error al actualizar excepciones: " + getSafeErrorMessage(error));
         } finally {
             setLoading(false);
         }

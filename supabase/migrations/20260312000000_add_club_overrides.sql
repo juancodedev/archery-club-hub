@@ -1,10 +1,19 @@
--- Migration: 20260312000000_add_club_overrides.sql
--- Description: Adds student_limit_override to clubs table for manual exceptions.
+-- ============================================================
+-- ACTUALIZACIÓN DE INVITACIONES Y TRAZABILIDAD v1.0
+-- ============================================================
 
-ALTER TABLE public.clubs 
-ADD COLUMN IF NOT EXISTS student_limit_override INTEGER;
+-- 1. Actualizar tabla de miembros para rastrear el origen (invitación)
+ALTER TABLE IF EXISTS public.members 
+ADD COLUMN IF NOT EXISTS invitation_id UUID REFERENCES public.member_invitations(id) ON DELETE SET NULL;
 
-COMMENT ON COLUMN public.clubs.student_limit_override IS 'Manual override for student limit, bypassing the plan limit if set.';
+-- 2. Expandir tabla de invitaciones para soportar links genéricos
+ALTER TABLE IF EXISTS public.member_invitations
+ADD COLUMN IF NOT EXISTS max_uses INTEGER DEFAULT 1,
+ADD COLUMN IF NOT EXISTS invitation_type TEXT DEFAULT 'individual' CHECK (invitation_type IN ('individual', 'generic')),
+ADD COLUMN IF NOT EXISTS title TEXT;
 
--- Ensure SuperAdmin can manage this column (RLS policies should already cover this, but being explicit)
--- Policies for clubs usually allow ALL for super_admin already.
+-- 3. Crear índice para búsqueda rápida por invitación
+CREATE INDEX IF NOT EXISTS idx_members_invitation_id ON public.members(invitation_id);
+
+-- 4. Actualizar RLS si es necesario (ya deberían estar habilitados por defecto, pero asegurarse de que SuperAdmin puede todo)
+-- Nota: La baseline ya tiene habilitado RLS por defecto en todas las tablas de public.
