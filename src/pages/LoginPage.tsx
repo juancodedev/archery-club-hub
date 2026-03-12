@@ -16,15 +16,35 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { session, member, isSuperAdminSubdomain } = useAuth();
+  const { session, member, isSuperAdminSubdomain, systemMode } = useAuth();
 
   useEffect(() => {
     if (session) {
       if (member) {
-        if (import.meta.env.DEV) console.log("🎯 [LoginPage] Miembro cargado, redirigiendo...");
-        if (isSuperAdminSubdomain || member.is_super_admin) {
+        if (import.meta.env.DEV) console.log("🎯 [LoginPage] Miembro cargado, verificando accesos...");
+
+        const isAdmin = member.roles?.some(role => ['administrador', 'presidente'].includes(role));
+        const isExpired = member.subscription_end_date && new Date(member.subscription_end_date) < new Date();
+        const graceEndDate = member.subscription_end_date ? new Date(member.subscription_end_date) : null;
+        if (graceEndDate) {
+          graceEndDate.setDate(graceEndDate.getDate() + 2);
+        }
+        const isGraceExpired = graceEndDate && graceEndDate < new Date();
+        const isClubBlocked = member.club_status === "bloqueado";
+        const isUserInactive = member.status === "inactivo";
+
+        // Check for blocks
+        const shouldBeBlocked = systemMode === 'produccion' && !member.is_super_admin && (
+          (isAdmin && (isClubBlocked || isExpired)) ||
+          (!isAdmin && (isClubBlocked || isGraceExpired || isUserInactive))
+        );
+
+        if (shouldBeBlocked) {
+          if (import.meta.env.DEV) console.log("🔒 [LoginPage] Acceso denegado: Club o Miembro bloqueado.");
+          navigate("/dashboard");
+        } else if (isSuperAdminSubdomain || member.is_super_admin) {
           navigate("/super-admin");
-        } else if (member.roles?.includes('administrador') || member.roles?.includes('presidente')) {
+        } else if (isAdmin) {
           navigate("/admin");
         } else {
           navigate("/dashboard");

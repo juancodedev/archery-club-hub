@@ -70,12 +70,12 @@ export default function IntegrationsSettings() {
                     <div className="space-y-0.5">
                         <Label className="text-base">Modo de Operación</Label>
                         <p className="text-sm text-muted-foreground">
-                            {settings?.mercadopago_mode === 'real' ? 'Transacciones reales habilitadas.' : 'Modo ficticio para pruebas.'}
+                            {settings?.mercadopago_mode === 'real' ? 'Modo Producción habilitado.' : 'Modo Pruebas habilitado.'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            {settings?.mercadopago_mode === 'real' ? 'Real' : 'Pruebas'}
+                            {settings?.mercadopago_mode === 'real' ? 'Producción' : 'Pruebas'}
                         </span>
                         <Switch
                             checked={settings?.mercadopago_mode === 'real'}
