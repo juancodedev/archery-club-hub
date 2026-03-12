@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { DISCIPLINE_LABELS, metersToYards } from "@/lib/archeryConstants";
 import type { TournamentType } from "@/types/archery";
+import { logger } from "@/lib/logger";
 
 
 interface TournamentTypeSelectProps {
@@ -66,8 +67,8 @@ export default function TournamentTypeSelect({
             const { data, error } = await query;
             if (error) throw error;
             setTypes(data || []);
-        } catch (error) {
-            if (import.meta.env.DEV) console.error("Error fetching tournament types:", error);
+        } catch (error: unknown) {
+            logger.error("Error fetching tournament types:", error);
         } finally {
             setLoading(false);
         }

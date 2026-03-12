@@ -14,6 +14,7 @@ import QRCode from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DISCIPLINES, STANDARD_DISTANCES, formatYards, type DisciplineValue } from "@/lib/archeryConstants";
+import { logger } from "@/lib/logger";
 
 const DISCIPLINE_ICONS: Record<string, string> = { outdoor: "🎯", indoor: "🏠", campo: "🌲", "3d": "🐗" };
 const DISCIPLINE_BADGE: Record<string, string> = {
@@ -30,7 +31,7 @@ function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
         width: size,
         margin: 2,
         color: { dark: "#0F172A", light: "#FFFFFF" },
-      }, (error) => { if (error) console.error("QR Error:", error); });
+      }, (error) => { if (error) logger.error("QR Error:", error); });
     }
   };
   return (

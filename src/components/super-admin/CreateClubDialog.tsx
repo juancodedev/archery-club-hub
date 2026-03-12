@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -80,7 +81,7 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
                 .single();
 
             if (memberError) {
-                console.error("Error creating admin member:", memberError);
+                logger.error("Error creating admin member:", memberError);
                 toast.warning("Club creado pero hubo un error al crear el administrador.");
             } else {
                 // 3. Assign Administrator Role
@@ -91,7 +92,7 @@ export default function SuperAdminCreateClubDialog({ onSuccess }: Props) {
                         club_id: club.id,
                         role: 'administrador'
                     });
-                if (roleError) console.error("Error assigning admin role:", roleError);
+                if (roleError) logger.error("Error assigning admin role:", roleError);
             }
 
             toast.success("Club y Administrador creados exitosamente");

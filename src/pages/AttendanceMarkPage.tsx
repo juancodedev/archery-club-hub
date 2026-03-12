@@ -1,11 +1,14 @@
+```javascript
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
+import { logger } from "@/lib/logger";
+import { CheckCircle2, XCircle, Loader2, ArrowLeft, PlusCircle, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function AttendanceMarkPage() {
     const { sessionId } = useParams();
@@ -84,7 +87,7 @@ export default function AttendanceMarkPage() {
                 toast({ title: "Asistencia confirmada", description: "Tu participación ha sido registrada." });
 
             } catch (error: unknown) {
-                if (import.meta.env.DEV) console.error("Error marking attendance:", error);
+                logger.error("Error marking attendance:", error);
                 setStatus("error");
                 setMessage((error as Error).message || "Ocurrió un error al registrar la asistencia");
             }
