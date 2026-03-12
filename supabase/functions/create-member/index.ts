@@ -69,8 +69,8 @@ Deno.serve(async (req) => {
       console.error('Error fetching club default password:', e);
     }
 
-    // Generate a secure random password if no default is set
-    const generatedPassword = defaultPassword || ('Arq!' + crypto.randomUUID().split('-')[0] + '123!');
+    // Use club's default password or a randomly generated fallback
+    const generatedPassword = defaultPassword || `Arq!${crypto.randomUUID().split('-')[0]}${Math.random().toString(36).substring(2, 6)}`;
 
     console.log('Creating/Recovering auth user:', authEmail);
     let userId: string;
@@ -186,6 +186,7 @@ Deno.serve(async (req) => {
       success: true,
       user_id: userId,
       member_id: memberId,
+      password: generatedPassword,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {

@@ -18,10 +18,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SuperAdminCreateClubDialog from "@/components/super-admin/CreateClubDialog";
 import PlansManagement from "@/components/super-admin/PlansManagement";
 import ExtraChargesDialog from "@/components/super-admin/ExtraChargesDialog";
-import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign, Users as UsersIcon } from "lucide-react";
+import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign, Users as UsersIcon, MoreHorizontal } from "lucide-react";
 import MembersManagement from "@/components/super-admin/MembersManagement";
 import IntegrationsSettings from "@/components/super-admin/IntegrationsSettings";
 import ContactRequests from "@/components/super-admin/ContactRequests";
+import ClubActionsMenu from "@/components/super-admin/ClubActionsMenu";
 import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
 interface Club {
     id: string;
@@ -32,6 +33,7 @@ interface Club {
     monthly_price: number;
     city: string | null;
     country: string | null;
+    student_limit_override?: number | null;
 }
 
 export default function SuperAdminPage() {
@@ -208,15 +210,11 @@ export default function SuperAdminPage() {
                                                                     {club.subscription_status}
                                                                 </Badge>
                                                             </TableCell>
-                                                            <TableCell className="text-right flex justify-end gap-2">
-                                                                <ExtraChargesDialog clubId={club.id} clubName={club.name} />
-                                                                <Button
-                                                                    variant={club.subscription_status === "activo" ? "destructive" : "default"}
-                                                                    size="sm"
-                                                                    onClick={() => toggleClubStatus(club.id, club.subscription_status)}
-                                                                >
-                                                                    {club.subscription_status === "activo" ? "Bloquear" : "Activar"}
-                                                                </Button>
+                                                            <TableCell className="text-right">
+                                                                <ClubActionsMenu
+                                                                    club={club}
+                                                                    onStatusToggle={toggleClubStatus}
+                                                                />
                                                             </TableCell>
                                                         </TableRow>
                                                     ))
