@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, DollarSign, Link as LinkIcon, Copy, Plus, Trophy, Target, QrCode } from "lucide-react";
+import { Settings, DollarSign, Link as LinkIcon, Copy, Plus, Trophy, Target, QrCode, Key } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -205,12 +205,43 @@ export default function ClubSettingsPage() {
           {/* Fees */}
           <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground flex items-center gap-2 text-left">
-              <DollarSign className="h-4 w-4 text-accent" />
-              Montos y Seguridad
+              <Key className="h-4 w-4 text-accent" />
+              Seguridad y Contraseñas del Club
             </h3>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 text-left">
+              <div className="space-y-2 sm:col-span-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <Label htmlFor="default-password" font-bold>Contraseña Predeterminada del Club</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="default-password"
+                    type="text"
+                    placeholder="Establece la contraseña por defecto para el club"
+                    value={defaultPassword}
+                    onChange={(e) => setDefaultPassword(e.target.value)}
+                    className="bg-background/50 border-primary/20"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (defaultPassword) {
+                        navigator.clipboard.writeText(defaultPassword);
+                        toast({ title: "Copiado", description: "Contraseña copiada" });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Esta contraseña se asignará automáticamente a los <strong>nuevos miembros</strong> y se usará en los <strong>reseteos de contraseña</strong> realizados por administradores.
+                </p>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="inscription">Inscripción (única vez)</Label>
+                <Label htmlFor="inscription">Cuota de Inscripción</Label>
                 <Input
                   id="inscription"
                   type="number"
@@ -228,34 +259,6 @@ export default function ClubSettingsPage() {
                   onChange={(e) => setMonthlyFee(e.target.value)}
                   className="bg-background/50"
                 />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="default-password">Contraseña por defecto para nuevos miembros</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="default-password"
-                    type="text"
-                    placeholder="Establece una contraseña segura"
-                    value={defaultPassword}
-                    onChange={(e) => setDefaultPassword(e.target.value)}
-                    className="bg-background/50"
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      if (defaultPassword) {
-                        navigator.clipboard.writeText(defaultPassword);
-                        toast({ title: "Copiado", description: "Contraseña copiada al portapapeles" });
-                      }
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-[10px] text-muted-foreground">Esta contraseña se usará automáticamente para nuevos miembros y reseteos.</p>
               </div>
               <div className="space-y-4 sm:col-span-2 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between">

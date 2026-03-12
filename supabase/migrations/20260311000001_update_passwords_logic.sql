@@ -1,4 +1,11 @@
--- Update admin_reset_user_password to allow Club Admins and use default password
+-- Ensure the column exists first
+ALTER TABLE public.clubs ADD COLUMN IF NOT EXISTS default_member_password TEXT;
+
+-- Drop function to avoid signature conflicts
+DROP FUNCTION IF EXISTS public.admin_reset_user_password(uuid, text);
+DROP FUNCTION IF EXISTS public.admin_reset_user_password(uuid);
+
+-- Re-create function
 CREATE OR REPLACE FUNCTION public.admin_reset_user_password(p_user_id uuid, p_new_password text DEFAULT NULL)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -26,20 +33,19 @@ BEGIN
     RAISE EXCEPTION 'No tienes permisos para resetear esta contraseña';
   END IF;
 
-  -- 3. Prevent self-reset via this RPC (admins should use profile settings or forgot password)
+  -- 3. Prevent self-reset via this RPC
   IF auth.uid() = p_user_id THEN
     RAISE EXCEPTION 'No puedes resetear tu propia contraseña desde este menú';
   END IF;
 
   -- 4. Determine Password
-  -- Check if there is a default password for the club
   SELECT default_member_password INTO v_default_password FROM public.clubs WHERE id = v_club_id;
 
   IF v_default_password IS NOT NULL AND v_default_password <> '' THEN
     v_generated_password := v_default_password;
   ELSE
-    -- Fallback to random generation if no default is set
-    v_generated_password := 'Arq!' || encode(extensions.gen_random_bytes(12), 'hex');
+    -- Use a simpler random generation if extension has issues, or fallback to a default pattern
+    v_generated_password := 'Arq!' || substring(md5(random()::text), 1, 12);
   END IF;
 
   -- 5. Update the password in the auth table
