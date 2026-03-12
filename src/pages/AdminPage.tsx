@@ -124,8 +124,8 @@ export default function AdminPage() {
       const { error } = await supabase.rpc('admin_reset_user_password', {
         p_user_id: member.user_id,
         p_new_password: '' // Ignored by server; password generated server-side
-    });
-      
+      });
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -263,11 +263,13 @@ export default function AdminPage() {
                                 <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
                                   <Trophy className="h-4 w-4 mr-2" />Divisiones
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                                    if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
-                                                        resetPassword.mutate(m);
-                                                    }
-                                                }}>
+                                <DropdownMenuItem
+                                  disabled={m.user_id === member?.user_id}
+                                  onClick={() => {
+                                    if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                                      resetPassword.mutate(m);
+                                    }
+                                  }}>
                                   <Key className="h-4 w-4 mr-2" />Resetear contraseña
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -328,6 +330,15 @@ export default function AdminPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
                           <Trophy className="h-4 w-4 mr-2" />Divisiones
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={m.user_id === member?.user_id}
+                          onClick={() => {
+                            if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                              resetPassword.mutate(m);
+                            }
+                          }}>
+                          <Key className="h-4 w-4 mr-2" />Resetear Contraseña
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>

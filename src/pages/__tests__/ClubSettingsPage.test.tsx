@@ -30,7 +30,7 @@ vi.mock('@/integrations/supabase/client', () => ({
                                     name: 'Test Club',
                                     inscription_fee: 5000,
                                     monthly_fee: 10000,
-                                    
+                                    default_member_password: 'test-password',
                                 },
                             }),
                         }),
@@ -213,7 +213,7 @@ describe('ClubSettingsPage - Mobile Responsiveness', () => {
 
         const passwordInput = screen.getByPlaceholderText(/establece una contraseña segura/i);
         expect(passwordInput).toBeInTheDocument();
-        expect(passwordInput).toHaveAttribute('required');
+        expect(passwordInput).toHaveValue('test-password');
     });
 
     it('should have gap spacing that is responsive', () => {

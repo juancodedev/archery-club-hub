@@ -51,6 +51,7 @@ interface FinancialEntry {
     category: string;
     description: string | null;
     receipt_url: string | null;
+    receipt_urls: string[] | null;
     members?: { full_name: string } | null;
 }
 
@@ -149,22 +150,26 @@ export default function FinancePage() {
         setIsFormOpen(true);
     };
 
-    const handleViewReceipt = async (receiptUrl: string | null) => {
-        if (!receiptUrl) return;
+    const handleViewReceipt = async (receiptUrl: string | null, receiptUrls?: string[] | null) => {
+        const urlsToOpen = receiptUrls && receiptUrls.length > 0 ? receiptUrls : (receiptUrl ? [receiptUrl] : []);
+
+        if (urlsToOpen.length === 0) return;
 
         try {
-            if (receiptUrl.startsWith('http')) {
-                window.open(receiptUrl, "_blank");
-                return;
-            }
+            for (const url of urlsToOpen) {
+                if (url.startsWith('http')) {
+                    window.open(url, "_blank");
+                    continue;
+                }
 
-            const { data, error } = await supabase.storage
-                .from("receipts")
-                .createSignedUrl(receiptUrl, 300);
+                const { data, error } = await supabase.storage
+                    .from("receipts")
+                    .createSignedUrl(url, 300);
 
-            if (error) throw error;
-            if (data?.signedUrl) {
-                window.open(data.signedUrl, "_blank");
+                if (error) throw error;
+                if (data?.signedUrl) {
+                    window.open(data.signedUrl, "_blank");
+                }
             }
         } catch (error: unknown) {
             if (import.meta.env.DEV) console.error(error);
@@ -351,7 +356,12 @@ export default function FinancePage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-center gap-1">
-                                            {entry.receipt_url && (
+                                            {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                                    <Receipt className="h-4 w-4" />
+                                                    {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
+                                                </Button>
+                                            ) : entry.receipt_url && (
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                                     <Receipt className="h-4 w-4" />
                                                 </Button>
@@ -412,7 +422,12 @@ export default function FinancePage() {
 
                             <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/30">
                                 <div className="flex gap-1">
-                                    {entry.receipt_url && (
+                                    {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20 relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                            <Receipt className="h-3.5 w-3.5" />
+                                            RECIBO ({entry.receipt_urls!.length})
+                                        </Button>
+                                    ) : entry.receipt_url && (
                                         <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                             <Receipt className="h-3.5 w-3.5" /> RECIBO
                                         </Button>
