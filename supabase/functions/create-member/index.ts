@@ -53,12 +53,31 @@ Deno.serve(async (req) => {
     const effectiveEmail = email?.trim() || null;
     const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
 
+    // Fetch club's default password
+    let defaultPassword: string | null = null;
+    try {
+      const { data: clubData } = await adminClient
+        .from('clubs')
+        .select('default_member_password')
+        .eq('id', club_id)
+        .single();
+      if (clubData?.default_member_password) {
+        defaultPassword = clubData.default_member_password;
+        console.log('Using club default password for new member');
+      }
+    } catch (e) {
+      console.error('Error fetching club default password:', e);
+    }
+
+    // Generate a secure random password if no default is set
+    const generatedPassword = defaultPassword || ('Arq!' + crypto.randomUUID().split('-')[0] + '123!');
+
     console.log('Creating/Recovering auth user:', authEmail);
     let userId: string;
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: authEmail,
-      password: 'Arq!' + crypto.randomUUID().split('-')[0] + '123!',
+      password: generatedPassword,
       email_confirm: true,
       user_metadata: { full_name },
     });

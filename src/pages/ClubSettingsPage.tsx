@@ -57,6 +57,7 @@ export default function ClubSettingsPage() {
 
   const [inscriptionFee, setInscriptionFee] = useState("");
   const [monthlyFee, setMonthlyFee] = useState("");
+  const [defaultPassword, setDefaultPassword] = useState("");
   const [allowSuperAdminFinances, setAllowSuperAdminFinances] = useState(false);
   const [feeInit, setFeeInit] = useState(false);
 
@@ -65,6 +66,7 @@ export default function ClubSettingsPage() {
     if (club) {
       setInscriptionFee(String(club.inscription_fee || 0));
       setMonthlyFee(String(club.monthly_fee || 0));
+      setDefaultPassword(club.default_member_password || "");
       setAllowSuperAdminFinances(club.allow_superadmin_finances || false);
       setFeeInit(true);
     }
@@ -77,6 +79,7 @@ export default function ClubSettingsPage() {
       const updateData: ClubUpdate = {
         inscription_fee: Number(inscriptionFee) || 0,
         monthly_fee: Number(monthlyFee) || 0,
+        default_member_password: defaultPassword || null,
         allow_superadmin_finances: allowSuperAdminFinances,
       };
 
@@ -207,12 +210,52 @@ export default function ClubSettingsPage() {
             </h3>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 text-left">
               <div className="space-y-2">
-                <Label>Inscripción (única vez)</Label>
-                <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
+                <Label htmlFor="inscription">Inscripción (única vez)</Label>
+                <Input
+                  id="inscription"
+                  type="number"
+                  value={inscriptionFee}
+                  onChange={(e) => setInscriptionFee(e.target.value)}
+                  className="bg-background/50"
+                />
               </div>
               <div className="space-y-2">
-                <Label>Mensualidad</Label>
-                <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
+                <Label htmlFor="monthly">Mensualidad</Label>
+                <Input
+                  id="monthly"
+                  type="number"
+                  value={monthlyFee}
+                  onChange={(e) => setMonthlyFee(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="default-password">Contraseña por defecto para nuevos miembros</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="default-password"
+                    type="text"
+                    placeholder="Establece una contraseña segura"
+                    value={defaultPassword}
+                    onChange={(e) => setDefaultPassword(e.target.value)}
+                    className="bg-background/50"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (defaultPassword) {
+                        navigator.clipboard.writeText(defaultPassword);
+                        toast({ title: "Copiado", description: "Contraseña copiada al portapapeles" });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Esta contraseña se usará automáticamente para nuevos miembros y reseteos.</p>
               </div>
               <div className="space-y-4 sm:col-span-2 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between">

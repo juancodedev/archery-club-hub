@@ -45,6 +45,7 @@ interface InitialData {
     description?: string;
     entry_date?: string;
     receipt_url?: string | null;
+    receipt_urls?: string[] | null;
     member_id?: string | null;
     payment_month?: number;
     payment_year?: number;
@@ -61,7 +62,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
     const [customCategory, setCustomCategory] = useState("");
     const [description, setDescription] = useState(initialData?.description || "");
     const [date, setDate] = useState(initialData?.entry_date || new Date().toISOString().split("T")[0]);
-    const [receiptUrl, setReceiptUrl] = useState<string | null>(initialData?.receipt_url || null);
+    const [receiptUrls, setReceiptUrls] = useState<string[]>(initialData?.receipt_urls || (initialData?.receipt_url ? [initialData.receipt_url] : []));
     const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialData?.member_id || null);
     const [paymentMonth, setPaymentMonth] = useState<string>(String(initialData?.payment_month || new Date().getMonth() + 1));
     const [paymentYear, setPaymentYear] = useState<string>(String(initialData?.payment_year || new Date().getFullYear()));
@@ -131,23 +132,29 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !clubId) return;
+        const files = e.target.files;
+        if (!files || files.length === 0 || !clubId) return;
 
         try {
             setUploading(true);
-            const fileExt = file.name.split(".").pop();
-            const fileName = `${clubId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = fileName;
+            const newUrls: string[] = [...receiptUrls];
 
-            const { error: uploadError } = await supabase.storage
-                .from("receipts")
-                .upload(filePath, file);
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = file.name.split(".").pop();
+                const fileName = `${clubId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const filePath = fileName;
 
-            if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage
+                    .from("receipts")
+                    .upload(filePath, file);
 
-            setReceiptUrl(filePath);
-            toast({ title: "Archivo subido correctamente" });
+                if (uploadError) throw uploadError;
+                newUrls.push(filePath);
+            }
+
+            setReceiptUrls(newUrls);
+            toast({ title: files.length > 1 ? "Archivos subidos correctamente" : "Archivo subido correctamente" });
         } catch (error: unknown) {
             toast({
                 title: "Error al subir archivo",
@@ -157,6 +164,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         } finally {
             setUploading(false);
         }
+    };
+
+    const removeFile = (index: number) => {
+        setReceiptUrls(receiptUrls.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -203,7 +214,8 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                 amount: parseChileanCurrency(amount),
                 description,
                 entry_date: date,
-                receipt_url: receiptUrl,
+                receipt_urls: receiptUrls,
+                receipt_url: receiptUrls.length > 0 ? receiptUrls[0] : null,
                 created_by: member?.user_id,
                 member_id: selectedMemberId,
                 payment_month: (category === "Membresía" || category === "Inscripción") ? Number(paymentMonth) : null,
@@ -416,28 +428,41 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
-                            <Upload className="h-4 w-4 text-muted-foreground" /> {type === "expense" ? "Boleta / Comprobante" : "Comprobante (Opcional)"}
+                            <Upload className="h-4 w-4 text-muted-foreground" /> {type === "expense" ? "Boletas / Comprobantes" : "Comprobantes (Opcional)"}
                         </Label>
 
-                        {receiptUrl ? (
-                            <div className="relative rounded-xl border border-border p-2 bg-muted/30 group">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="h-8 w-8 text-primary" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium truncate">Documento cargado</p>
-                                        <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline">Ver archivo</a>
+                        <div className="space-y-2">
+                            {receiptUrls.map((url, index) => (
+                                <div key={index} className="relative rounded-xl border border-border p-2 bg-muted/30 group">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-8 w-8 text-primary" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium truncate">Documento {index + 1}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    supabase.storage.from("receipts").createSignedUrl(url, 300).then(({ data }) => {
+                                                        if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+                                                    });
+                                                }}
+                                                className="text-[10px] text-primary hover:underline"
+                                            >
+                                                Ver archivo
+                                            </button>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            type="button"
+                                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => removeFile(index)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => setReceiptUrl(null)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
                                 </div>
-                            </div>
-                        ) : (
+                            ))}
+
                             <div className="relative">
                                 <Input
                                     type="file"
@@ -446,6 +471,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                     id="receipt-upload"
                                     accept="image/*,application/pdf"
                                     disabled={uploading}
+                                    multiple
                                 />
                                 <label
                                     htmlFor="receipt-upload"
@@ -455,10 +481,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                     )}
                                 >
                                     <Upload className="h-8 w-8 mb-2" />
-                                    <span className="text-xs font-medium">{uploading ? "Subiendo..." : "Haga clic para subir"}</span>
+                                    <span className="text-xs font-medium">{uploading ? "Subiendo..." : "Haga clic para subir más archivos"}</span>
                                 </label>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
