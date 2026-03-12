@@ -416,6 +416,9 @@ export type Database = {
           id: string
           token: string
           used_at: string | null
+          max_uses: number | null
+          invitation_type: string | null
+          title: string | null
         }
         Insert: {
           club_id: string
@@ -426,6 +429,9 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+          max_uses?: number | null
+          invitation_type?: string | null
+          title?: string | null
         }
         Update: {
           club_id?: string
@@ -436,6 +442,9 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
+          max_uses?: number | null
+          invitation_type?: string | null
+          title?: string | null
         }
         Relationships: [
           {
@@ -537,6 +546,7 @@ export type Database = {
           status: Database["public"]["Enums"]["member_status"] | null
           user_id: string | null
           windbreaker_size: string | null
+          invitation_id: string | null
         }
         Insert: {
           address?: string | null

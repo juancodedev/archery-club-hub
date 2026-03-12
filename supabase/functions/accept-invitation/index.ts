@@ -34,7 +34,6 @@ Deno.serve(async (req) => {
       .from('member_invitations')
       .select('*')
       .eq('token', token)
-      .is('used_at', null)
       .gt('expires_at', new Date().toISOString())
       .limit(1);
 
@@ -43,6 +42,24 @@ Deno.serve(async (req) => {
     }
 
     const invitation = invRows[0];
+
+    // Check if invitation is already used (for individual) or reached max_uses (for generic)
+    if (invitation.invitation_type === 'individual' && invitation.used_at) {
+      return new Response(JSON.stringify({ error: 'Esta invitación ya ha sido utilizada' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (invitation.invitation_type === 'generic') {
+      const { count, error: countError } = await adminClient
+        .from('members')
+        .select('*', { count: 'exact', head: true })
+        .eq('invitation_id', invitation.id);
+
+      if (countError) throw countError;
+      if (count !== null && count >= (invitation.max_uses || 1)) {
+        return new Response(JSON.stringify({ error: 'Esta invitación ha alcanzado su límite de usos' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     let effectiveUserId = user_id || null;
     const effectiveEmail = email?.trim() || null;
 
@@ -95,6 +112,7 @@ Deno.serve(async (req) => {
         shirt_gender: shirt_gender || null,
         status: 'activo',
         member_type,
+        invitation_id: invitation.id,
       })
       .select('id')
       .single();
@@ -112,8 +130,20 @@ Deno.serve(async (req) => {
       role: role,
     });
 
-    // Mark invitation as used
-    await adminClient.from('member_invitations').update({ used_at: new Date().toISOString() }).eq('id', invitation.id);
+    // Mark invitation as used (if individual)
+    if (invitation.invitation_type === 'individual') {
+      await adminClient.from('member_invitations').update({ used_at: new Date().toISOString() }).eq('id', invitation.id);
+    } else {
+      // For generic, we might want to mark it as used only when it reaches max_uses
+      const { count } = await adminClient
+        .from('members')
+        .select('*', { count: 'exact', head: true })
+        .eq('invitation_id', invitation.id);
+
+      if (count !== null && count >= (invitation.max_uses || 1)) {
+        await adminClient.from('member_invitations').update({ used_at: new Date().toISOString() }).eq('id', invitation.id);
+      }
+    }
 
     return new Response(JSON.stringify({
       success: true,
