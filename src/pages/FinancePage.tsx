@@ -41,6 +41,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import FinanceForm from "@/components/admin/FinanceForm";
+import { logger } from "@/lib/logger";
 
 interface Club { id: string; name: string; allow_superadmin_finances: boolean; financial_support_expires_at?: string | null; }
 interface FinancialEntry {
@@ -172,7 +173,7 @@ export default function FinancePage() {
                 }
             }
         } catch (error: unknown) {
-            if (import.meta.env.DEV) console.error(error);
+            logger.error(error);
             toast({
                 title: "Error al abrir comprobante",
                 description: "No se pudo generar el enlace seguro.",
