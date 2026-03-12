@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2 } from "lucide-react";
+import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,6 +114,25 @@ export default function AdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       toast({ title: "Estado actualizado" });
+    },
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: async (member: AdminMember) => {
+      if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
+
+      const { error } = await supabase.rpc('admin_reset_user_password', {
+        p_user_id: member.user_id,
+        p_new_password: '' // Ignored by server; password generated server-side
+    });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Contraseña reseteada exitosamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al resetear la contraseña", variant: "destructive" });
     },
   });
 
@@ -243,6 +262,13 @@ export default function AdminPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setDivisionsMember(m)}>
                                   <Trophy className="h-4 w-4 mr-2" />Divisiones
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                                    if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                                                        resetPassword.mutate(m);
+                                                    }
+                                                }}>
+                                  <Key className="h-4 w-4 mr-2" />Resetear contraseña
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
