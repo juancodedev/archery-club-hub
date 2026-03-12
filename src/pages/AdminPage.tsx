@@ -123,7 +123,7 @@ export default function AdminPage() {
 
       const { error } = await supabase.rpc('admin_reset_user_password', {
         p_user_id: member.user_id,
-        p_new_password: '' // Ignored by server; password generated server-side
+        p_new_password: null as any
       });
 
       if (error) throw error;
