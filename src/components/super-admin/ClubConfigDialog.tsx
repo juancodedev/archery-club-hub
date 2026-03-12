@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -67,6 +67,20 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
 
     const queryClient = useQueryClient();
     const [isSaving, setIsSaving] = useState(false);
+
+    // Local states for club settings
+    const [inscriptionFee, setInscriptionFee] = useState<number>(0);
+    const [monthlyFee, setMonthlyFee] = useState<number>(0);
+    const [defaultPassword, setDefaultPassword] = useState<string>("");
+
+    // Initialize local states when data is loaded
+    useEffect(() => {
+        if (clubData) {
+            setInscriptionFee(clubData.inscription_fee || 0);
+            setMonthlyFee(clubData.monthly_fee || 0);
+            setDefaultPassword(clubData.default_member_password || "");
+        }
+    }, [clubData]);
 
     // States for new generic invitation
     const [newTitle, setNewTitle] = useState("");
@@ -324,9 +338,9 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                                     <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         type="number"
-                                        defaultValue={clubData?.inscription_fee || 0}
+                                        value={inscriptionFee}
+                                        onChange={(e) => setInscriptionFee(parseFloat(e.target.value))}
                                         className="pl-8 bg-muted/20"
-                                        onBlur={(e) => updateClubMutation.mutate({ inscription_fee: parseFloat(e.target.value) })}
                                     />
                                 </div>
                             </div>
@@ -336,13 +350,25 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                                     <DollarSign className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         type="number"
-                                        defaultValue={clubData?.monthly_fee || 0}
+                                        value={monthlyFee}
+                                        onChange={(e) => setMonthlyFee(parseFloat(e.target.value))}
                                         className="pl-8 bg-muted/20"
-                                        onBlur={(e) => updateClubMutation.mutate({ monthly_fee: parseFloat(e.target.value) })}
                                     />
                                 </div>
                             </div>
                         </div>
+
+                        <Button
+                            className="w-full gap-2"
+                            disabled={updateClubMutation.isPending}
+                            onClick={() => updateClubMutation.mutate({
+                                inscription_fee: inscriptionFee,
+                                monthly_fee: monthlyFee
+                            })}
+                        >
+                            {updateClubMutation.isPending ? <RefreshCcw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Guardar Cambios
+                        </Button>
                     </TabsContent>
 
                     <TabsContent value="security" className="mt-4 space-y-4 text-left">
@@ -351,22 +377,33 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                             <div className="flex gap-2">
                                 <Input
                                     type="text"
-                                    defaultValue={clubData?.default_member_password || ""}
+                                    value={defaultPassword}
+                                    onChange={(e) => setDefaultPassword(e.target.value)}
                                     className="bg-muted/20"
                                     placeholder="No establecida"
-                                    onBlur={(e) => updateClubMutation.mutate({ default_member_password: e.target.value })}
                                 />
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    disabled={!clubData?.default_member_password}
-                                    onClick={() => copyToClipboard(clubData?.default_member_password || "", "Contraseña")}
+                                    disabled={!defaultPassword}
+                                    onClick={() => copyToClipboard(defaultPassword, "Contraseña")}
                                 >
                                     <Copy className="h-4 w-4" />
                                 </Button>
                             </div>
                             <p className="text-[10px] text-muted-foreground">Contraseña asignada automáticamente a nuevos miembros.</p>
                         </div>
+
+                        <Button
+                            className="w-full gap-2 mt-4"
+                            disabled={updateClubMutation.isPending}
+                            onClick={() => updateClubMutation.mutate({
+                                default_member_password: defaultPassword
+                            })}
+                        >
+                            {updateClubMutation.isPending ? <RefreshCcw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Guardar Cambios
+                        </Button>
                     </TabsContent>
                 </Tabs>
             </DialogContent>
