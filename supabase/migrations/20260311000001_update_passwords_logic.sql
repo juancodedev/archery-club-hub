@@ -7,7 +7,7 @@ DROP FUNCTION IF EXISTS public.admin_reset_user_password(uuid);
 
 -- Re-create function
 CREATE OR REPLACE FUNCTION public.admin_reset_user_password(p_user_id uuid, p_new_password text DEFAULT NULL)
- RETURNS boolean
+ RETURNS text
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'auth', 'extensions'
@@ -39,13 +39,17 @@ BEGIN
   END IF;
 
   -- 4. Determine Password
-  SELECT default_member_password INTO v_default_password FROM public.clubs WHERE id = v_club_id;
-
-  IF v_default_password IS NOT NULL AND v_default_password <> '' THEN
-    v_generated_password := v_default_password;
+  IF p_new_password IS NOT NULL AND p_new_password <> '' THEN
+    v_generated_password := p_new_password;
   ELSE
-    -- Use a simpler random generation if extension has issues, or fallback to a default pattern
-    v_generated_password := 'Arq!' || substring(md5(random()::text), 1, 12);
+    SELECT default_member_password INTO v_default_password FROM public.clubs WHERE id = v_club_id;
+
+    IF v_default_password IS NOT NULL AND v_default_password <> '' THEN
+      v_generated_password := v_default_password;
+    ELSE
+      -- Use a simpler random generation fallback if no default is set
+      v_generated_password := 'Arq!' || substring(md5(random()::text), 1, 12);
+    END IF;
   END IF;
 
   -- 5. Update the password in the auth table
@@ -53,6 +57,6 @@ BEGIN
   SET encrypted_password = crypt(v_generated_password, gen_salt('bf'))
   WHERE id = p_user_id;
 
-  RETURN FOUND;
+  RETURN v_generated_password;
 END;
 $function$;

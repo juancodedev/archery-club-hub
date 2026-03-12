@@ -31,6 +31,8 @@ export type Database = {
           plan_id: string | null
           subscription_end_date: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
+          default_member_password: string | null
+          financial_support_expires_at: string | null
         }
         Insert: {
           allow_superadmin_finances?: boolean | null
@@ -48,6 +50,8 @@ export type Database = {
           plan_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          default_member_password?: string | null
+          financial_support_expires_at?: string | null
         }
         Update: {
           allow_superadmin_finances?: boolean | null
@@ -65,6 +69,8 @@ export type Database = {
           plan_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          default_member_password?: string | null
+          financial_support_expires_at?: string | null
         }
         Relationships: [
           {

@@ -106,15 +106,16 @@ export default function MembersManagement() {
             if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
 
             // Password is generated server-side by the RPC function
-            const { error } = await supabase.rpc('admin_reset_user_password', {
+            const { data, error } = await supabase.rpc('admin_reset_user_password', {
                 p_user_id: member.user_id,
                 p_new_password: '' // Ignored by server; password generated server-side
             });
 
             if (error) throw error;
+            return data;
         },
-        onSuccess: () => {
-            toast.success("Contraseña reseteada exitosamente. Se generó una contraseña segura automáticamente.");
+        onSuccess: (newPassword) => {
+            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${newPassword}`);
         },
         onError: (error: Error) => {
             toast.error(getSafeErrorMessage(error));

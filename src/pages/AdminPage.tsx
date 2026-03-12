@@ -121,15 +121,19 @@ export default function AdminPage() {
     mutationFn: async (member: AdminMember) => {
       if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
 
-      const { error } = await supabase.rpc('admin_reset_user_password', {
+      const { data, error } = await supabase.rpc('admin_reset_user_password', {
         p_user_id: member.user_id,
         p_new_password: null as any
       });
 
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
-      toast({ title: "Contraseña reseteada exitosamente" });
+    onSuccess: (newPassword) => {
+      toast({
+        title: "Contraseña reseteada exitosamente",
+        description: `Nueva contraseña: ${newPassword}`
+      });
     },
     onError: () => {
       toast({ title: "Error al resetear la contraseña", variant: "destructive" });

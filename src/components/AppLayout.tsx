@@ -133,7 +133,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <DivisionChangeNotifications />
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
               <CloseIcon className="h-5 w-5 text-muted-foreground" />
             </Button>
@@ -151,7 +150,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border bg-muted/20">
+        <div className="mt-auto p-4 border-t border-border bg-muted/20 sticky bottom-0">
           <div className="flex items-center gap-3 px-3 mb-4">
             <Avatar className="h-10 w-10 border border-border/50">
               <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
