@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [member, setMember] = useState<MemberInfo | null>(null);
   const [memberships, setMemberships] = useState<MemberInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [systemMode, setSystemMode] = useState<'produccion' | 'pruebas'>('pruebas');
 
   const fetchMember = async (userId: string, userEmail?: string) => {
     try {
@@ -121,11 +122,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = initialSession?.user ?? null;
         setUser(currentUser);
 
-        setLoading(false); // Liberamos la UI de inmediato
-
         if (currentUser) {
-          fetchMember(currentUser.id, currentUser.email);
+          await fetchMember(currentUser.id, currentUser.email);
         }
+
+        // Fetch system mode
+        const { data: settings } = await supabase.from("system_settings").select("mercadopago_mode").maybeSingle();
+        if (settings) {
+          setSystemMode(settings.mercadopago_mode === 'real' ? 'produccion' : 'pruebas');
+        }
+
+        setLoading(false);
       } catch (err) {
         if (import.meta.env.DEV) console.error("Error initializing session:", err);
         setLoading(false);
@@ -152,6 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     memberships,
     loading,
     isSuperAdminSubdomain,
+    systemMode,
     signOut,
     refreshMember,
     setActiveMembership

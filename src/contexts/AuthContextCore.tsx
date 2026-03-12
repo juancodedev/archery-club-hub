@@ -23,6 +23,7 @@ export interface AuthContextType {
     memberships: MemberInfo[];
     loading: boolean;
     isSuperAdminSubdomain: boolean;
+    systemMode: 'produccion' | 'pruebas';
     signOut: () => Promise<void>;
     refreshMember: () => Promise<void>;
     setActiveMembership: (clubId: string) => void;
