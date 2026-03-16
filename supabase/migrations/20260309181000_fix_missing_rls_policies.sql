@@ -17,6 +17,10 @@ CREATE POLICY "Manage training sessions" ON public.training_sessions FOR ALL TO 
 USING (
   public.is_club_admin(auth.uid(), club_id) 
   OR public.has_club_role(auth.uid(), club_id, 'entrenador')
+)
+WITH CHECK (
+  public.is_club_admin(auth.uid(), club_id) 
+  OR public.has_club_role(auth.uid(), club_id, 'entrenador')
 );
 
 -- 2. Training Enrollments
@@ -38,6 +42,10 @@ CREATE POLICY "Coach manage enrollments" ON public.training_enrollments FOR ALL 
 USING (
   public.is_club_admin(auth.uid(), club_id) 
   OR public.has_club_role(auth.uid(), club_id, 'entrenador')
+)
+WITH CHECK (
+  public.is_club_admin(auth.uid(), club_id) 
+  OR public.has_club_role(auth.uid(), club_id, 'entrenador')
 );
 
 -- 3. Divisions
@@ -52,6 +60,9 @@ USING (
 DROP POLICY IF EXISTS "Admin manage divisions" ON public.divisions;
 CREATE POLICY "Admin manage divisions" ON public.divisions FOR ALL TO authenticated
 USING (
+  public.is_club_admin(auth.uid(), club_id) 
+)
+WITH CHECK (
   public.is_club_admin(auth.uid(), club_id) 
 );
 
@@ -68,6 +79,9 @@ DROP POLICY IF EXISTS "Admin manage tournament types" ON public.tournament_types
 CREATE POLICY "Admin manage tournament types" ON public.tournament_types FOR ALL TO authenticated
 USING (
   public.is_club_admin(auth.uid(), club_id) 
+)
+WITH CHECK (
+  public.is_club_admin(auth.uid(), club_id) 
 );
 
 -- 5. Extra Charges
@@ -81,6 +95,10 @@ USING (
 DROP POLICY IF EXISTS "Admin manage extra charges" ON public.extra_charges;
 CREATE POLICY "Admin manage extra charges" ON public.extra_charges FOR ALL TO authenticated
 USING (
+  public.is_club_admin(auth.uid(), club_id) 
+  OR public.has_club_role(auth.uid(), club_id, 'tesorero')
+)
+WITH CHECK (
   public.is_club_admin(auth.uid(), club_id) 
   OR public.has_club_role(auth.uid(), club_id, 'tesorero')
 );
