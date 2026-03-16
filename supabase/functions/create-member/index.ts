@@ -85,11 +85,21 @@ Deno.serve(async (req) => {
     if (authError) {
       if (authError.message?.includes('already been registered')) {
         console.log('User already exists in Auth, checking if they are a member...');
-        // Try to get the existing user
-        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
-        if (listError) throw listError;
+        // Paginate through all users to find the existing user by email
+        let existingUser = null;
+        let page = 1;
+        const perPage = 1000;
 
-        const existingUser = users.find(u => u.email === authEmail);
+        while (!existingUser) {
+          const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({ page, perPage });
+          if (listError) throw listError;
+
+          existingUser = users.find(u => u.email === authEmail) ?? null;
+
+          if (users.length === 0 || users.length < perPage) break; // No more pages
+          page++;
+        }
+
         if (!existingUser) {
           throw new Error("User conflict reported but user not found in list");
         }
