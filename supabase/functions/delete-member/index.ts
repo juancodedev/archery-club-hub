@@ -63,35 +63,45 @@ Deno.serve(async (req) => {
     }
 
     // Delete member roles first
-    await supabaseAdmin.from('member_roles').delete().eq('member_id', member_id);
+    const { error: rolesError } = await supabaseAdmin.from('member_roles').delete().eq('member_id', member_id);
+    if (rolesError) throw rolesError;
 
     // Delete member divisions
-    await supabaseAdmin.from('member_divisions').delete().eq('member_id', member_id);
+    const { error: divisionsError } = await supabaseAdmin.from('member_divisions').delete().eq('member_id', member_id);
+    if (divisionsError) throw divisionsError;
 
     // Delete division change notifications
-    await supabaseAdmin.from('division_change_notifications').delete().eq('member_id', member_id);
+    const { error: divNotifError } = await supabaseAdmin.from('division_change_notifications').delete().eq('member_id', member_id);
+    if (divNotifError) throw divNotifError;
 
     // Nullify or delete other references to avoid constraint errors
     // Invitations created by this member
-    await supabaseAdmin.from('member_invitations').update({ created_by: null }).eq('created_by', member_id);
+    const { error: invitationsError } = await supabaseAdmin.from('member_invitations').update({ created_by: null }).eq('created_by', member_id);
+    if (invitationsError) throw invitationsError;
 
     // Training sessions created by this member
-    await supabaseAdmin.from('training_sessions').update({ created_by: null }).eq('created_by', member_id);
+    const { error: trainingSessionsError } = await supabaseAdmin.from('training_sessions').update({ created_by: null }).eq('created_by', member_id);
+    if (trainingSessionsError) throw trainingSessionsError;
 
     // Tournaments created by this member
-    await supabaseAdmin.from('tournaments').update({ created_by: null }).eq('created_by', member_id);
+    const { error: tournamentsError } = await supabaseAdmin.from('tournaments').update({ created_by: null }).eq('created_by', member_id);
+    if (tournamentsError) throw tournamentsError;
 
     // Tournament registrations for this member (delete them as the member is being deleted)
-    await supabaseAdmin.from('tournament_registrations').delete().eq('member_id', member_id);
+    const { error: tournRegError } = await supabaseAdmin.from('tournament_registrations').delete().eq('member_id', member_id);
+    if (tournRegError) throw tournRegError;
 
     // Training enrollments
-    await supabaseAdmin.from('training_enrollments').delete().eq('member_id', member_id);
+    const { error: enrollmentsError } = await supabaseAdmin.from('training_enrollments').delete().eq('member_id', member_id);
+    if (enrollmentsError) throw enrollmentsError;
 
     // Scores
-    await supabaseAdmin.from('scores').delete().eq('member_id', member_id);
+    const { error: scoresError } = await supabaseAdmin.from('scores').delete().eq('member_id', member_id);
+    if (scoresError) throw scoresError;
 
     // Financial entries for this member
-    await supabaseAdmin.from('financial_entries').delete().eq('member_id', member_id);
+    const { error: financialError } = await supabaseAdmin.from('financial_entries').delete().eq('member_id', member_id);
+    if (financialError) throw financialError;
 
     // Delete member record
     const { error: deleteError } = await supabaseAdmin.from('members').delete().eq('id', member_id);
