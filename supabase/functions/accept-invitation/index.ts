@@ -63,9 +63,26 @@ Deno.serve(async (req) => {
     let effectiveUserId = user_id || null;
     const effectiveEmail = email?.trim() || null;
 
-    // If no user_id provided (minor without email or no-email flow), create a placeholder auth account
+    // Placeholder emails generated internally always match this pattern.
+    const PLACEHOLDER_EMAIL_PATTERN = /^miembro-[0-9a-f]{32}@sin-email\.clubarchery\.local$/;
+
+    // If no user_id provided, only allow placeholder (no-email) flows to avoid account squatting.
+    // A real email without user_id means the caller could confirm accounts for emails they don't own.
     if (!effectiveUserId) {
-      const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
+      const isRealEmail = effectiveEmail && !PLACEHOLDER_EMAIL_PATTERN.test(effectiveEmail);
+
+      // Reject if a real email is provided without user_id – the user must sign up first
+      if (isRealEmail) {
+        return new Response(
+          JSON.stringify({ error: 'El usuario debe completar el registro antes de aceptar la invitación.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Only placeholder/no-email members reach here (e.g. minors without an email account).
+      // Always generate a fresh unique placeholder for the Auth account; the member record stores
+      // effectiveEmail (null for no-email flows) separately.
+      const authEmail = `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
       const authPassword = password?.trim() || `Invitado${Math.floor(Math.random() * 9000 + 1000)}`;
 
       const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -76,9 +93,6 @@ Deno.serve(async (req) => {
       });
 
       if (authError) {
-        if (authError.message?.includes('already been registered')) {
-          return new Response(JSON.stringify({ error: `Ya existe un usuario con este correo electrónico` }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-        }
         throw authError;
       }
       effectiveUserId = authData.user.id;
