@@ -39,7 +39,7 @@ export default function NewScorePage() {
   const sessionId = searchParams.get("sessionId");
 
   // Training session state
-  const [trainingSessionId, setTrainingSessionId] = useState<string>(sessionId || "");
+  const [trainingSessionId, setTrainingSessionId] = useState<string>(sessionId || "none");
   const [availableSessions, setAvailableSessions] = useState<any[]>([]);
 
   // Tournament type configuration
@@ -78,7 +78,7 @@ export default function NewScorePage() {
 
   // Fetch session data if sessionId exists
   useEffect(() => {
-    if (trainingSessionId) {
+    if (trainingSessionId && trainingSessionId !== "none") {
       fetchSessionDetails(trainingSessionId);
     }
   }, [trainingSessionId]);
@@ -207,7 +207,7 @@ export default function NewScorePage() {
       const { error } = await supabase.from("scores").insert({
         member_id: selectedMemberId,
         club_id: selectedClubId,
-        training_session_id: trainingSessionId || null,
+        training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
         event_name: eventName || "Entrenamiento",
         score_date: scoreDate,
         division_id: divisionId || null,
@@ -295,7 +295,7 @@ export default function NewScorePage() {
                   <SelectValue placeholder="Sin vincular a sesión" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Ninguna sesión específica</SelectItem>
+                  <SelectItem value="none">Ninguna sesión específica</SelectItem>
                   {availableSessions.map(s => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name} ({new Date(s.event_date).toLocaleDateString()})
