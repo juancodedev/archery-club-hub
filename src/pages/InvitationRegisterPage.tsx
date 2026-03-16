@@ -300,10 +300,6 @@ export default function InvitationRegisterPage() {
                 <Label htmlFor="medicalHistory">Antecedentes médicos relevantes</Label>
                 <Textarea id="medicalHistory" value={medicalHistory} onChange={(e) => setMedicalHistory(e.target.value)} placeholder="Alergias, condiciones, etc." rows={3} />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="ifaaNumber">Número IFAA</Label>
-                <Input id="ifaaNumber" value={ifaaNumber} onChange={(e) => setIfaaNumber(e.target.value)} placeholder="Ej: CL-1234" />
-              </div>
             </div>
           </div>
 
