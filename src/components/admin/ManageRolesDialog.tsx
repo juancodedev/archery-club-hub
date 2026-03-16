@@ -6,9 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
-const ALL_ROLES = ["arquero", "socio", "entrenador", "presidente", "administrador", "secretaria", "tesorero", "alumno"] as const;
-const ROLE_LABELS: Record<string, string> = {
+type ClubRole = Database["public"]["Enums"]["club_role"];
+
+const ALL_ROLES: ClubRole[] = ["arquero", "socio", "entrenador", "presidente", "administrador", "secretaria", "tesorero", "alumno"];
+const ROLE_LABELS: Record<ClubRole, string> = {
   arquero: "Arquero",
   socio: "Socio",
   entrenador: "Entrenador",
@@ -31,13 +34,13 @@ interface Props {
 export default function ManageRolesDialog({ memberId, memberName, clubId, currentRoles, open, onOpenChange }: Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<ClubRole>>(new Set());
 
   useEffect(() => {
-    setSelected(new Set(currentRoles));
+    setSelected(new Set(currentRoles as ClubRole[]));
   }, [currentRoles, open]);
 
-  const toggle = (role: string) => {
+  const toggle = (role: ClubRole) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(role)) next.delete(role); else next.add(role);
@@ -49,7 +52,7 @@ export default function ManageRolesDialog({ memberId, memberName, clubId, curren
     mutationFn: async () => {
       if (!memberId) return;
       const toAdd = [...selected].filter((r) => !currentRoles.includes(r));
-      const toRemove = currentRoles.filter((r) => !selected.has(r));
+      const toRemove = currentRoles.filter((r) => !selected.has(r as ClubRole)) as ClubRole[];
 
       for (const role of toRemove) {
         const { error } = await supabase

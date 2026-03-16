@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { formatRUT } from "@/lib/rut";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency, cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
 import { calculateFinancialStatus, isMembershipCategory, MemberForStatus } from "@/lib/membershipUtils";
 
 interface ClubItem { id: string; name: string; }
@@ -44,11 +46,13 @@ interface FullMember extends MemberForStatus {
   grace_days: number | null;
   membership_category: string | null;
   membership_fee: number | null;
+  ifaa_number: string | null;
+  shirt_gender: string | null;
 }
 
 export default function ProfilePage() {
-  const { member, user } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const { member, user, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const queryClient = useQueryClient();
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
@@ -79,59 +83,68 @@ export default function ProfilePage() {
     roles: [] as string[],
     billing_day: "",
     grace_days: "7",
+    ifaa_number: "",
+    shirt_gender: "",
+    enrollment_date: "",
   });
 
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.id) {
+    } else if (member?.id && (!selectedMemberId || !selectedClubId)) {
       setSelectedMemberId(member.id);
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedMemberId, selectedClubId]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) setClubs(data as ClubItem[]);
   };
 
   const fetchMembers = async (clubId: string) => {
     if (!clubId || clubId === "null") return;
     const { data } = await supabase.from("members").select("id, full_name").eq("club_id", clubId).order("full_name");
-    if (data) setMembersList(data);
+    if (data) setMembersList(data as MemberItem[]);
   };
 
   const { data: fullMember, isLoading: loadingMember } = useQuery<FullMember | null>({
     queryKey: ["member-profile", selectedMemberId],
     queryFn: async () => {
       if (!selectedMemberId || selectedMemberId === "null" || selectedMemberId === "00000000-0000-0000-0000-000000000000") return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("members")
         .select("*, member_roles(role)")
         .eq("id", selectedMemberId)
         .single();
 
+      if (error) throw error;
+
       if (data) {
+        const d = data as unknown as FullMember;
         setFormData({
-          full_name: data.full_name || "",
-          phone: data.phone || "",
-          address: data.address || "",
-          identification: data.identification || "",
-          medical_history: data.medical_history || "",
-          guardian_name: (data as Record<string, string | null>).guardian_name || "",
-          guardian_phone: (data as Record<string, string | null>).guardian_phone || "",
-          emergency_contact_name: (data as Record<string, string | null>).emergency_contact_name || "",
-          emergency_contact_phone: (data as Record<string, string | null>).emergency_contact_phone || "",
-          shirt_size: (data as Record<string, string | null>).shirt_size || "",
-          windbreaker_size: (data as Record<string, string | null>).windbreaker_size || "",
-          display_name: (data as Record<string, string | null>).display_name || "",
-          avatar_url: (data as Record<string, string | null>).avatar_url || "",
-          roles: (data as Record<string, { role: string }[]>).member_roles?.map((r: { role: string }) => r.role) || [],
-          billing_day: String((data as Record<string, number | null>).billing_day || ""),
-          grace_days: String((data as Record<string, number | null>).grace_days ?? "7")
-        } as typeof formData & { roles: string[]; billing_day: string; grace_days: string });
+          full_name: d.full_name || "",
+          phone: d.phone || "",
+          address: d.address || "",
+          identification: d.identification || "",
+          medical_history: d.medical_history || "",
+          guardian_name: d.guardian_name || "",
+          guardian_phone: d.guardian_phone || "",
+          emergency_contact_name: d.emergency_contact_name || "",
+          emergency_contact_phone: d.emergency_contact_phone || "",
+          shirt_size: d.shirt_size || "",
+          windbreaker_size: d.windbreaker_size || "",
+          display_name: d.display_name || "",
+          avatar_url: d.avatar_url || "",
+          roles: d.member_roles?.map((r) => r.role) || [],
+          billing_day: String(d.billing_day || ""),
+          grace_days: String(d.grace_days ?? "7"),
+          ifaa_number: d.ifaa_number || "",
+          shirt_gender: d.shirt_gender || "",
+          enrollment_date: d.enrollment_date || "",
+        });
       }
-      return data;
+      return data as unknown as FullMember;
     },
     enabled: !!selectedMemberId,
   });
@@ -201,11 +214,9 @@ export default function ProfilePage() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const publicUrl = getAvatarUrl(filePath);
 
-      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl || "" }));
 
       if (selectedMemberId) {
         await supabase
@@ -216,16 +227,35 @@ export default function ProfilePage() {
         queryClient.invalidateQueries({ queryKey: ["member-profile", selectedMemberId] });
       }
     } catch (error: unknown) {
-      toast.error("Error al subir imagen: " + (error as Error).message);
+      toast.error("Error al subir imagen: " + getSafeErrorMessage(error));
     }
   };
 
   const updateProfile = useMutation({
     mutationFn: async () => {
       if (!selectedMemberId) return;
+
       const { error } = await supabase
         .from("members")
-        .update(formData)
+        .update({
+          full_name: formData.full_name,
+          phone: formData.phone || null,
+          address: formData.address || null,
+          identification: formData.identification || null,
+          medical_history: formData.medical_history || null,
+          guardian_name: formData.guardian_name || null,
+          guardian_phone: formData.guardian_phone || null,
+          emergency_contact_name: formData.emergency_contact_name || null,
+          emergency_contact_phone: formData.emergency_contact_phone || null,
+          shirt_size: formData.shirt_size || null,
+          windbreaker_size: formData.windbreaker_size || null,
+          display_name: formData.display_name || null,
+          billing_day: formData.billing_day ? Number(formData.billing_day) : null,
+          grace_days: formData.grace_days ? Number(formData.grace_days) : null,
+          ifaa_number: formData.ifaa_number || null,
+          shirt_gender: formData.shirt_gender || null,
+          enrollment_date: formData.enrollment_date || null,
+        })
         .eq("id", selectedMemberId);
       if (error) throw error;
     },
@@ -234,7 +264,7 @@ export default function ProfilePage() {
       toast.success("Perfil actualizado");
       setIsEditing(false);
     },
-    onError: (e: Error) => toast.error("Error: " + e.message)
+    onError: (e: Error) => toast.error(getSafeErrorMessage(e))
   });
 
   const infoItems = fullMember
@@ -242,6 +272,9 @@ export default function ProfilePage() {
       { icon: User, label: "Nombre", value: fullMember.full_name, key: "full_name" },
       { icon: Phone, label: "Teléfono", value: fullMember.phone || "—", key: "phone" },
       { icon: Shield, label: "Identificación", value: fullMember.identification || "—", key: "identification" },
+      { icon: Shield, label: "Núm. IFAA", value: fullMember.ifaa_number || "—", key: "ifaa_number" },
+      { icon: Calendar, label: "Incorporación", value: fullMember.enrollment_date || "—", key: "enrollment_date" },
+      { icon: User, label: "Estilo Polera", value: fullMember.shirt_gender ? (fullMember.shirt_gender === 'masculino' ? 'Masculino' : 'Femenino') : "—", key: "shirt_gender" },
       { icon: MapPin, label: "Dirección", value: fullMember.address || "—", key: "address" },
       { icon: Heart, label: "Contacto Emergencia", value: fullMember.emergency_contact_name || "—", key: "emergency_contact_name" },
       { icon: Phone, label: "Tel. Emergencia", value: fullMember.emergency_contact_phone || "—", key: "emergency_contact_phone" },
@@ -332,13 +365,7 @@ export default function ProfilePage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4 text-center">
             <div className="relative group">
               <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-muted overflow-hidden border-2 border-primary/20 shadow-lg">
-                {formData.avatar_url ? (
-                  <img src={formData.avatar_url} alt="Profile" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center bg-primary/10">
-                    <User className="h-12 w-12 text-primary/40" />
-                  </div>
-                )}
+                <img src={getAvatarUrl(formData.avatar_url)} alt="Profile" className="h-full w-full object-cover" />
               </div>
               <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full">
                 <span className="text-xs font-medium">Cambiar</span>
@@ -429,6 +456,26 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <Label>Dirección Particular</Label>
                     <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Número IFAA</Label>
+                    <input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.ifaa_number} onChange={(e) => setFormData({ ...formData, ifaa_number: e.target.value })} placeholder="Ej: CL-1234" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Fecha de Incorporación</Label>
+                    <input type="date" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={formData.enrollment_date} onChange={(e) => setFormData({ ...formData, enrollment_date: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Corte de Polera/Cortavientos</Label>
+                    <Select value={formData.shirt_gender} onValueChange={(val) => setFormData({ ...formData, shirt_gender: val })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar corte" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="masculino">Masculino</SelectItem>
+                        <SelectItem value="femenino">Femenino</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 

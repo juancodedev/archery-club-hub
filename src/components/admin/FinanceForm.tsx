@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,10 +23,12 @@ import {
     CreditCard,
     Ticket,
     User,
-    CalendarDays
+    CalendarDays,
+    Plus
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency, parseChileanCurrency } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface FinanceFormProps {
     type: "income" | "expense";
@@ -34,10 +36,7 @@ interface FinanceFormProps {
     onCancel: () => void;
 }
 
-const CATEGORIES = {
-    income: ["Membresía", "Otros Pagos", "Torneo", "Venta Equipamiento", "Capacitación", "Otro"],
-    expense: ["Mantenimiento", "Alquiler", "Equipamiento", "Premiación", "Servicios", "Insumos", "Otro"]
-};
+
 
 interface InitialData {
     id?: string;
@@ -46,6 +45,7 @@ interface InitialData {
     description?: string;
     entry_date?: string;
     receipt_url?: string | null;
+    receipt_urls?: string[] | null;
     member_id?: string | null;
     payment_month?: number;
     payment_year?: number;
@@ -57,11 +57,12 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    const [amount, setAmount] = useState(initialData?.amount ? String(initialData.amount) : "");
+    const [amount, setAmount] = useState(initialData?.amount ? formatCurrency(initialData.amount).replace("$", "").trim() : "");
     const [category, setCategory] = useState(initialData?.category || "");
+    const [customCategory, setCustomCategory] = useState("");
     const [description, setDescription] = useState(initialData?.description || "");
     const [date, setDate] = useState(initialData?.entry_date || new Date().toISOString().split("T")[0]);
-    const [receiptUrl, setReceiptUrl] = useState<string | null>(initialData?.receipt_url || null);
+    const [receiptUrls, setReceiptUrls] = useState<string[]>(initialData?.receipt_urls || (initialData?.receipt_url ? [initialData.receipt_url] : []));
     const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialData?.member_id || null);
     const [paymentMonth, setPaymentMonth] = useState<string>(String(initialData?.payment_month || new Date().getMonth() + 1));
     const [paymentYear, setPaymentYear] = useState<string>(String(initialData?.payment_year || new Date().getFullYear()));
@@ -96,6 +97,32 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         enabled: !!clubId,
     });
 
+    // Fetch dynamic categories
+    const { data: dbCategories, isLoading: loadingCategories } = useQuery({
+        queryKey: ["financial-categories", clubId, type],
+        queryFn: async () => {
+            if (!clubId) return [];
+            const { data, error } = await supabase
+                .from("financial_categories")
+                .select("name")
+                .eq("club_id", clubId)
+                .eq("type", type)
+                .order("name", { ascending: true })
+                .limit(10);
+            if (error) throw error;
+            return data.map(c => c.name);
+        },
+        enabled: !!clubId,
+    });
+
+    const categories = useMemo(() => {
+        const list = dbCategories || [];
+        if (!list.includes("Otro")) {
+            return [...list, "Otro"];
+        }
+        return list;
+    }, [dbCategories]);
+
     const handleCategoryChange = (val: string) => {
         setCategory(val);
         if (type === "income" && club) {
@@ -105,32 +132,42 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
     };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !clubId) return;
+        const files = e.target.files;
+        if (!files || files.length === 0 || !clubId) return;
 
         try {
             setUploading(true);
-            const fileExt = file.name.split(".").pop();
-            const fileName = `${clubId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
-            const filePath = fileName;
+            const newUrls: string[] = [...receiptUrls];
 
-            const { error: uploadError } = await supabase.storage
-                .from("receipts")
-                .upload(filePath, file);
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = file.name.split(".").pop();
+                const fileName = `${clubId}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+                const filePath = fileName;
 
-            if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage
+                    .from("receipts")
+                    .upload(filePath, file);
 
-            setReceiptUrl(filePath);
-            toast({ title: "Archivo subido correctamente" });
+                if (uploadError) throw uploadError;
+                newUrls.push(filePath);
+            }
+
+            setReceiptUrls(newUrls);
+            toast({ title: files.length > 1 ? "Archivos subidos correctamente" : "Archivo subido correctamente" });
         } catch (error: unknown) {
             toast({
                 title: "Error al subir archivo",
-                description: (error as Error).message,
+                description: getSafeErrorMessage(error),
                 variant: "destructive"
             });
         } finally {
             setUploading(false);
         }
+    };
+
+    const removeFile = (index: number) => {
+        setReceiptUrls(receiptUrls.filter((_, i) => i !== index));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -139,14 +176,46 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
         try {
             setLoading(true);
+
+            let finalCategory = category;
+
+            // If "Otro" is selected, create the new category first
+            if (category === "Otro" && customCategory.trim()) {
+                const categoryName = customCategory.trim();
+
+                // Check if it already exists to avoid redundant inserts
+                const { data: existing } = await supabase
+                    .from("financial_categories")
+                    .select("name")
+                    .eq("club_id", clubId)
+                    .eq("type", type)
+                    .eq("name", categoryName)
+                    .maybeSingle();
+
+                if (!existing) {
+                    const { error: catError } = await supabase
+                        .from("financial_categories")
+                        .insert({
+                            club_id: clubId,
+                            name: categoryName,
+                            type: type
+                        });
+
+                    if (catError) throw catError;
+                }
+
+                finalCategory = categoryName;
+            }
+
             const payload = {
                 club_id: clubId,
                 type,
-                category,
-                amount: Number(amount),
+                category: finalCategory,
+                amount: parseChileanCurrency(amount),
                 description,
                 entry_date: date,
-                receipt_url: receiptUrl,
+                receipt_urls: receiptUrls,
+                receipt_url: receiptUrls.length > 0 ? receiptUrls[0] : null,
                 created_by: member?.user_id,
                 member_id: selectedMemberId,
                 payment_month: (category === "Membresía" || category === "Inscripción") ? Number(paymentMonth) : null,
@@ -177,7 +246,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         } catch (error: unknown) {
             toast({
                 title: "Error al guardar",
-                description: (error as Error).message,
+                description: getSafeErrorMessage(error),
                 variant: "destructive"
             });
         } finally {
@@ -208,12 +277,31 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                 <SelectValue placeholder="Seleccionar categoría" />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl">
-                                {CATEGORIES[type].map(cat => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                ))}
+                                {loadingCategories ? (
+                                    <div className="p-2 text-xs text-center text-muted-foreground animate-pulse">Cargando...</div>
+                                ) : (
+                                    categories.map(cat => (
+                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    ))
+                                )}
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {category === "Otro" && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                            <Label className="flex items-center gap-2">
+                                <Plus className="h-4 w-4 text-muted-foreground" /> Nombre de la Nueva Categoría
+                            </Label>
+                            <Input
+                                value={customCategory}
+                                onChange={(e) => setCustomCategory(e.target.value)}
+                                placeholder="Ej: Publicidad, Gasolina..."
+                                className="rounded-xl"
+                                required
+                            />
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
@@ -222,9 +310,19 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                         <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                type="number"
+                                type="text"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                                    // Basic formatting helper as they type if needed
+                                    setAmount(val);
+                                }}
+                                onBlur={() => {
+                                    const numeric = parseChileanCurrency(amount);
+                                    if (numeric > 0) {
+                                        setAmount(formatCurrency(numeric).replace("$", "").trim());
+                                    }
+                                }}
                                 className="pl-9 rounded-xl"
                                 placeholder="0"
                                 required
@@ -309,6 +407,13 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                         />
                     </div>
 
+                    <div className="space-y-2 pt-2">
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            Registrado por: <span className="font-bold text-foreground">{member?.full_name || "Usuario del sistema"}</span>
+                        </p>
+                    </div>
+
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-muted-foreground" /> Descripción (Opcional)
@@ -323,28 +428,41 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">
-                            <Upload className="h-4 w-4 text-muted-foreground" /> {type === "expense" ? "Boleta / Comprobante" : "Comprobante (Opcional)"}
+                            <Upload className="h-4 w-4 text-muted-foreground" /> {type === "expense" ? "Boletas / Comprobantes" : "Comprobantes (Opcional)"}
                         </Label>
 
-                        {receiptUrl ? (
-                            <div className="relative rounded-xl border border-border p-2 bg-muted/30 group">
-                                <div className="flex items-center gap-2">
-                                    <FileText className="h-8 w-8 text-primary" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium truncate">Documento cargado</p>
-                                        <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline">Ver archivo</a>
+                        <div className="space-y-2">
+                            {receiptUrls.map((url, index) => (
+                                <div key={index} className="relative rounded-xl border border-border p-2 bg-muted/30 group">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-8 w-8 text-primary" />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-medium truncate">Documento {index + 1}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    supabase.storage.from("receipts").createSignedUrl(url, 300).then(({ data }) => {
+                                                        if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+                                                    });
+                                                }}
+                                                className="text-[10px] text-primary hover:underline"
+                                            >
+                                                Ver archivo
+                                            </button>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            type="button"
+                                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => removeFile(index)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={() => setReceiptUrl(null)}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
                                 </div>
-                            </div>
-                        ) : (
+                            ))}
+
                             <div className="relative">
                                 <Input
                                     type="file"
@@ -353,6 +471,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                     id="receipt-upload"
                                     accept="image/*,application/pdf"
                                     disabled={uploading}
+                                    multiple
                                 />
                                 <label
                                     htmlFor="receipt-upload"
@@ -362,10 +481,20 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                     )}
                                 >
                                     <Upload className="h-8 w-8 mb-2" />
-                                    <span className="text-xs font-medium">{uploading ? "Subiendo..." : "Haga clic para subir"}</span>
+                                    <span className="text-xs font-medium">{uploading ? "Subiendo..." : "Haga clic para subir más archivos"}</span>
                                 </label>
                             </div>
-                        )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-6 pb-4">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
+                    <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">Registrado por</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{member?.full_name || "Usuario actual"}</p>
                     </div>
                 </div>
             </div>

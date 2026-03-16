@@ -24,12 +24,16 @@ import TrainingSessionsPage from "./pages/TrainingSessionsPage";
 import ClubSettingsPage from "./pages/ClubSettingsPage";
 import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import SuperAdminPage from "./pages/SuperAdminPage";
+import TournamentsPage from "./pages/TournamentsPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
 import BillingPage from "./pages/BillingPage";
 import FinancePage from "./pages/FinancePage";
 import MembershipsPage from "./pages/MembershipsPage";
+import BirthdaysPage from "./pages/BirthdaysPage";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +50,8 @@ const App = () => (
             <Route path="/register-club" element={<RegisterClubPage />} />
             <Route path="/join" element={<InvitationRegisterPage />} />
             <Route path="/attendance/:sessionId" element={<AttendanceMarkPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/dashboard"
               element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>}
@@ -99,8 +105,16 @@ const App = () => (
               element={<ProtectedRoute><AppLayout><MembershipsPage /></AppLayout></ProtectedRoute>}
             />
             <Route
+              path="/admin/tournaments"
+              element={<ProtectedRoute><AppLayout><TournamentsPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
+              path="/birthdays"
+              element={<ProtectedRoute><AppLayout><BirthdaysPage /></AppLayout></ProtectedRoute>}
+            />
+            <Route
               path="/super-admin/*"
-              element={<ProtectedRoute><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireSuperAdmin><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

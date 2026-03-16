@@ -13,14 +13,15 @@ import { formatRUT } from "@/lib/rut";
 
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useEffect } from "react";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   clubId: string;
 }
 
 export default function AddMemberDialog({ clubId: initialClubId }: Props) {
-  const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const { member, isSuperAdminSubdomain } = useAuth();
+  const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -44,6 +45,9 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
   const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const [ifaaNumber, setIfaaNumber] = useState("");
+  const [shirtGender, setShirtGender] = useState("");
+  const [enrollmentDate, setEnrollmentDate] = useState(new Date().toISOString().split('T')[0]);
 
   const isMinor = useMemo(() => {
     if (!dateOfBirth) return false;
@@ -71,56 +75,51 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;
       if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
 
-      // Get default password from club via RPC (Secured)
-      const { data: defaultPassword, error: passwordError } = await supabase
-        .rpc('get_club_default_password', { p_club_id: targetClubId });
-
-      if (passwordError) {
-        throw new Error("No se pudo recuperar la contraseña por defecto. Verifica tus permisos o la configuración del club.");
-      }
-
-      if (!defaultPassword) {
-        throw new Error("El club no ha configurado una contraseña por defecto. Por favor, ve a Configuración del Club y establécela.");
-      }
-
       // Email: use provided value, or null for minors without email
       const effectiveEmail = email.trim() !== '' ? email.trim() : null;
 
-      // Use RPC function to create member account with auto-confirmed email
-      const { data, error } = await supabase.rpc('create_member_account_by_admin', {
-        p_email: effectiveEmail,
-        p_password: defaultPassword,
-        p_full_name: name,
-        p_phone: phone || null,
-        p_date_of_birth: dateOfBirth || null,
-        p_identification: identification || null,
-        p_address: address || null,
-        p_medical_history: medicalHistory || null,
-        p_emergency_contact_name: emergencyContactName || null,
-        p_emergency_contact_phone: emergencyContactPhone || null,
-        p_shirt_size: shirtSize || null,
-        p_windbreaker_size: windbreakerSize || null,
-        p_display_name: displayName || null,
-        p_guardian_name: isMinor ? guardianName : null,
-        p_guardian_phone: isMinor ? guardianPhone : null,
-        p_guardian_email: isMinor ? guardianEmail : null,
-        p_club_id: targetClubId,
-        p_role: role,
-        p_billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
-        p_grace_days: graceDays ? Number(graceDays) : 7
-      }) as { data: { success: boolean; user_id: string; member_id: string } | null; error: { message: string } | null };
+      // Use edge function to create member account via Admin API
+      // Password is generated server-side automatically
+      const { data, error } = await supabase.functions.invoke('create-member', {
+        body: {
+          full_name: name,
+          club_id: targetClubId,
+          email: effectiveEmail,
+          role,
+          phone: phone || null,
+          date_of_birth: dateOfBirth || null,
+          identification: identification || null,
+          address: address || null,
+          medical_history: medicalHistory || null,
+          emergency_contact_name: emergencyContactName || null,
+          emergency_contact_phone: emergencyContactPhone || null,
+          shirt_size: shirtSize || null,
+          windbreaker_size: windbreakerSize || null,
+          display_name: displayName || null,
+          guardian_name: isMinor ? guardianName : null,
+          guardian_phone: isMinor ? guardianPhone : null,
+          guardian_email: isMinor ? guardianEmail : null,
+          billing_day: billingDay ? Number(billingDay) : new Date().getDate(),
+          grace_days: graceDays ? Number(graceDays) : 7,
+          ifaa_number: ifaaNumber || null,
+          shirt_gender: shirtGender || null,
+          enrollment_date: enrollmentDate || null,
+        },
+      });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (!data?.success) throw new Error("No se pudo crear el miembro");
 
-      return { defaultPassword };
+      return data; // Return the created member data
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       queryClient.invalidateQueries({ queryKey: ["all-members"] });
+
       toast({
         title: "✅ Miembro agregado exitosamente",
-        description: `La cuenta está lista para usar inmediatamente con la contraseña: ${data.defaultPassword} (sin necesidad de validar el correo electrónico)`
+        description: `La cuenta está lista.`
       });
       setOpen(false);
       // Reset all fields
@@ -140,9 +139,12 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       setGuardianPhone("");
       setGuardianEmail("");
       setRole("arquero");
+      setIfaaNumber("");
+      setShirtGender("");
+      setEnrollmentDate(new Date().toISOString().split('T')[0]);
     },
     onError: (e: Error) => {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     },
   });
 
@@ -227,6 +229,14 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
                   rows={3}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Número IFAA</Label>
+                <Input value={ifaaNumber} onChange={(e) => setIfaaNumber(e.target.value)} placeholder="Ej: CL-1234" />
+              </div>
+              <div className="space-y-2">
+                <Label>Fecha de Incorporación</Label>
+                <Input type="date" value={enrollmentDate} onChange={(e) => setEnrollmentDate(e.target.value)} />
+              </div>
             </div>
           </div>
 
@@ -251,6 +261,18 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
           <div className="glass rounded-xl p-4 space-y-4">
             <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Corte de Polera/Cortavientos</Label>
+                <Select value={shirtGender} onValueChange={setShirtGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar corte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="femenino">Femenino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Talla Polera</Label>
                 <Select value={shirtSize} onValueChange={setShirtSize}>

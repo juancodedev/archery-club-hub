@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import { logger } from "@/lib/logger";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -84,7 +85,7 @@ export default function AttendanceMarkPage() {
                 toast({ title: "Asistencia confirmada", description: "Tu participación ha sido registrada." });
 
             } catch (error: unknown) {
-                console.error("Error marking attendance:", error);
+                logger.error("Error marking attendance:", error);
                 setStatus("error");
                 setMessage((error as Error).message || "Ocurrió un error al registrar la asistencia");
             }

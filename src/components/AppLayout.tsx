@@ -1,11 +1,14 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, type LucideIcon } from "lucide-react";
+import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Trophy, Cake, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
+import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente, isTesorero as checkIsTesorero, isSecretaria as checkIsSecretaria } from "@/lib/permissions";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -13,6 +16,8 @@ const navItems = [
   { to: "/scores/new", icon: Crosshair, label: "Registrar Puntaje" },
   { to: "/scores", icon: History, label: "Historial" },
   { to: "/training", icon: Calendar, label: "Entrenamientos" },
+  { to: "/admin/tournaments", icon: Trophy, label: "Torneos" },
+  { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
 ];
 
 const adminItems = [
@@ -57,10 +62,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
 
   const roles = member?.roles || [];
-  const isAdmin = roles.includes("administrador") || roles.includes("presidente") || roles.includes("secretaria") || isSuperAdmin;
-  const isPresidente = roles.includes("presidente") || roles.includes("administrador") || isSuperAdmin;
-  const isTesorero = roles.includes("tesorero") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
-  const isSecretaria = roles.includes("secretaria") || roles.includes("administrador") || roles.includes("presidente") || isSuperAdmin;
+  const isAdmin = checkIsAdmin(roles, isSuperAdmin);
+  const isPresidente = checkIsPresidente(roles, isSuperAdmin);
+  const isTesorero = checkIsTesorero(roles, isSuperAdmin);
+  const isSecretaria = checkIsSecretaria(roles, isSuperAdmin);
 
   const allAdminItems = isSuperAdmin
     ? superAdminItems
@@ -105,10 +110,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     )}>
       {/* Sidebar - Desktop relative, Mobile fixed overlay */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative md:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-card transition-all duration-300 ease-in-out md:relative overflow-hidden",
         isSidebarOpen
-          ? "translate-x-0 shadow-2xl md:shadow-none md:w-64"
-          : "-translate-x-full md:w-0 md:border-none md:opacity-0"
+          ? "w-64 translate-x-0 shadow-2xl md:shadow-none"
+          : "w-64 -translate-x-full md:w-0 md:border-none md:opacity-0"
       )}>
         <div className="flex items-center gap-3 p-6 border-b border-border min-w-[256px]">
           <div className={cn(
@@ -128,7 +133,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <DivisionChangeNotifications />
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
               <CloseIcon className="h-5 w-5 text-muted-foreground" />
             </Button>
@@ -146,10 +150,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="p-4 border-t border-border bg-muted/20">
-          <div className="mb-3 px-3">
-            <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
-            <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
+        <div className="mt-auto p-4 border-t border-border bg-muted/20 sticky bottom-0">
+          <div className="flex items-center gap-3 px-3 mb-4">
+            <Avatar className="h-10 w-10 border border-border/50">
+              <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
+              <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                {member?.full_name?.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={signOut}>
             <LogOut className="h-4 w-4" />
@@ -186,9 +198,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             {member?.id && (
               <Link to="/profile">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary hover:bg-primary/20 transition-colors">
-                  <User className="h-4 w-4" />
-                </div>
+                <Avatar className="h-8 w-8 border border-primary/20 hover:scale-105 transition-transform">
+                  <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                    {member?.full_name?.substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               </Link>
             )}
           </div>

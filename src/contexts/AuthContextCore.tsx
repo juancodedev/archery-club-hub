@@ -13,6 +13,7 @@ export interface MemberInfo {
     club_status?: string;
     subscription_end_date?: string | null;
     club_name?: string;
+    avatar_url?: string | null;
 }
 
 export interface AuthContextType {
@@ -22,6 +23,7 @@ export interface AuthContextType {
     memberships: MemberInfo[];
     loading: boolean;
     isSuperAdminSubdomain: boolean;
+    systemMode: 'produccion' | 'pruebas';
     signOut: () => Promise<void>;
     refreshMember: () => Promise<void>;
     setActiveMembership: (clubId: string) => void;

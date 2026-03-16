@@ -2,12 +2,13 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Settings, DollarSign, Link as LinkIcon, Copy, Plus, Trophy, Target, QrCode } from "lucide-react";
+import { Settings, DollarSign, Link as LinkIcon, Copy, Plus, Trophy, Target, QrCode, Key } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { QRCodeCanvas } from "qrcode.react";
@@ -15,10 +16,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DivisionsManager from "@/components/admin/DivisionsManager";
 import TournamentTypesManager from "@/components/admin/TournamentTypesManager";
 import { Switch } from "@/components/ui/switch";
+import { Database } from "@/integrations/supabase/types";
+
+type ClubUpdate = Database["public"]["Tables"]["clubs"]["Update"] & {
+  financial_support_expires_at?: string | null;
+};
 
 export default function ClubSettingsPage() {
   const { member } = useAuth();
-  const isSuperAdmin = member?.is_super_admin || member?.email === 'cl.jmunoz@gmail.com';
+  const isSuperAdmin = !!member?.is_super_admin;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -29,10 +35,10 @@ export default function ClubSettingsPage() {
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
-    } else if (member?.club_id) {
+    } else if (member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
-  }, [member, isSuperAdmin]);
+  }, [member, isSuperAdmin, selectedClubId]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
@@ -69,14 +75,36 @@ export default function ClubSettingsPage() {
   const updateSettings = useMutation({
     mutationFn: async () => {
       if (!selectedClubId) throw new Error("No club selected");
+
+      const updateData: ClubUpdate = {
+        inscription_fee: Number(inscriptionFee) || 0,
+        monthly_fee: Number(monthlyFee) || 0,
+        default_member_password: defaultPassword || null,
+        allow_superadmin_finances: allowSuperAdminFinances,
+      };
+
+      // If enabling support, set expiration to 24h from now
+      if (allowSuperAdminFinances && !club?.allow_superadmin_finances) {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 24);
+        updateData.financial_support_expires_at = expiresAt.toISOString();
+
+        // Create a contact request for support visibility
+        await supabase.from("contact_requests").insert({
+          club_id: selectedClubId,
+          member_id: member?.id,
+          type: "financial_support",
+          message: `El administrador ha habilitado el acceso a finanzas por 24 horas para soporte técnico.`,
+          status: "pending"
+        });
+      } else if (!allowSuperAdminFinances) {
+        // If disabling, clear expiration
+        updateData.financial_support_expires_at = null;
+      }
+
       const { error } = await supabase
         .from("clubs")
-        .update({
-          inscription_fee: Number(inscriptionFee) || 0,
-          monthly_fee: Number(monthlyFee) || 0,
-          default_member_password: defaultPassword,
-          allow_superadmin_finances: allowSuperAdminFinances,
-        })
+        .update(updateData as unknown as Database["public"]["Tables"]["clubs"]["Update"])
         .eq("id", selectedClubId);
       if (error) throw error;
     },
@@ -84,7 +112,7 @@ export default function ClubSettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["club-settings"] });
       toast({ title: "Configuración actualizada" });
     },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" }),
   });
 
   // Invitations
@@ -124,7 +152,7 @@ export default function ClubSettingsPage() {
       toast({ title: "Invitación creada" });
       setInvEmail("");
     },
-    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" }),
   });
 
   const copyLink = (token: string) => {
@@ -177,33 +205,61 @@ export default function ClubSettingsPage() {
           {/* Fees */}
           <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground flex items-center gap-2 text-left">
-              <DollarSign className="h-4 w-4 text-accent" />
-              Montos y Seguridad
+              <Key className="h-4 w-4 text-accent" />
+              Seguridad y Contraseñas del Club
             </h3>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 text-left">
-              <div className="space-y-2">
-                <Label>Inscripción (única vez)</Label>
-                <Input type="number" value={inscriptionFee} onChange={(e) => setInscriptionFee(e.target.value)} placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Mensualidad</Label>
-                <Input type="number" value={monthlyFee} onChange={(e) => setMonthlyFee(e.target.value)} placeholder="0" />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label className="flex items-center gap-1">
-                  Password por defecto para nuevos miembros
-                  <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  type="text"
-                  value={defaultPassword}
-                  onChange={(e) => setDefaultPassword(e.target.value)}
-                  placeholder="Establece una contraseña segura"
-                  required
-                />
-                <p className="text-[10px] text-muted-foreground">Esta contraseña se asignará a las cuentas creadas manualmente desde el panel de miembros.</p>
+              <div className="space-y-2 sm:col-span-2 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <Label htmlFor="default-password" font-bold>Contraseña Predeterminada del Club</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="default-password"
+                    type="text"
+                    placeholder="Establece la contraseña por defecto para el club"
+                    value={defaultPassword}
+                    onChange={(e) => setDefaultPassword(e.target.value)}
+                    className="bg-background/50 border-primary/20"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      if (defaultPassword) {
+                        navigator.clipboard.writeText(defaultPassword);
+                        toast({ title: "Copiado", description: "Contraseña copiada" });
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Esta contraseña se asignará automáticamente a los <strong>nuevos miembros</strong> y se usará en los <strong>reseteos de contraseña</strong> realizados por administradores.
+                </p>
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="inscription">Cuota de Inscripción</Label>
+                <Input
+                  id="inscription"
+                  type="number"
+                  value={inscriptionFee}
+                  onChange={(e) => setInscriptionFee(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="monthly">Mensualidad</Label>
+                <Input
+                  id="monthly"
+                  type="number"
+                  value={monthlyFee}
+                  onChange={(e) => setMonthlyFee(e.target.value)}
+                  className="bg-background/50"
+                />
+              </div>
               <div className="space-y-4 sm:col-span-2 pt-4 border-t border-border/50">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">

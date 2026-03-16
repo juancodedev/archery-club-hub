@@ -41,8 +41,9 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import FinanceForm from "@/components/admin/FinanceForm";
+import { logger } from "@/lib/logger";
 
-interface Club { id: string; name: string; allow_superadmin_finances: boolean; }
+interface Club { id: string; name: string; allow_superadmin_finances: boolean; financial_support_expires_at?: string | null; }
 interface FinancialEntry {
     id: string;
     type: "income" | "expense";
@@ -51,6 +52,7 @@ interface FinancialEntry {
     category: string;
     description: string | null;
     receipt_url: string | null;
+    receipt_urls: string[] | null;
     members?: { full_name: string } | null;
 }
 
@@ -72,23 +74,24 @@ export default function FinancePage() {
         } else if (member?.club_id) {
             setSelectedClubId(member.club_id);
         }
-    }, [member, isSuperAdmin]);
+    }, [member, isSuperAdmin, selectedClubId]);
 
     const fetchClubs = async () => {
         const { data } = await supabase
             .from("clubs")
-            .select("id, name, allow_superadmin_finances")
+            .select("id, name, allow_superadmin_finances, financial_support_expires_at")
             .eq("allow_superadmin_finances", true)
+            .or(`financial_support_expires_at.is.null,financial_support_expires_at.gt.${new Date().toISOString()}`)
             .order("name");
 
         if (data) {
-            setClubs(data);
+            setClubs(data as unknown as Club[]);
         }
     };
 
     const clubId = selectedClubId;
 
-    const { data: entries, isLoading } = useQuery({
+    const { data: entries, isLoading } = useQuery<FinancialEntry[]>({
         queryKey: ["financial-entries", clubId, categoryFilter],
         queryFn: async () => {
             if (!clubId) return [];
@@ -108,7 +111,7 @@ export default function FinancePage() {
             const { data, error } = await query.order("entry_date", { ascending: false });
 
             if (error) throw error;
-            return data;
+            return data as unknown as FinancialEntry[];
         },
         enabled: !!clubId,
     });
@@ -148,25 +151,29 @@ export default function FinancePage() {
         setIsFormOpen(true);
     };
 
-    const handleViewReceipt = async (receiptUrl: string | null) => {
-        if (!receiptUrl) return;
+    const handleViewReceipt = async (receiptUrl: string | null, receiptUrls?: string[] | null) => {
+        const urlsToOpen = receiptUrls && receiptUrls.length > 0 ? receiptUrls : (receiptUrl ? [receiptUrl] : []);
+
+        if (urlsToOpen.length === 0) return;
 
         try {
-            if (receiptUrl.startsWith('http')) {
-                window.open(receiptUrl, "_blank");
-                return;
-            }
+            for (const url of urlsToOpen) {
+                if (url.startsWith('http')) {
+                    window.open(url, "_blank");
+                    continue;
+                }
 
-            const { data, error } = await supabase.storage
-                .from("receipts")
-                .createSignedUrl(receiptUrl, 300);
+                const { data, error } = await supabase.storage
+                    .from("receipts")
+                    .createSignedUrl(url, 300);
 
-            if (error) throw error;
-            if (data?.signedUrl) {
-                window.open(data.signedUrl, "_blank");
+                if (error) throw error;
+                if (data?.signedUrl) {
+                    window.open(data.signedUrl, "_blank");
+                }
             }
         } catch (error: unknown) {
-            console.error(error);
+            logger.error(error);
             toast({
                 title: "Error al abrir comprobante",
                 description: "No se pudo generar el enlace seguro.",
@@ -350,12 +357,17 @@ export default function FinancePage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-center gap-1">
-                                            {entry.receipt_url && (
+                                            {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                                    <Receipt className="h-4 w-4" />
+                                                    {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
+                                                </Button>
+                                            ) : entry.receipt_url && (
                                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                                     <Receipt className="h-4 w-4" />
                                                 </Button>
                                             )}
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type, entry)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}>
@@ -411,14 +423,19 @@ export default function FinancePage() {
 
                             <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/30">
                                 <div className="flex gap-1">
-                                    {entry.receipt_url && (
+                                    {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20 relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                            <Receipt className="h-3.5 w-3.5" />
+                                            RECIBO ({entry.receipt_urls!.length})
+                                        </Button>
+                                    ) : entry.receipt_url && (
                                         <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                             <Receipt className="h-3.5 w-3.5" /> RECIBO
                                         </Button>
                                     )}
                                 </div>
                                 <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type, entry)}>
+                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type as "expense" | "income", entry)}>
                                         <Pencil className="h-3.5 w-3.5" /> EDITAR
                                     </Button>
                                     <Button
