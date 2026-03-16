@@ -111,16 +111,15 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
       if (data?.error) throw new Error(data.error);
       if (!data?.success) throw new Error("No se pudo crear el miembro");
 
-      return data; // Return the data containing the password
+      return data; // Return the created member data
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["club-members"] });
       queryClient.invalidateQueries({ queryKey: ["all-members"] });
 
-      const passwordMsg = data?.password ? ` Contraseña: ${data.password}` : "";
       toast({
         title: "✅ Miembro agregado exitosamente",
-        description: `La cuenta está lista.${passwordMsg}`
+        description: `La cuenta está lista.`
       });
       setOpen(false);
       // Reset all fields
