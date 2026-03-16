@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    console.log('Request body:', body);
 
     const {
       full_name, club_id, email, role = 'arquero',
@@ -72,7 +71,7 @@ Deno.serve(async (req) => {
     // Use club's default password or a randomly generated fallback
     const generatedPassword = defaultPassword || `Arq!${crypto.randomUUID().split('-')[0]}${Math.random().toString(36).substring(2, 6)}`;
 
-    console.log('Creating/Recovering auth user:', authEmail);
+    console.log('Creating/Recovering auth user...');
     let userId: string;
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
