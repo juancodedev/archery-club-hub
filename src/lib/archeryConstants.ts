@@ -155,6 +155,47 @@ export const TOURNAMENT_FORMAT_LABELS: Record<string, string> = Object.fromEntri
     TOURNAMENT_FORMATS.map((f) => [f.value, f.label])
 );
 
+// ─── ENTRENAMIENTOS ──────────────────────────────────────────────────────────
+
+export const TRAINING_TYPES = [
+    { value: "libre", label: "Entrenamiento Libre", icon: "📈" },
+    { value: "estandar", label: "Serie Estándar", icon: "🎯" },
+] as const;
+
+export const WEATHER_TYPES = [
+    { value: "soleado", label: "Soleado", icon: "☀️" },
+    { value: "nublado", label: "Nublado", icon: "☁️" },
+    { value: "lluvioso", label: "Lluvioso", icon: "🌧️" },
+    { value: "viento", label: "Viento Fuerte", icon: "🌬️" },
+] as const;
+
+export const WIND_DIRECTIONS = [
+    { value: "frente", label: "De Frente", icon: "⬇️" },
+    { value: "espalda", label: "De Espalda", icon: "⬆️" },
+    { value: "izquierda", label: "Desde Izquierda", icon: "➡️" },
+    { value: "derecha", label: "Desde Derecha", icon: "⬅️" },
+] as const;
+
+export const TRAINING_PRESETS = [
+    {
+        id: "wa-standard",
+        name: "WA Estandar",
+        description: "50m/30m: 6x6 flechas (122cm)",
+        rounds: [
+            { distance: 55, target: "122 cm", ends: 6, arrows: 6 },
+            { distance: 33, target: "122 cm", ends: 6, arrows: 6 }
+        ]
+    },
+    {
+        id: "indoor-18m",
+        name: "Sala Estándar",
+        description: "18m: 10x3 flechas (40cm)",
+        rounds: [
+            { distance: 20, target: "40 cm", ends: 10, arrows: 3 }
+        ]
+    }
+] as const;
+
 // ─── SISTEMA DE PUNTUACIÓN ──────────────────────────────────────────────────
 
 /**
