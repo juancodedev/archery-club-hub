@@ -35,7 +35,7 @@ interface Division {
 
 export default function DivisionsAdminPage() {
     const { member } = useAuth();
-    const isSuperAdmin = member?.is_super_admin || member?.email === "cl.jmunoz@gmail.com";
+    const isSuperAdmin = !!member?.is_super_admin;
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState("");

@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContextCore";
+import { logger } from "@/lib/logger";
 
 interface Division {
     id: string;
@@ -60,8 +61,8 @@ export default function DivisionSelect({
 
             if (error) throw error;
             setDivisions(data || []);
-        } catch (error) {
-            console.error("Error fetching divisions:", error);
+        } catch (error: unknown) {
+            logger.error("Error fetching divisions:", error);
         } finally {
             setLoading(false);
         }

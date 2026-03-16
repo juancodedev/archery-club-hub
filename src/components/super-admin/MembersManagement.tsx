@@ -29,8 +29,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import AddMemberDialog from "@/components/admin/AddMemberDialog";
+// Ensure the correct path to AddMemberDialog is used
+import AddMemberDialog from "@/components/admin/AddMemberDialog"; // Update the path if necessary
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
 import ManageRolesDialog from "@/components/admin/ManageRolesDialog";
 
@@ -101,27 +103,23 @@ export default function MembersManagement() {
 
     const resetPassword = useMutation({
         mutationFn: async (member: Member) => {
-            const { data: defaultPassword, error: passwordError } = await supabase
-                .rpc('get_club_default_password', { p_club_id: member.club_id });
+            if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
 
-            if (passwordError) throw new Error("Permiso denegado para ver la contraseña del club.");
-
-            const finalPassword = defaultPassword || "Quiver2026!";
-
-            // We use the admin function to update the user password
-            const { error } = await supabase.rpc('admin_reset_user_password', {
+            // Password is generated server-side by the RPC function
+            const { data, error } = await supabase.rpc('admin_reset_user_password', {
                 p_user_id: member.user_id,
-                p_new_password: defaultPassword
+                p_club_id: member.club_id,
+                p_new_password: '' // Ignored by server; password generated server-side
             });
 
             if (error) throw error;
-            return { defaultPassword };
+            return data;
         },
-        onSuccess: (data) => {
-            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${data.defaultPassword}`);
+        onSuccess: (newPassword) => {
+            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${newPassword}`);
         },
         onError: (error: Error) => {
-            toast.error("Error al resetear contraseña: " + error.message);
+            toast.error(getSafeErrorMessage(error));
         }
     });
 
@@ -135,7 +133,7 @@ export default function MembersManagement() {
             toast.success("Miembro eliminado");
         },
         onError: (error: Error) => {
-            toast.error("Error al eliminar: " + error.message);
+            toast.error(getSafeErrorMessage(error));
         }
     });
 

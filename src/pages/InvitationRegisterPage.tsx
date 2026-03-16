@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, Calendar, Heart, GraduationCap, Info } from "lucide-react";
 import { formatRUT } from "@/lib/rut";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
+import { logger } from "@/lib/logger";
 
 interface Invitation { club_id: string; email: string | null; expires_at: string; used_at: string | null; }
 interface ClubInfo { id: string; name: string; inscription_fee?: number; monthly_fee?: number; }
@@ -50,6 +52,9 @@ export default function InvitationRegisterPage() {
   const [guardianPhone, setGuardianPhone] = useState("");
   const [guardianEmail, setGuardianEmail] = useState("");
 
+  const [ifaaNumber, setIfaaNumber] = useState("");
+  const [shirtGender, setShirtGender] = useState("");
+
   const [noEmail, setNoEmail] = useState(false);
 
   const isMinor = useMemo(() => {
@@ -65,7 +70,7 @@ export default function InvitationRegisterPage() {
   useEffect(() => {
     async function loadInvitation() {
       if (!token) {
-        console.error("No token provided");
+        logger.error("No token provided");
         setExpired(true);
         setLoadingInv(false);
         return;
@@ -76,7 +81,7 @@ export default function InvitationRegisterPage() {
           .rpc("get_invitation_by_token", { p_token: token });
 
         if (invError) {
-          console.error("Error loading invitation:", invError);
+          logger.error("Error loading invitation:", invError);
           setExpired(true);
           setLoadingInv(false);
           return;
@@ -85,7 +90,7 @@ export default function InvitationRegisterPage() {
         const inv = invRows && invRows.length > 0 ? invRows[0] : null;
 
         if (!inv || inv.used_at || new Date(inv.expires_at) < new Date()) {
-          console.log("Invitation invalid or expired:", inv);
+          logger.log("Invitation invalid or expired:", inv);
           setExpired(true);
           // Still load club for logo if possible
           if (inv) {
@@ -100,10 +105,10 @@ export default function InvitationRegisterPage() {
         if (inv.email) setEmail(inv.email);
 
         const { data: c, error: clubError } = await supabase.from("public_clubs_view").select("*").eq("id", inv.club_id).single();
-        if (clubError) console.error("Error loading club:", clubError);
+        if (clubError) logger.error("Error loading club:", clubError);
         setClub(c as ClubInfo);
       } catch (err) {
-        console.error("Unexpected error loading invitation:", err);
+        logger.error("Unexpected error loading invitation:", err);
         setExpired(true);
       } finally {
         setLoadingInv(false);
@@ -121,7 +126,7 @@ export default function InvitationRegisterPage() {
       let finalUserId = null;
       const finalEmail = email.trim() !== "" ? email.trim() : null;
 
-      // 1. Create auth user only if email is provided
+      // 1. Create auth user only if email is provided (via standard signUp - user verifies email)
       if (!noEmail && finalEmail) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: finalEmail,
@@ -133,29 +138,34 @@ export default function InvitationRegisterPage() {
         finalUserId = authData.user.id;
       }
 
-      // 2. Complete registration via RPC
-      const { data: rpcData, error: rpcError } = await supabase.rpc("accept_invitation_v2" as never, {
-        p_token: token,
-        p_user_id: finalUserId,
-        p_password: password || null,
-        p_full_name: fullName,
-        p_email: finalEmail,
-        p_phone: phone || null,
-        p_date_of_birth: dateOfBirth || null,
-        p_identification: identification || null,
-        p_address: address || null,
-        p_medical_history: medicalHistory || null,
-        p_emergency_contact_name: emergencyContactName,
-        p_emergency_contact_phone: emergencyContactPhone,
-        p_shirt_size: shirtSize || null,
-        p_windbreaker_size: windbreakerSize || null,
-        p_display_name: displayName || null,
-        p_guardian_name: isMinor ? guardianName : null,
-        p_guardian_phone: isMinor ? guardianPhone : null,
-        p_guardian_email: isMinor ? guardianEmail : null,
+      // 2. Complete registration via edge function (uses Admin API for placeholder accounts)
+      const { data: rpcData, error: rpcError } = await supabase.functions.invoke('accept-invitation', {
+        body: {
+          token,
+          user_id: finalUserId,
+          full_name: fullName,
+          email: finalEmail,
+          password: password || null,
+          phone: phone || null,
+          date_of_birth: dateOfBirth || null,
+          identification: identification || null,
+          address: address || null,
+          medical_history: medicalHistory || null,
+          emergency_contact_name: emergencyContactName,
+          emergency_contact_phone: emergencyContactPhone,
+          shirt_size: shirtSize || null,
+          windbreaker_size: windbreakerSize || null,
+          display_name: displayName || null,
+          guardian_name: isMinor ? guardianName : null,
+          guardian_phone: isMinor ? guardianPhone : null,
+          guardian_email: isMinor ? guardianEmail : null,
+          ifaa_number: ifaaNumber || null,
+          shirt_gender: shirtGender || null,
+        },
       });
 
       if (rpcError) throw rpcError;
+      if (rpcData?.error) throw new Error(rpcData.error);
 
       if (noEmail) {
         toast({
@@ -169,8 +179,9 @@ export default function InvitationRegisterPage() {
         });
       }
       navigate("/login");
-    } catch (error: unknown) {
-      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+    } catch (e: unknown) {
+      logger.error(e);
+      toast({ title: "Error", description: getSafeErrorMessage(e), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -239,6 +250,15 @@ export default function InvitationRegisterPage() {
                   placeholder="12.345.678-9"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="ifaaNumber">Número IFAA</Label>
+                <Input
+                  id="ifaaNumber"
+                  value={ifaaNumber}
+                  onChange={(e) => setIfaaNumber(e.target.value)}
+                  placeholder="Ej: CL-1234"
+                />
+              </div>
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="address">Dirección particular</Label>
                 <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
@@ -304,6 +324,18 @@ export default function InvitationRegisterPage() {
           <div className="glass rounded-xl p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground">Tabla de Tallas</h3>
             <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Corte de Polera/Cortavientos</Label>
+                <Select value={shirtGender} onValueChange={setShirtGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar corte" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="femenino">Femenino</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label>Talla Polera</Label>
                 <Select value={shirtSize} onValueChange={setShirtSize}>

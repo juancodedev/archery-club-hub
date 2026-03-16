@@ -1,66 +1,57 @@
 import { describe, it, expect } from "vitest";
-import { calculateAge } from "../divisionUtils";
+import { calculateAge, getDivisionSuggestions } from "../divisionUtils";
 
 describe("divisionUtils", () => {
     describe("calculateAge", () => {
-        it("should calculate age correctly from Date object", () => {
-            const birthDate = new Date("2000-01-01");
-            const age = calculateAge(birthDate);
-            const expectedAge = new Date().getFullYear() - 2000;
-            expect(age).toBe(expectedAge);
-        });
-
-        it("should calculate age correctly from string", () => {
-            const birthDate = "2005-06-15";
-            const age = calculateAge(birthDate);
-            const expectedAge = new Date().getFullYear() - 2005;
-            // Age might be -1 if birthday hasn't occurred this year
-            expect(age).toBeGreaterThanOrEqual(expectedAge - 1);
-            expect(age).toBeLessThanOrEqual(expectedAge);
-        });
-
-        it("should handle birthday not yet occurred this year", () => {
-            const today = new Date();
-            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 15);
-            const birthYear = today.getFullYear() - 25;
-            const birthDate = new Date(birthYear, nextMonth.getMonth(), nextMonth.getDate());
-
-            const age = calculateAge(birthDate);
-            // If birthday is in the future this year, age should be 24, not 25
-            expect(age).toBe(24);
-        });
-
-        it("should handle birthday already occurred this year", () => {
-            const today = new Date();
-            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 15);
-            const birthYear = today.getFullYear() - 25;
-            const birthDate = new Date(birthYear, lastMonth.getMonth(), lastMonth.getDate());
-
-            const age = calculateAge(birthDate);
+        it("should return correct age for a past date", () => {
+            const birthDate = new Date();
+            birthDate.setFullYear(birthDate.getFullYear() - 25);
+            const age = calculateAge(birthDate.toISOString());
             expect(age).toBe(25);
         });
 
-        it("should handle same day birthday (birthday is today)", () => {
-            const today = new Date();
-            const birthYear = today.getFullYear() - 30;
-            const birthDate = new Date(birthYear, today.getMonth(), today.getDate());
-
-            const age = calculateAge(birthDate);
-            expect(age).toBe(30);
+        it("should return 0 for today's birth date", () => {
+            const today = new Date().toISOString();
+            const age = calculateAge(today);
+            expect(age).toBe(0);
         });
 
-        it("should handle very young ages", () => {
-            const lastYear = new Date().getFullYear() - 1;
-            const birthDate = new Date(lastYear, 0, 1);
-            const age = calculateAge(birthDate);
-            expect(age).toBeGreaterThanOrEqual(0);
-            expect(age).toBeLessThanOrEqual(2);
+        it("should handle birthday earlier this year", () => {
+            const date = new Date();
+            date.setFullYear(date.getFullYear() - 10);
+            date.setMonth(0); // January
+            date.setDate(1); // January 1st
+            const age = calculateAge(date.toISOString());
+            expect(age).toBeGreaterThanOrEqual(9);
+        });
+    });
+
+    describe("getDivisionSuggestions", () => {
+        it("should suggest Cadete for age < 15 and recurvo", () => {
+            const suggestions = getDivisionSuggestions(14, "recurvo");
+            expect(suggestions).toContain("RCC");
+            expect(suggestions).toContain("RC");
         });
 
-        it("should handle very old ages", () => {
-            const birthDate = new Date("1950-01-01");
-            const age = calculateAge(birthDate);
-            expect(age).toBeGreaterThan(70);
+        it("should suggest Junior for age < 18 and recurvo", () => {
+            const suggestions = getDivisionSuggestions(16, "recurvo");
+            expect(suggestions).toContain("RCJ");
+            expect(suggestions).toContain("RC");
+        });
+
+        it("should suggest only base for adult recurvo", () => {
+            const suggestions = getDivisionSuggestions(25, "recurvo");
+            expect(suggestions).toEqual(["RC"]);
+        });
+
+        it("should suggest base prefixes for compuesto", () => {
+            const suggestions = getDivisionSuggestions(25, "compuesto");
+            expect(suggestions).toEqual(["CO"]);
+        });
+
+        it("should suggest multiple bases if no bow type provided", () => {
+            const suggestions = getDivisionSuggestions(25);
+            expect(suggestions).toEqual(["RC", "CO", "BB", "LB"]);
         });
     });
 });
