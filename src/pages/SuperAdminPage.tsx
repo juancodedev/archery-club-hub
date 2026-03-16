@@ -17,8 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SuperAdminCreateClubDialog from "@/components/super-admin/CreateClubDialog";
 import PlansManagement from "@/components/super-admin/PlansManagement";
-import ExtraChargesDialog from "@/components/super-admin/ExtraChargesDialog";
-import { PlusCircle, TicketPercent, Layers, Trophy, CalendarDays, DollarSign, Users as UsersIcon, MoreHorizontal } from "lucide-react";
+import { DollarSign, Users as UsersIcon } from "lucide-react";
 import MembersManagement from "@/components/super-admin/MembersManagement";
 import IntegrationsSettings from "@/components/super-admin/IntegrationsSettings";
 import ContactRequests from "@/components/super-admin/ContactRequests";

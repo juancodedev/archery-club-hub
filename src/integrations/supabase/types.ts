@@ -945,8 +945,11 @@ export type Database = {
       }
       training_sessions: {
         Row: {
+          arrow_info: string | null
+          arrow_numbers: boolean | null
           attendance_token: string | null
           attendance_token_expires: string | null
+          bow_info: string | null
           club_id: string
           created_at: string
           created_by: string | null
@@ -956,12 +959,21 @@ export type Database = {
           division: string | null
           event_date: string
           id: string
+          location: string | null
           name: string
+          rounds_config: Json | null
           target_type: string | null
+          training_type: Database["public"]["Enums"]["training_type"] | null
+          weather: string | null
+          wind_direction: string | null
+          wind_speed: string | null
         }
         Insert: {
+          arrow_info?: string | null
+          arrow_numbers?: boolean | null
           attendance_token?: string | null
           attendance_token_expires?: string | null
+          bow_info?: string | null
           club_id: string
           created_at?: string
           created_by?: string | null
@@ -971,12 +983,21 @@ export type Database = {
           division?: string | null
           event_date?: string
           id?: string
+          location?: string | null
           name: string
+          rounds_config?: Json | null
           target_type?: string | null
+          training_type?: Database["public"]["Enums"]["training_type"] | null
+          weather?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
         }
         Update: {
+          arrow_info?: string | null
+          arrow_numbers?: boolean | null
           attendance_token?: string | null
           attendance_token_expires?: string | null
+          bow_info?: string | null
           club_id?: string
           created_at?: string
           created_by?: string | null
@@ -986,8 +1007,14 @@ export type Database = {
           division?: string | null
           event_date?: string
           id?: string
+          location?: string | null
           name?: string
+          rounds_config?: Json | null
           target_type?: string | null
+          training_type?: Database["public"]["Enums"]["training_type"] | null
+          weather?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
         }
         Relationships: [
           {
@@ -1075,8 +1102,8 @@ export type Database = {
         Returns: undefined
       }
       admin_reset_user_password: {
-        Args: { p_new_password: string; p_user_id: string }
-        Returns: boolean
+        Args: { p_user_id: string; p_club_id: string; p_new_password?: string }
+        Returns: string
       }
       auto_update_member_divisions: {
         Args: never
@@ -1192,6 +1219,7 @@ export type Database = {
       | "alumno"
       member_status: "activo" | "inactivo"
       subscription_status: "activo" | "pendiente" | "bloqueado"
+      training_type: "libre" | "estandar"
     }
     CompositeTypes: {
       [_ in never]: never
