@@ -32,7 +32,10 @@ USING (public.is_super_admin(auth.uid()));
 DROP POLICY IF EXISTS "Public read active coupons" ON public.coupons;
 CREATE POLICY "Public read active coupons" ON public.coupons
 FOR SELECT TO authenticated
-USING (true); -- Usually coupons are checked by code anyway
+USING (
+  (valid_until IS NULL OR valid_until > now())
+  AND (max_uses IS NULL OR current_uses < max_uses)
+);
 
 -- Reload cache
 NOTIFY pgrst, 'reload schema';
