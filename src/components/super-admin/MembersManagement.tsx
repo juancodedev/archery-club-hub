@@ -108,6 +108,7 @@ export default function MembersManagement() {
             // Password is generated server-side by the RPC function
             const { data, error } = await supabase.rpc('admin_reset_user_password', {
                 p_user_id: member.user_id,
+                p_club_id: member.club_id,
                 p_new_password: '' // Ignored by server; password generated server-side
             });
 
