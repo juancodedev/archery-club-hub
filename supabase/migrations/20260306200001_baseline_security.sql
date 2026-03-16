@@ -160,7 +160,9 @@ CREATE POLICY "Super manage settings" ON public.system_settings FOR ALL TO authe
 -- 5. GRANTS - Resolver "permission denied"
 -- ============================================================
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+-- Minimal anon grants: only tables with explicit public RLS policies
+GRANT SELECT ON public.plans, public.clubs, public.system_settings TO anon;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
