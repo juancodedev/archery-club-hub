@@ -47,8 +47,8 @@ BEGIN
     IF v_default_password IS NOT NULL AND v_default_password <> '' THEN
       v_generated_password := v_default_password;
     ELSE
-      -- Use a simpler random generation fallback if no default is set
-      v_generated_password := 'Arq!' || substring(md5(random()::text), 1, 12);
+      -- Use a cryptographically secure random generation fallback if no default is set
+      v_generated_password := 'Arq!' || encode(extensions.gen_random_bytes(12), 'hex');
     END IF;
   END IF;
 
