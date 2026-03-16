@@ -34,8 +34,10 @@ CREATE POLICY "Users manage own registrations" ON public.tournament_registration
     WITH CHECK (member_id = public.get_member_id_by_user(auth.uid()));
 
 -- 5. Fix common pitfalls for updates:
--- Ensure all tables have appropriate grants for authenticated users
-GRANT INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
+-- Grant write permissions only to the tables that have authenticated write policies above
+GRANT UPDATE ON public.members TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.scores TO authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.tournament_registrations TO authenticated;
 
 -- Ensure SECURITY DEFINER functions exist and are robust (already done in previous fix, but reinforcing)
 NOTIFY pgrst, 'reload schema';
