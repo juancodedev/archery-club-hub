@@ -57,6 +57,10 @@ BEGIN
   SET encrypted_password = crypt(v_generated_password, gen_salt('bf'))
   WHERE id = p_user_id;
 
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Usuario con id % no encontrado en auth.users', p_user_id;
+  END IF;
+
   RETURN v_generated_password;
 END;
 $function$;
