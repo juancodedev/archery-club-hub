@@ -1102,8 +1102,8 @@ export type Database = {
         Returns: undefined
       }
       admin_reset_user_password: {
-        Args: { p_new_password: string; p_user_id: string }
-        Returns: boolean
+        Args: { p_user_id: string; p_club_id: string; p_new_password?: string }
+        Returns: string
       }
       auto_update_member_divisions: {
         Args: never
