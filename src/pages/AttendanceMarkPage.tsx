@@ -1,4 +1,3 @@
-```javascript
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,9 +5,8 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { logger } from "@/lib/logger";
-import { CheckCircle2, XCircle, Loader2, ArrowLeft, PlusCircle, Building2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 
 export default function AttendanceMarkPage() {
     const { sessionId } = useParams();

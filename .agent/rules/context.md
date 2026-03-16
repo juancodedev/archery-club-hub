@@ -1,6 +1,5 @@
 ---
 trigger: always_on
-glob: "**/*.{ts,tsx,js,jsx,md,sql}"
 description: Contexto principal para QuiverApp - SaaS de Arquería
 ---
 
@@ -30,6 +29,7 @@ QuiverApp es una plataforma SaaS multi-tenant diseñada para la gestión integra
     - Usar la estética "Premium" definida: fondos oscuros, acentos dorados/primarios, uso de `glassmorphism` (clase `glass`).
     - Las animaciones deben ser sutiles y consistentes usando `framer-motion`.
 5.  **Componentes**: Seguir el patrón de shadcn-ui. Los componentes reutilizables residen en `src/components/ui`.
+6.  **Codificacion**: Considerar intervensiones muy presisas y optimas para el sistema, ya que actualmente está en producción con un cliente funcional
 
 ## Estructura de Datos (Core)
 

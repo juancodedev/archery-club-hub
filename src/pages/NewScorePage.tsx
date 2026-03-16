@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
 import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
 import type { TournamentType, Club, MemberBasic } from "@/types/archery";
+import { TRAINING_PRESETS } from "@/lib/archeryConstants";
 
 
 function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
@@ -34,6 +35,12 @@ export default function NewScorePage() {
   const [tournamentTypeId, setTournamentTypeId] = useState("");
   const [detail, setDetail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("sessionId");
+
+  // Training session state
+  const [trainingSessionId, setTrainingSessionId] = useState<string>(sessionId || "none");
+  const [availableSessions, setAvailableSessions] = useState<any[]>([]);
 
   // Tournament type configuration
   const [arrowsPerEnd, setArrowsPerEnd] = useState(5);
@@ -61,6 +68,78 @@ export default function NewScorePage() {
       setSelectedMemberId(member.id);
     }
   }, [member, isSuperAdmin]);
+
+  // Fetch available sessions for today or recent
+  useEffect(() => {
+    if (selectedClubId) {
+      fetchSessions(selectedClubId);
+    }
+  }, [selectedClubId]);
+
+  // Fetch session data if sessionId exists
+  useEffect(() => {
+    if (trainingSessionId && trainingSessionId !== "none") {
+      fetchSessionDetails(trainingSessionId);
+    }
+  }, [trainingSessionId]);
+
+  const fetchSessions = async (clubId: string) => {
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("training_sessions")
+      .select("*")
+      .eq("club_id", clubId)
+      .gte("event_date", today) // Only today onwards, or we could allow past sessions
+      .order("event_date", { ascending: false });
+    if (data) setAvailableSessions(data);
+  };
+
+  const fetchSessionDetails = async (id: string) => {
+    const { data, error } = await supabase
+      .from("training_sessions")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (data && !error) {
+      setEventName(data.name);
+      if (data.division) {
+        // Find division id if possible or just store name
+        // For now we use the name to pre-fill event name
+      }
+
+      if (data.training_type === 'estandar' && data.rounds_config) {
+        const rounds = data.rounds_config as any[];
+        // Calculate total ends and arrows per end
+        // Simplification: use the first round's arrows and sum ends
+        if (rounds.length > 0) {
+          const totalEnds = rounds.reduce((sum, r) => sum + (Number(r.ends) || 0), 0);
+          const arrows = Number(rounds[0].arrows) || 5;
+          setEndsCount(totalEnds);
+          setArrowsPerEnd(arrows);
+          setEnds(createEmptyEnds(arrows, totalEnds));
+        }
+      }
+    }
+  };
+
+  const applyPreset = (presetId: string) => {
+    const preset = TRAINING_PRESETS.find(p => p.id === presetId);
+    if (preset) {
+      setEventName(preset.name);
+      if (preset.rounds && preset.rounds.length > 0) {
+        const totalEnds = preset.rounds.reduce((sum, r) => sum + (Number(r.ends) || 0), 0);
+        const arrows = Number(preset.rounds[0].arrows) || 5;
+        setEndsCount(totalEnds);
+        setArrowsPerEnd(arrows);
+        setEnds(createEmptyEnds(arrows, totalEnds));
+        toast({
+          title: "Preset aplicado",
+          description: `Configurado para ${preset.name}`
+        });
+      }
+    }
+  };
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
@@ -128,6 +207,7 @@ export default function NewScorePage() {
       const { error } = await supabase.from("scores").insert({
         member_id: selectedMemberId,
         club_id: selectedClubId,
+        training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
         event_name: eventName || "Entrenamiento",
         score_date: scoreDate,
         division_id: divisionId || null,
@@ -207,7 +287,23 @@ export default function NewScorePage() {
             <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground">Sesión de Entrenamiento (Opcional)</Label>
+              <Select value={trainingSessionId} onValueChange={setTrainingSessionId}>
+                <SelectTrigger className="glass h-11 border-primary/20">
+                  <SelectValue placeholder="Sin vincular a sesión" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ninguna sesión específica</SelectItem>
+                  {availableSessions.map(s => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name} ({new Date(s.event_date).toLocaleDateString()})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2 lg:col-span-2">
               <Label className="text-xs font-bold text-muted-foreground">Evento / Entrenamiento</Label>
               <Input value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Entrenamiento libre..." className="h-11 glass border-primary/10" />
@@ -219,6 +315,25 @@ export default function NewScorePage() {
                 <Input type="date" value={scoreDate} onChange={(e) => setScoreDate(e.target.value)} className="h-11 pl-10 glass border-primary/10" />
               </div>
             </div>
+
+            <div className="space-y-4">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Atajos / Presets Estándar</Label>
+              <div className="flex flex-wrap gap-2">
+                {TRAINING_PRESETS.map(p => (
+                  <Button
+                    key={p.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="glass border-primary/20 hover:border-primary text-[10px] font-black uppercase tracking-tighter"
+                    onClick={() => applyPreset(p.id)}
+                  >
+                    🎯 {p.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-xs font-bold text-muted-foreground">División / Categoría</Label>
               <DivisionSelect
@@ -228,6 +343,7 @@ export default function NewScorePage() {
                 placeholder="Recurvo, Compuesto..."
               />
             </div>
+
             <div className="space-y-2">
               <Label className="text-xs font-bold text-muted-foreground">Tipo de Torneo</Label>
               <TournamentTypeSelect
@@ -237,7 +353,8 @@ export default function NewScorePage() {
                 placeholder="Indoor 18m, Outdoor 70m..."
               />
             </div>
-            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+
+            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
               <Label className="text-xs font-bold text-muted-foreground">Detalle</Label>
               <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." className="h-11 glass border-primary/10" />
             </div>

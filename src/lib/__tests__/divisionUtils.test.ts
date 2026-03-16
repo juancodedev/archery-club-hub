@@ -1,21 +1,8 @@
 import { describe, it, expect } from "vitest";
-
-// divisionUtils.ts is currently being refactored.
-// These tests verify the age calculation logic inline as it existed previously.
-
-function calculateAge(dateString: string): number {
-    const birth = new Date(dateString);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-    }
-    return age;
-}
+import { calculateAge, getDivisionSuggestions } from "../divisionUtils";
 
 describe("divisionUtils", () => {
-    describe("calculateAge (inline reference implementation)", () => {
+    describe("calculateAge", () => {
         it("should return correct age for a past date", () => {
             const birthDate = new Date();
             birthDate.setFullYear(birthDate.getFullYear() - 25);
@@ -35,18 +22,36 @@ describe("divisionUtils", () => {
             date.setMonth(0); // January
             date.setDate(1); // January 1st
             const age = calculateAge(date.toISOString());
-            // At minimum should be 9 or 10 depending on today's date
             expect(age).toBeGreaterThanOrEqual(9);
         });
+    });
 
-        it("should return correct age for well-known date", () => {
-            const birthDate = "2000-01-01";
-            const age = calculateAge(birthDate);
-            const now = new Date();
-            const expectedYear = now.getFullYear() - 2000;
-            const hasHadBirthday = now.getMonth() > 0 || (now.getMonth() === 0 && now.getDate() >= 1);
-            const expected = hasHadBirthday ? expectedYear : expectedYear - 1;
-            expect(age).toBe(expected);
+    describe("getDivisionSuggestions", () => {
+        it("should suggest Cadete for age < 15 and recurvo", () => {
+            const suggestions = getDivisionSuggestions(14, "recurvo");
+            expect(suggestions).toContain("RCC");
+            expect(suggestions).toContain("RC");
+        });
+
+        it("should suggest Junior for age < 18 and recurvo", () => {
+            const suggestions = getDivisionSuggestions(16, "recurvo");
+            expect(suggestions).toContain("RCJ");
+            expect(suggestions).toContain("RC");
+        });
+
+        it("should suggest only base for adult recurvo", () => {
+            const suggestions = getDivisionSuggestions(25, "recurvo");
+            expect(suggestions).toEqual(["RC"]);
+        });
+
+        it("should suggest base prefixes for compuesto", () => {
+            const suggestions = getDivisionSuggestions(25, "compuesto");
+            expect(suggestions).toEqual(["CO"]);
+        });
+
+        it("should suggest multiple bases if no bow type provided", () => {
+            const suggestions = getDivisionSuggestions(25);
+            expect(suggestions).toEqual(["RC", "CO", "BB", "LB"]);
         });
     });
 });

@@ -1,70 +1,9 @@
--- 1. Crear el usuario en auth.users si no existe
-DO $$
-DECLARE
-  new_user_id UUID;
-  default_club_id UUID;
-BEGIN
-  -- Verificar si el usuario ya existe en auth.users
-  SELECT id INTO new_user_id FROM auth.users WHERE email = 'jmunoz@juancode.dev';
+-- NOTE: Super admin user bootstrap must be performed outside of version-controlled
+-- migrations. Use the Supabase Admin API or `supabase auth` CLI with secrets stored
+-- outside the repository (e.g. via environment variables or a secrets manager).
+-- Do NOT insert users or credentials directly in migration files.
 
-  IF new_user_id IS NULL THEN
-    -- Insertar en auth.users
-    INSERT INTO auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token)
-    VALUES (
-      '00000000-0000-0000-0000-000000000000',
-      gen_random_uuid(),
-      'authenticated',
-      'authenticated',
-      'jmunoz@juancode.dev',
-      crypt('SuperAdmin2024*', gen_salt('bf')),
-      now(),
-      now(),
-      now(),
-      '{"provider":"email","providers":["email"]}',
-      '{"full_name":"Super Admin"}',
-      now(),
-      now(),
-      '',
-      '',
-      '',
-      ''
-    )
-    RETURNING id INTO new_user_id;
-    RAISE NOTICE 'Usuario auth.users creado: %', new_user_id;
-  ELSE
-    RAISE NOTICE 'Usuario auth.users ya existe: %', new_user_id;
-  END IF;
-
-  -- 2. Asegurar que esté en public.members
-  -- Primero buscamos un club existente para evitar el error de NOT NULL en club_id
-  SELECT id INTO default_club_id FROM public.clubs LIMIT 1;
-
-  IF EXISTS (SELECT 1 FROM public.members WHERE email = 'jmunoz@juancode.dev') THEN
-    UPDATE public.members 
-    SET is_super_admin = true, user_id = new_user_id
-    WHERE email = 'jmunoz@juancode.dev';
-    RAISE NOTICE 'Usuario actualizado en public.members';
-  ELSE
-    IF default_club_id IS NULL THEN
-       -- Si no hay clubes, creamos uno de sistema para que la app no rompa
-       INSERT INTO public.clubs (name, city, country) 
-       VALUES ('Club Central', 'Santiago', 'Chile') 
-       RETURNING id INTO default_club_id;
-    END IF;
-
-    INSERT INTO public.members (user_id, club_id, email, full_name, is_super_admin, status)
-    VALUES (new_user_id, default_club_id, 'jmunoz@juancode.dev', 'Super Admin', true, 'activo');
-    RAISE NOTICE 'Usuario insertado en public.members asociado al club %', default_club_id;
-  END IF;
-
-  -- 3. Quitar privilegios al usuario antiguo
-  UPDATE public.members 
-  SET is_super_admin = false 
-  WHERE email = 'cl.jmunoz@gmail.com';
-
-END $$;
-
--- 4. Redefinir la función is_super_admin para eliminar el email hardcodeado
+-- 1. Redefinir la función is_super_admin para eliminar el email hardcodeado
 CREATE OR REPLACE FUNCTION public.is_super_admin(p_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
@@ -74,7 +13,7 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
   );
 $$;
 
--- 4. Limpiar políticas RLS que tenían el email antiguo hardcodeado
+-- 2. Limpiar políticas RLS que tenían el email antiguo hardcodeado
 -- Solo si las tablas existen
 DO $$
 BEGIN
@@ -99,5 +38,5 @@ BEGIN
     RAISE NOTICE 'Tabla contact_requests no existe, se omite';
   END IF;
 
-  RAISE NOTICE 'Migración de Superadmin completada. Nuevo admin: jmunoz@juancode.dev';
+  RAISE NOTICE 'Migración de Superadmin completada.';
 END $$;

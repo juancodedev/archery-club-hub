@@ -5,6 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// Roles that can be assigned via this endpoint (non-privileged only)
+const ALLOWED_MEMBER_ROLES = ['arquero', 'socio', 'alumno'];
+
 console.log("Function 'create-member' loaded");
 
 Deno.serve(async (req) => {
@@ -29,8 +32,25 @@ Deno.serve(async (req) => {
       }
     });
 
+    // Verify caller is authenticated
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'No autenticado' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user: callerUser }, error: callerAuthError } = await adminClient.auth.getUser(token);
+    if (callerAuthError || !callerUser) {
+      return new Response(JSON.stringify({ error: 'Token inválido' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const body = await req.json();
-    console.log('Request body:', body);
 
     const {
       full_name, club_id, email, role = 'arquero',
@@ -44,6 +64,33 @@ Deno.serve(async (req) => {
 
     if (!full_name || !club_id) {
       return new Response(JSON.stringify({ error: 'Nombre y club son obligatorios' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Verify the caller is a super admin or admin of this club
+    const { data: isSuper, error: isSuperError } = await adminClient.rpc('is_super_admin', { p_user_id: callerUser.id });
+    const { data: isAdmin, error: isAdminError } = await adminClient.rpc('is_club_admin', { p_user_id: callerUser.id, p_club_id: club_id });
+
+    if (isSuperError || isAdminError) {
+      console.error('Error verifying permissions:', isSuperError || isAdminError);
+      return new Response(JSON.stringify({ error: 'Error al verificar permisos' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!isSuper && !isAdmin) {
+      return new Response(JSON.stringify({ error: 'No tienes permisos para crear miembros en este club' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Restrict role to allowed non-privileged values
+    if (typeof role !== 'string' || !ALLOWED_MEMBER_ROLES.includes(role)) {
+      return new Response(JSON.stringify({ error: `Rol no permitido. Los roles válidos son: ${ALLOWED_MEMBER_ROLES.join(', ')}` }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -72,7 +119,7 @@ Deno.serve(async (req) => {
     // Use club's default password or a randomly generated fallback
     const generatedPassword = defaultPassword || `Arq!${crypto.randomUUID().split('-')[0]}${Math.random().toString(36).substring(2, 6)}`;
 
-    console.log('Creating/Recovering auth user:', authEmail);
+    console.log('Creating/Recovering auth user...');
     let userId: string;
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -85,11 +132,21 @@ Deno.serve(async (req) => {
     if (authError) {
       if (authError.message?.includes('already been registered')) {
         console.log('User already exists in Auth, checking if they are a member...');
-        // Try to get the existing user
-        const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers();
-        if (listError) throw listError;
+        // Paginate through all users to find the existing user by email
+        let existingUser = null;
+        let page = 1;
+        const perPage = 1000;
 
-        const existingUser = users.find(u => u.email === authEmail);
+        while (!existingUser) {
+          const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({ page, perPage });
+          if (listError) throw listError;
+
+          existingUser = users.find(u => u.email === authEmail) ?? null;
+
+          if (users.length === 0 || users.length < perPage) break; // No more pages
+          page++;
+        }
+
         if (!existingUser) {
           throw new Error("User conflict reported but user not found in list");
         }
@@ -186,7 +243,6 @@ Deno.serve(async (req) => {
       success: true,
       user_id: userId,
       member_id: memberId,
-      password: generatedPassword,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {
