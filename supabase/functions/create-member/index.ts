@@ -8,9 +8,15 @@ const corsHeaders = {
 // Roles that can be assigned via this endpoint (non-privileged only)
 const ALLOWED_MEMBER_ROLES = ['arquero', 'socio', 'alumno'];
 
+function generateSecurePassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `Arq!${hex}`;
+}
+
 console.log("Function 'create-member' loaded");
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   console.log('--- create-member request ---');
 
   if (req.method === 'OPTIONS') {
@@ -100,24 +106,8 @@ Deno.serve(async (req) => {
     const effectiveEmail = email?.trim() || null;
     const authEmail = effectiveEmail || `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
 
-    // Fetch club's default password
-    let defaultPassword: string | null = null;
-    try {
-      const { data: clubData } = await adminClient
-        .from('clubs')
-        .select('default_member_password')
-        .eq('id', club_id)
-        .single();
-      if (clubData?.default_member_password) {
-        defaultPassword = clubData.default_member_password;
-        console.log('Using club default password for new member');
-      }
-    } catch (e) {
-      console.error('Error fetching club default password:', e);
-    }
-
-    // Use club's default password or a randomly generated fallback
-    const generatedPassword = defaultPassword || `Arq!${crypto.randomUUID().split('-')[0]}${Math.random().toString(36).substring(2, 6)}`;
+    // Always generate a strong random password server-side.
+    const generatedPassword = generateSecurePassword();
 
     console.log('Creating/Recovering auth user...');
     let userId: string;
@@ -141,7 +131,7 @@ Deno.serve(async (req) => {
           const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({ page, perPage });
           if (listError) throw listError;
 
-          existingUser = users.find(u => u.email === authEmail) ?? null;
+          existingUser = users.find((u: { email?: string; id: string }) => u.email === authEmail) ?? null;
 
           if (users.length === 0 || users.length < perPage) break; // No more pages
           page++;
@@ -245,11 +235,13 @@ Deno.serve(async (req) => {
       member_id: memberId,
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-  } catch (err) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Error interno del servidor';
+    const details = err instanceof Error ? err.toString() : String(err);
     console.error('Global Error:', err);
     return new Response(JSON.stringify({
-      error: err.message || 'Error interno del servidor',
-      details: err.toString()
+      error: message,
+      details
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
