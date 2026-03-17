@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Link as LinkIcon, DollarSign, Users } from "lucide-react";
+import { Copy, Key, Link as LinkIcon, DollarSign, Users } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
