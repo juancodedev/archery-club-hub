@@ -143,4 +143,7 @@ BEGIN
 END;
 $function$;
 
+REVOKE EXECUTE ON FUNCTION public.admin_reset_user_password(uuid, uuid, text) FROM anon;
+GRANT EXECUTE ON FUNCTION public.admin_reset_user_password(uuid, uuid, text) TO authenticated;
+
 NOTIFY pgrst, 'reload schema';
