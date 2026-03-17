@@ -5,6 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const INVITED_MEMBER_ROLE = 'arquero';
+
+function generateSecurePassword(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `Inv!${hex}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -83,7 +91,10 @@ Deno.serve(async (req) => {
       // Always generate a fresh unique placeholder for the Auth account; the member record stores
       // effectiveEmail (null for no-email flows) separately.
       const authEmail = `miembro-${crypto.randomUUID().replace(/-/g, '')}@sin-email.clubarchery.local`;
-      const authPassword = password?.trim() || `Invitado${Math.floor(Math.random() * 9000 + 1000)}`;
+      const candidatePassword = password?.trim();
+      const authPassword = candidatePassword && candidatePassword.length >= 10
+        ? candidatePassword
+        : generateSecurePassword();
 
       const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: authEmail,
@@ -98,8 +109,9 @@ Deno.serve(async (req) => {
       effectiveUserId = authData.user.id;
     }
 
-    const role = body.role || 'arquero';
-    const member_type = role === 'socio' ? 'socio' : 'arquero';
+    // Never trust role from the public payload to avoid privilege escalation.
+    const role = INVITED_MEMBER_ROLE;
+    const member_type = 'arquero';
 
     // Create member record
     const { data: memberData, error: memberError } = await adminClient

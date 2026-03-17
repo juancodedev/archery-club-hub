@@ -115,8 +115,8 @@ export default function MembersManagement() {
             if (error) throw error;
             return data;
         },
-        onSuccess: (newPassword) => {
-            toast.success(`Contraseña reseteada exitosamente. Nueva contraseña: ${newPassword}`);
+        onSuccess: () => {
+            toast.success("Contraseña reseteada exitosamente. Se generó una contraseña temporal segura.");
         },
         onError: (error: Error) => {
             toast.error(getSafeErrorMessage(error));
@@ -125,8 +125,11 @@ export default function MembersManagement() {
 
     const deleteMember = useMutation({
         mutationFn: async (memberId: string) => {
-            const { error } = await supabase.from("members").delete().eq("id", memberId);
+            const { data, error } = await supabase.functions.invoke('delete-member', {
+                body: { member_id: memberId },
+            });
             if (error) throw error;
+            if (data?.error) throw new Error(data.error);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["all-members"] });
