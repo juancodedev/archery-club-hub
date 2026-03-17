@@ -8,6 +8,14 @@ import { logger } from "@/lib/logger";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+async function sha256Hex(value: string): Promise<string> {
+    const data = new TextEncoder().encode(value);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+}
+
 export default function AttendanceMarkPage() {
     const { sessionId } = useParams();
     const token = new URLSearchParams(window.location.search).get("token");
@@ -44,7 +52,10 @@ export default function AttendanceMarkPage() {
                 const now = new Date();
                 const expires = session.attendance_token_expires ? new Date(session.attendance_token_expires) : null;
 
-                if (session.attendance_token !== token || (expires && now > expires)) {
+                const tokenHash = await sha256Hex(token);
+                const tokenMatches = session.attendance_token === tokenHash || session.attendance_token === token;
+
+                if (!tokenMatches || (expires && now > expires)) {
                     setStatus("error");
                     setMessage("El código QR ha expirado o es inválido");
                     return;

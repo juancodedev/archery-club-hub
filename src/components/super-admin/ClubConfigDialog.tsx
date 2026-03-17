@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Key, Link as LinkIcon, DollarSign, Users } from "lucide-react";
+import { Copy, Link as LinkIcon, DollarSign, Users } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,14 +71,12 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
     // Local states for club settings
     const [inscriptionFee, setInscriptionFee] = useState<number>(0);
     const [monthlyFee, setMonthlyFee] = useState<number>(0);
-    const [defaultPassword, setDefaultPassword] = useState<string>("");
 
     // Initialize local states when data is loaded
     useEffect(() => {
         if (clubData) {
             setInscriptionFee(clubData.inscription_fee || 0);
             setMonthlyFee(clubData.monthly_fee || 0);
-            setDefaultPassword(clubData.default_member_password || "");
         }
     }, [clubData]);
 
@@ -372,38 +370,10 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                     </TabsContent>
 
                     <TabsContent value="security" className="mt-4 space-y-4 text-left">
-                        <div className="space-y-2">
-                            <Label>Contraseña Predeterminada</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    type="text"
-                                    value={defaultPassword}
-                                    onChange={(e) => setDefaultPassword(e.target.value)}
-                                    className="bg-muted/20"
-                                    placeholder="No establecida"
-                                />
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    disabled={!defaultPassword}
-                                    onClick={() => copyToClipboard(defaultPassword, "Contraseña")}
-                                >
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground">Contraseña asignada automáticamente a nuevos miembros.</p>
+                        <div className="rounded-lg border border-border/50 bg-muted/20 p-4 text-sm text-muted-foreground">
+                            La plataforma ya no almacena contraseñas predeterminadas de club.
+                            Los reseteos generan claves temporales seguras del lado del servidor.
                         </div>
-
-                        <Button
-                            className="w-full gap-2 mt-4"
-                            disabled={updateClubMutation.isPending}
-                            onClick={() => updateClubMutation.mutate({
-                                default_member_password: defaultPassword
-                            })}
-                        >
-                            {updateClubMutation.isPending ? <RefreshCcw className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                            Guardar Cambios
-                        </Button>
                     </TabsContent>
                 </Tabs>
             </DialogContent>

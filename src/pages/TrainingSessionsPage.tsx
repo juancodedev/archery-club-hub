@@ -34,6 +34,19 @@ const DISCIPLINE_BADGE: Record<string, string> = {
   "3d": "bg-purple-500/10 text-purple-600 border-purple-500/20",
 };
 
+function generateSecureToken(bytes = 32): string {
+  const raw = crypto.getRandomValues(new Uint8Array(bytes));
+  return Array.from(raw).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const data = new TextEncoder().encode(value);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
   const canvasRef = (ref: HTMLCanvasElement | null) => {
     if (ref) {
@@ -170,9 +183,13 @@ export default function TrainingSessionsPage() {
 
   const generateQR = useMutation({
     mutationFn: async (sessionId: string) => {
-      const token = Math.random().toString(36).substring(2, 15);
+      const token = generateSecureToken();
+      const tokenHash = await sha256Hex(token);
       const expires = new Date(); expires.setHours(expires.getHours() + 24);
-      const { error } = await supabase.from("training_sessions").update({ attendance_token: token, attendance_token_expires: expires.toISOString() } as never).eq("id", sessionId);
+      const { error } = await supabase
+        .from("training_sessions")
+        .update({ attendance_token: tokenHash, attendance_token_expires: expires.toISOString() } as never)
+        .eq("id", sessionId);
       if (error) throw error;
       return { token, sessionId };
     },
