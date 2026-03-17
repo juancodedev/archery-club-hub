@@ -212,5 +212,5 @@ INSERT INTO public.plans (name, description, price, features, display_order) VAL
 -- Seed del Super Admin
 INSERT INTO public.super_admins (user_id)
 SELECT id FROM auth.users WHERE email = 'cl.jmunoz@gmail.com'
-ON CONFLICT DO NOTHING;
+ON CONFLICT DO NOTHING; 
 ```
