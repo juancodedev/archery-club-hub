@@ -233,6 +233,7 @@ Deno.serve(async (req: Request) => {
       success: true,
       user_id: userId,
       member_id: memberId,
+      ...(effectiveEmail ? {} : { temporary_password: generatedPassword }),
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err: unknown) {
