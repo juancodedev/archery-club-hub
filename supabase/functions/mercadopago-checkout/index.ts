@@ -11,9 +11,20 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const supabaseUrl = Deno.env.get('SUPABASE_URL');
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+        let supabaseUrl = Deno.env.get('SUPABASE_URL');
+        let supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
         const mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN');
+
+        // Optional local database override (useful for pointing to a staging DB while developing locally)
+        const localUrl = Deno.env.get('LOCAL_SUPABASE_URL');
+        const localKey = Deno.env.get('LOCAL_SUPABASE_SERVICE_ROLE_KEY');
+
+        // If we have local overrides and we are in a local environment (localhost URL)
+        if (localUrl && localKey && (supabaseUrl?.includes('localhost') || !supabaseUrl)) {
+            supabaseUrl = localUrl;
+            supabaseKey = localKey;
+            console.log("Using local database override in Edge Function");
+        }
 
         if (!supabaseUrl || !supabaseKey || !mpAccessToken) {
             throw new Error("Missing environment variables");
