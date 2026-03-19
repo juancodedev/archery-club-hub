@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,7 +10,7 @@ const ALLOWED_MEMBER_ROLES = ['arquero', 'socio', 'alumno'];
 
 console.log("Function 'create-member' loaded");
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   console.log('--- create-member request ---');
 
   if (req.method === 'OPTIONS') {
@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
           const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers({ page, perPage });
           if (listError) throw listError;
 
-          existingUser = users.find(u => u.email === authEmail) ?? null;
+          existingUser = users.find((u: { email?: string | null }) => u.email === authEmail) ?? null;
 
           if (users.length === 0 || users.length < perPage) break; // No more pages
           page++;
@@ -246,10 +246,11 @@ Deno.serve(async (req) => {
     }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (err) {
-    console.error('Global Error:', err);
+    const error = err instanceof Error ? err : new Error(String(err));
+    console.error('Global Error:', error);
     return new Response(JSON.stringify({
-      error: err.message || 'Error interno del servidor',
-      details: err.toString()
+      error: error.message || 'Error interno del servidor',
+      details: error.toString()
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

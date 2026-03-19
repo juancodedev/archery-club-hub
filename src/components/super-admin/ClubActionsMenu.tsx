@@ -20,6 +20,8 @@ interface Club {
     subscription_end_date: string | null;
     monthly_price: number;
     student_limit_override?: number | null;
+    grace_period_days?: number;
+    block_type?: 'total' | 'partial';
 }
 
 interface ClubActionsMenuProps {
