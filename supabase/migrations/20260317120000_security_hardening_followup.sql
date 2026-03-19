@@ -67,7 +67,7 @@ BEGIN
 END;
 $$;
 
-REVOKE EXECUTE ON FUNCTION public.register_club(text, text, text, text, text, uuid, uuid, decimal) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.register_club(text, text, text, text, text, uuid, uuid, decimal) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.register_club(text, text, text, text, text, uuid, uuid, decimal) TO authenticated;
 
 -- 3) Restrict direct clubs table visibility; keep anonymous access via public_clubs_view only.
@@ -89,6 +89,14 @@ USING (
 );
 
 REVOKE SELECT ON public.clubs FROM anon;
+
+-- Recreate public_clubs_view without security_invoker so it runs with the definer's
+-- (postgres) privileges. This allows anon to read through the view's limited columns
+-- without needing a SELECT privilege on the underlying clubs table.
+DROP VIEW IF EXISTS public.public_clubs_view;
+CREATE VIEW public.public_clubs_view AS
+SELECT id, name, city, country, logo_url, inscription_fee, monthly_fee
+FROM public.clubs;
 GRANT SELECT ON public.public_clubs_view TO anon, authenticated;
 
 -- 4) Reset-password RPC should not return plaintext passwords.
@@ -143,7 +151,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE EXECUTE ON FUNCTION public.admin_reset_user_password(uuid, uuid, text) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_reset_user_password(uuid, uuid, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.admin_reset_user_password(uuid, uuid, text) TO authenticated;
 
 NOTIFY pgrst, 'reload schema';
