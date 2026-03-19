@@ -33,6 +33,8 @@ interface Club {
     city: string | null;
     country: string | null;
     student_limit_override?: number | null;
+    grace_period_days?: number;
+    block_type?: 'total' | 'partial';
 }
 
 export default function SuperAdminPage() {

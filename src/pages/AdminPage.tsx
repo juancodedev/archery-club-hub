@@ -20,6 +20,7 @@ import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialo
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
 import { calculateFinancialStatus } from "@/lib/membershipUtils";
+import { isReadOnlyMode } from "@/lib/permissions";
 
 interface AdminMember {
   id: string;
@@ -159,8 +160,8 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-col xs:flex-row gap-2">
-            {selectedClubId && <InviteMemberDialog clubId={selectedClubId} />}
-            {selectedClubId && <AddMemberDialog clubId={selectedClubId} />}
+            {selectedClubId && <InviteMemberDialog clubId={selectedClubId} disabled={isReadOnlyMode(member)} />}
+            {selectedClubId && <AddMemberDialog clubId={selectedClubId} disabled={isReadOnlyMode(member)} />}
           </div>
         </div>
 
@@ -253,10 +254,10 @@ export default function AdminPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="glass">
-                                <DropdownMenuItem onClick={() => setEditMember(m)}>
+                                <DropdownMenuItem onClick={() => setEditMember(m)} disabled={isReadOnlyMode(member)}>
                                   <Pencil className="h-4 w-4 mr-2" />Editar datos
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
+                                <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })} disabled={isReadOnlyMode(member)}>
                                   <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setHistoryMember(m)}>
@@ -278,11 +279,11 @@ export default function AdminPage() {
                                   <Key className="h-4 w-4 mr-2" />Resetear contraseña
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
+                                <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })} disabled={isReadOnlyMode(member)}>
                                   {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
                                   {m.status === "activo" ? "Desactivar Miembro" : "Activar Miembro"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)} disabled={isReadOnlyMode(member)}>
                                   <Trash2 className="h-4 w-4 mr-2" />Eliminar
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
