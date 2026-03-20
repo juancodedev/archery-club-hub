@@ -176,8 +176,8 @@ export default function BillingPage() {
             } else {
                 throw new Error("No se pudo generar el link de pago");
             }
-        } catch (error: any) {
-            toast.error("Error al iniciar el pago: " + error.message);
+        } catch (error) {
+            toast.error("Error al iniciar el pago: " + (error instanceof Error ? error.message : String(error)));
             setIsProcessing(false);
         }
     };

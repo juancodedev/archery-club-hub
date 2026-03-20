@@ -41,7 +41,7 @@ export default function NewScorePage() {
 
   // Training session state
   const [trainingSessionId, setTrainingSessionId] = useState<string>(sessionId || "none");
-  const [availableSessions, setAvailableSessions] = useState<any[]>([]);
+  const [availableSessions, setAvailableSessions] = useState<{ id: string; name: string }[]>([]);
 
   // Tournament type configuration
   const [arrowsPerEnd, setArrowsPerEnd] = useState(5);
@@ -110,7 +110,7 @@ export default function NewScorePage() {
       }
 
       if (data.training_type === 'estandar' && data.rounds_config) {
-        const rounds = data.rounds_config as any[];
+        const rounds = data.rounds_config as unknown as { ends: number; arrows: number }[];
         // Calculate total ends and arrows per end
         // Simplification: use the first round's arrows and sum ends
         if (rounds.length > 0) {
