@@ -55,14 +55,14 @@ describe('ClubSettingsPage', () => {
                 email: 'test@example.com',
                 roles: ['administrador'],
                 status: 'activo',
-            } as any,
+            } as unknown as ReturnType<typeof mockUseAuth>["member"],
             memberships: [],
             setActiveMembership: vi.fn(),
             isSuperAdminSubdomain: false,
             signOut: vi.fn(),
             loading: false,
             systemMode: 'produccion',
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
     });
 
     const renderComponent = () => {

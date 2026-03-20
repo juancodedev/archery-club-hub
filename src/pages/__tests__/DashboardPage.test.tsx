@@ -18,7 +18,7 @@ const mockMemberAdmin = {
     subscription_end_date: null,
     avatar_url: null,
     date_of_birth: null,
-} as any;
+} as unknown as ReturnType<typeof mockUseAuth>["member"];
 
 const mockMemberRegular = {
     id: "member-regular-1",
@@ -31,15 +31,15 @@ const mockMemberRegular = {
     subscription_end_date: null,
     avatar_url: null,
     date_of_birth: null,
-} as any;
+} as unknown as ReturnType<typeof mockUseAuth>["member"];
 
-function renderPage(member: any, memberships: any[] = []) {
+function renderPage(member: ReturnType<typeof mockUseAuth>["member"], memberships: ReturnType<typeof mockUseAuth>["memberships"] = []) {
     mockUseAuth.mockReturnValue({
         member,
         memberships,
         setActiveMembership: vi.fn(),
         isSuperAdminSubdomain: false,
-    } as any);
+    } as unknown as ReturnType<typeof mockUseAuth>);
 
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },
@@ -86,14 +86,14 @@ describe("DashboardPage", () => {
 
     it("should show club switcher when user has multiple memberships", () => {
         renderPage(mockMemberAdmin, [
-            { club_id: "club-1", club_name: "Club A" },
-            { club_id: "club-2", club_name: "Club B" },
+            { club_id: "club-1", club_name: "Club A" } as unknown as ReturnType<typeof mockUseAuth>["memberships"][number],
+            { club_id: "club-2", club_name: "Club B" } as unknown as ReturnType<typeof mockUseAuth>["memberships"][number],
         ]);
         expect(screen.getByText("Cambiar de Club")).toBeDefined();
     });
 
     it("should NOT show club switcher for single membership", () => {
-        renderPage(mockMemberRegular, [{ club_id: "club-1", club_name: "Club Único" }]);
+        renderPage(mockMemberRegular, [{ club_id: "club-1", club_name: "Club Único" } as unknown as ReturnType<typeof mockUseAuth>["memberships"][number]]);
         expect(screen.queryByText("Cambiar de Club")).toBeNull();
     });
 });
