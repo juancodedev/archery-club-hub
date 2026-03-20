@@ -158,9 +158,10 @@ export default function TournamentsPage() {
     const createMutation = useMutation({
         mutationFn: async () => {
             if (!clubId) return;
-            const { error } = await supabase.from("tournaments" as unknown as "members").insert({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).from("tournaments").insert({
                 club_id: clubId, name, description, start_date: startDate, end_date: endDate, location,
-                tournament_type_id: typeId, created_by: memberId
+                tournament_type_id: typeId, created_by: memberId,
             });
             if (error) throw error;
         },
@@ -177,7 +178,8 @@ export default function TournamentsPage() {
     const registerMutation = useMutation({
         mutationFn: async (tournamentId: string) => {
             if (!memberId) return;
-            const { error } = await supabase.from("tournament_registrations" as unknown as "members").insert({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).from("tournament_registrations").insert({
                 tournament_id: tournamentId, member_id: memberId
             });
             if (error) throw error;
@@ -192,7 +194,8 @@ export default function TournamentsPage() {
     // --- Cancel registration ---
     const cancelMutation = useMutation({
         mutationFn: async (regId: string) => {
-            const { error } = await supabase.from("tournament_registrations" as unknown as "members").delete().eq("id", regId);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).from("tournament_registrations").delete().eq("id", regId);
             if (error) throw error;
         },
         onSuccess: () => {
@@ -203,8 +206,9 @@ export default function TournamentsPage() {
 
     // --- Update status (manager) ---
     const updateStatusMutation = useMutation({
-        mutationFn: async ({ regId, status }: { regId: string; status: string }) => {
-            const { error } = await supabase.from("tournament_registrations" as unknown as "members").update({ status }).eq("id", regId);
+        mutationFn: async ({ regId, status }: { regId: string; status: Registration["status"] }) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error } = await (supabase as any).from("tournament_registrations").update({ status }).eq("id", regId);
             if (error) throw error;
         },
         onSuccess: () => {
