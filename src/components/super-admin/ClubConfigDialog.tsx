@@ -102,7 +102,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
     });
 
     const updateClubMutation = useMutation({
-        mutationFn: async (updates: any) => {
+        mutationFn: async (updates: Record<string, unknown>) => {
             const { error } = await supabase
                 .from("clubs")
                 .update(updates)
@@ -113,7 +113,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
             queryClient.invalidateQueries({ queryKey: ["club-config", clubId] });
             toast.success("Configuración actualizada con éxito");
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast.error("Error al actualizar: " + error.message);
         }
     });
@@ -150,7 +150,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
         toast.success(`${label} copiado al portapapeles`);
     };
 
-    const getInvitationStatus = (inv: any) => {
+    const getInvitationStatus = (inv: { expires_at: string; used_at?: string | null; invitation_type: string }) => {
         const isExpired = new Date(inv.expires_at) < new Date();
         if (inv.used_at && inv.invitation_type === 'individual') return 'used';
         if (isExpired) return 'expired';

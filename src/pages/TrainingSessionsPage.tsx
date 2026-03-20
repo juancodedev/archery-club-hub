@@ -68,7 +68,7 @@ export default function TrainingSessionsPage() {
 
   // New state for training types
   const [trainingType, setTrainingType] = useState<string>("libre");
-  const [rounds, setRounds] = useState<any[]>([]);
+  const [rounds, setRounds] = useState<{ distance: number; target: string; ends: number; arrows: number; presetId?: string }[]>([]);
   const [weather, setWeather] = useState("");
   const [windDirection, setWindDirection] = useState("");
   const [windSpeed, setWindSpeed] = useState("");
@@ -502,7 +502,7 @@ export default function TrainingSessionsPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
-                      {session.distance_yards && !(session.rounds_config as any[])?.length && (
+                      {session.distance_yards && !(session.rounds_config as { length?: number } | null)?.length && (
                         <span className="flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-lg font-mono">
                           📏 {session.distance_yards} yd
                         </span>
@@ -542,9 +542,9 @@ export default function TrainingSessionsPage() {
                     )}
 
                     {/* Rondas Compactas para Estándar */}
-                    {session.training_type === 'estandar' && (session.rounds_config as any[])?.length > 0 && (
+                    {session.training_type === 'estandar' && (session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[] | null)?.length && (
                       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {(session.rounds_config as any[]).map((r: any, idx: number) => (
+                        {(session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[]).map((r: { distance: number; target: string; ends: number; arrows: number }, idx: number) => (
                           <div key={idx} className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-white/5 text-[10px]">
                             <div className="flex items-center gap-2">
                               <span className="font-black text-primary">R{idx + 1}</span>
