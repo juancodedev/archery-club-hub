@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
         if (clubError || !club) throw new Error("Club not found");
 
         // 3. Determine price
-        let unitPrice = is_annual ? (plan.price_annual || (plan.price * 12 * 0.8)) : (club.monthly_price || plan.price);
+        const unitPrice = is_annual ? (plan.price_annual || (plan.price * 12 * 0.8)) : (club.monthly_price || plan.price);
 
         // If it's annual and we have a monthly override, we should probably scale it too, 
         // but the user said "ajustar el precio a pagar mensualmente", so we use monthly_price if monthly.
