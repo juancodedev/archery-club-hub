@@ -31,7 +31,6 @@ export type Database = {
           plan_id: string | null
           subscription_end_date: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
-          default_member_password: string | null
           financial_support_expires_at: string | null
           block_type: string | null
           grace_period_days: number | null
@@ -39,7 +38,6 @@ export type Database = {
           next_payment_due_date: string | null
           student_limit_override: number | null
         }
-        Insert: {
           allow_superadmin_finances?: boolean | null
           billing_cycle?: string | null
           city?: string | null
@@ -55,7 +53,6 @@ export type Database = {
           plan_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
-          default_member_password?: string | null
           financial_support_expires_at?: string | null
           block_type?: string | null
           grace_period_days?: number | null
@@ -79,7 +76,6 @@ export type Database = {
           plan_id?: string | null
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
-          default_member_password?: string | null
           financial_support_expires_at?: string | null
           block_type?: string | null
           grace_period_days?: number | null

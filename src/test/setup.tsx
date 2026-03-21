@@ -26,7 +26,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock import.meta.env
-(globalThis as any).import = {
+(globalThis as Record<string, unknown>).import = {
     meta: {
         env: {
             DEV: true,
@@ -38,7 +38,7 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 
 // Mock Supabase client
 vi.mock('@/integrations/supabase/client', () => {
-    const mockChain: any = {
+    const mockChain: Record<string, ReturnType<typeof vi.fn>> & { then: ReturnType<typeof vi.fn>; single: ReturnType<typeof vi.fn>; maybeSingle: ReturnType<typeof vi.fn>; throwOnError: ReturnType<typeof vi.fn> } = {
         select: vi.fn().mockReturnThis(),
         insert: vi.fn().mockReturnThis(),
         update: vi.fn().mockReturnThis(),
@@ -98,7 +98,7 @@ vi.mock('@/integrations/supabase/client', () => {
 // Mock framer-motion with simple pass-through components
 vi.mock('framer-motion', () => {
     const createEl = (tag: string) => {
-        return ({ children, ...props }: any) => React.createElement(tag, props, children);
+        return ({ children, ...props }: { children?: React.ReactNode;[key: string]: unknown }) => React.createElement(tag, props, children);
     };
     return {
         motion: {
@@ -120,11 +120,11 @@ vi.mock('framer-motion', () => {
             h2: createEl('h2'),
             h3: createEl('h3'),
         },
-        AnimatePresence: ({ children }: any) => children,
+        AnimatePresence: ({ children }: { children?: React.ReactNode }) => children,
         useAnimation: () => ({ start: vi.fn(), stop: vi.fn(), set: vi.fn() }),
         useInView: () => true,
-        useMotionValue: (v: any) => ({ get: () => v, set: vi.fn(), onChange: vi.fn() }),
-        useSpring: (v: any) => ({ get: () => v, set: vi.fn() }),
+        useMotionValue: (v: number) => ({ get: () => v, set: vi.fn(), onChange: vi.fn() }),
+        useSpring: (v: number) => ({ get: () => v, set: vi.fn() }),
         useTransform: () => ({ get: () => 0 }),
         animate: vi.fn(),
     };
