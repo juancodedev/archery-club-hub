@@ -17,6 +17,7 @@ import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
 import type { TournamentType, Club, MemberBasic } from "@/types/archery";
 import { TRAINING_PRESETS } from "@/lib/archeryConstants";
+import { isReadOnlyMode } from "@/lib/permissions";
 
 
 function createEmptyEnds(arrowsPerEnd: number, endsCount: number) {
@@ -464,8 +465,8 @@ export default function NewScorePage() {
           <Button type="button" variant="ghost" onClick={() => navigate("/scores")} className="h-12 w-full sm:w-auto font-bold rounded-xl">
             Cancelar
           </Button>
-          <Button type="submit" disabled={loading} className="h-12 w-full sm:w-80 font-bold rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all">
-            {loading ? "Sincronizando..." : "Guardar Puntaje en la Nube"}
+          <Button type="submit" disabled={loading || isReadOnlyMode(member)} className="h-12 w-full sm:w-80 font-bold rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all">
+            {loading ? "Sincronizando..." : isReadOnlyMode(member) ? "Modo Lectura (Suscripción Vencida)" : "Guardar Puntaje en la Nube"}
           </Button>
         </div>
       </form>

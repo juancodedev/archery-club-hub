@@ -17,9 +17,10 @@ import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   clubId: string;
+  disabled?: boolean;
 }
 
-export default function AddMemberDialog({ clubId: initialClubId }: Props) {
+export default function AddMemberDialog({ clubId: initialClubId, disabled }: Props) {
   const { member, isSuperAdminSubdomain } = useAuth();
   const isSuperAdmin = !!member?.is_super_admin || isSuperAdminSubdomain;
   const { toast } = useToast();
@@ -151,7 +152,7 @@ export default function AddMemberDialog({ clubId: initialClubId }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2"><UserPlus className="h-4 w-4" />Agregar Miembro</Button>
+        <Button className="gap-2" disabled={disabled}><UserPlus className="h-4 w-4" />Agregar Miembro</Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="font-display">Nuevo Miembro</DialogTitle></DialogHeader>

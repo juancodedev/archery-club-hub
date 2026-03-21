@@ -12,6 +12,7 @@ export interface MemberInfo {
     is_super_admin: boolean;
     club_status?: string;
     subscription_end_date?: string | null;
+    block_type?: 'total' | 'partial' | null;
     club_name?: string;
     avatar_url?: string | null;
 }

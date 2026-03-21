@@ -2,8 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const isLocal = typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.endsWith('.local') ||
+    import.meta.env.DEV);
+
+// Use local database if it's configured and we're in a local environment
+const SUPABASE_URL = (isLocal && import.meta.env.VITE_LOCAL_SUPABASE_URL)
+  ? import.meta.env.VITE_LOCAL_SUPABASE_URL
+  : import.meta.env.VITE_SUPABASE_URL;
+
+const SUPABASE_PUBLISHABLE_KEY = (isLocal && import.meta.env.VITE_LOCAL_SUPABASE_ANON_KEY)
+  ? import.meta.env.VITE_LOCAL_SUPABASE_ANON_KEY
+  : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
