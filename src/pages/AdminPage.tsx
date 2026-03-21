@@ -131,10 +131,10 @@ export default function AdminPage() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (newPassword) => {
+    onSuccess: () => {
       toast({
         title: "Contraseña reseteada exitosamente",
-        description: `Nueva contraseña: ${newPassword}`
+        description: "Se generó una nueva contraseña temporal de forma segura."
       });
     },
     onError: () => {

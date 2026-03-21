@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CreditCard, CheckCircle2, XCircle, Search, Building2, Settings, BarChart3, Shield } from "lucide-react";
+import { CreditCard, CheckCircle2, XCircle, Search, Building2, Settings, BarChart3, Shield, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +23,7 @@ import IntegrationsSettings from "@/components/super-admin/IntegrationsSettings"
 import ContactRequests from "@/components/super-admin/ContactRequests";
 import ClubActionsMenu from "@/components/super-admin/ClubActionsMenu";
 import { useNavigate, useLocation, Routes, Route, Navigate } from "react-router-dom";
+import TournamentsPage from "./TournamentsPage";
 interface Club {
     id: string;
     name: string;
@@ -123,6 +124,7 @@ export default function SuperAdminPage() {
                     <TabsTrigger value="members" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><UsersIcon className="h-4 w-4" /> Miembros</TabsTrigger>
                     <TabsTrigger value="finances" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><DollarSign className="h-4 w-4" /> Finanzas</TabsTrigger>
                     <TabsTrigger value="plans" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><CreditCard className="h-4 w-4" /> Planes y alumnos</TabsTrigger>
+                    <TabsTrigger value="tournaments" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><Trophy className="h-4 w-4" /> Torneos</TabsTrigger>
                     <TabsTrigger value="settings" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><Settings className="h-4 w-4" /> Configuración</TabsTrigger>
                     <TabsTrigger value="reports" className="gap-2 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-400"><BarChart3 className="h-4 w-4" /> Reportes</TabsTrigger>
                 </TabsList>
@@ -291,6 +293,8 @@ export default function SuperAdminPage() {
                             </CardContent>
                         </Card>
                     } />
+
+                    <Route path="tournaments" element={<TournamentsPage />} />
                 </Routes>
             </Tabs>
         </div>

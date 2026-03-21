@@ -30,7 +30,7 @@ describe("ProtectedRoute", () => {
             loading: true,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByText("Cargando...")).toBeDefined();
@@ -43,7 +43,7 @@ describe("ProtectedRoute", () => {
             loading: false,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         const navigate = screen.getByTestId("navigate");
@@ -52,12 +52,12 @@ describe("ProtectedRoute", () => {
 
     it("should render children when super admin", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "super-admin-id" } } as any,
-            member: { id: "1", is_super_admin: true, roles: ["superadmin"] } as any,
+            session: { user: { id: "super-admin-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "1", is_super_admin: true, roles: ["superadmin"] } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByTestId("protected-content")).toBeDefined();
@@ -65,12 +65,12 @@ describe("ProtectedRoute", () => {
 
     it("should render children when in pruebas mode", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "member-id" } } as any,
-            member: { id: "2", is_super_admin: false, roles: ["socio"], status: "activo" } as any,
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "2", is_super_admin: false, roles: ["socio"], status: "activo" } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "pruebas",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByTestId("protected-content")).toBeDefined();
@@ -78,12 +78,12 @@ describe("ProtectedRoute", () => {
 
     it("should redirect to /dashboard when non-superAdmin accesses superAdmin-only route in pruebas mode", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "member-id" } } as any,
-            member: { id: "2", is_super_admin: false, roles: ["socio"], status: "activo" } as any,
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "2", is_super_admin: false, roles: ["socio"], status: "activo" } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "pruebas",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute(true); // requireSuperAdmin = true
         const navigate = screen.getByTestId("navigate");
@@ -92,7 +92,7 @@ describe("ProtectedRoute", () => {
 
     it("should block access for inactive member in produccion mode", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "member-id" } } as any,
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
             member: {
                 id: "3",
                 is_super_admin: false,
@@ -100,11 +100,11 @@ describe("ProtectedRoute", () => {
                 status: "inactivo",
                 club_status: "activo",
                 subscription_end_date: null,
-            } as any,
+            } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByText("Membresía Inactiva")).toBeDefined();
@@ -112,7 +112,7 @@ describe("ProtectedRoute", () => {
 
     it("should block access for club blocked in produccion mode (regular member)", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "member-id" } } as any,
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
             member: {
                 id: "4",
                 is_super_admin: false,
@@ -120,11 +120,11 @@ describe("ProtectedRoute", () => {
                 status: "activo",
                 club_status: "bloqueado",
                 subscription_end_date: null,
-            } as any,
+            } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByText("Acceso Bloqueado")).toBeDefined();
@@ -132,7 +132,7 @@ describe("ProtectedRoute", () => {
 
     it("should render children for active member in produccion mode", () => {
         mockUseAuth.mockReturnValue({
-            session: { user: { id: "member-id" } } as any,
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
             member: {
                 id: "5",
                 is_super_admin: false,
@@ -140,11 +140,11 @@ describe("ProtectedRoute", () => {
                 status: "activo",
                 club_status: "activo",
                 subscription_end_date: null,
-            } as any,
+            } as unknown as ReturnType<typeof mockUseAuth>["member"],
             loading: false,
             signOut: vi.fn(),
             systemMode: "produccion",
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         renderProtectedRoute();
         expect(screen.getByTestId("protected-content")).toBeDefined();

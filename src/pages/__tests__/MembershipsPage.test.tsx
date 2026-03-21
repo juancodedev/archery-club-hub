@@ -15,7 +15,7 @@ const mockMember = {
     club_id: "club-abc",
     is_super_admin: false,
     roles: ["administrador"],
-} as any;
+} as unknown as ReturnType<typeof mockUseAuth>["member"];
 
 // Mock members returned by supabase
 const mockSupabaseMembers = [
@@ -44,7 +44,7 @@ describe("MembershipsPage", () => {
             member: mockMember,
             memberships: [],
             setActiveMembership: vi.fn(),
-        } as any);
+        } as unknown as ReturnType<typeof mockUseAuth>);
 
         // Mock nested supabase calls
         const mockFrom = vi.mocked(supabase.from);
@@ -61,7 +61,7 @@ describe("MembershipsPage", () => {
             } else if (table === "financial_entries") {
                 chain.gte = vi.fn().mockResolvedValue({ data: [], error: null });
             }
-            return chain as any;
+            return chain as unknown as ReturnType<typeof supabase.from>;
         });
     });
 
