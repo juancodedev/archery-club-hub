@@ -210,7 +210,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto relative">
-          {member?.club_status === 'bloqueado' && member?.block_type === 'total' && !isSuperAdmin ? (
+          {member?.club_status === 'bloqueado' && (member?.block_type === 'total' || member?.block_type === null) && !isSuperAdmin ? (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
               <div className="max-w-md w-full glass p-8 rounded-[2rem] text-center space-y-6 shadow-2xl border-destructive/20 animate-in fade-in zoom-in duration-300">
                 <div className="h-20 w-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto text-destructive">
