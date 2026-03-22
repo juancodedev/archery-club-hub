@@ -143,7 +143,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
         throw new Error("Este colaborador no tiene correo electrónico configurado.");
       }
 
-      if (targetEmail.endsWith("@sin-email.clubarchery.local")) {
+      if (targetEmail.toLowerCase().endsWith("@sin-email.clubarchery.local")) {
         throw new Error("Este colaborador usa un correo interno temporal. Debe registrar un correo real para recuperar su contraseña.");
       }
 
