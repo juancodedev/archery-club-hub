@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Wallet } from "lucide-react";
+import { Key, Wallet } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -135,6 +135,35 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
     },
   });
 
+  const resendRecovery = useMutation({
+    mutationFn: async () => {
+      const targetEmail = email.trim();
+
+      if (!targetEmail) {
+        throw new Error("Este colaborador no tiene correo electrónico configurado.");
+      }
+
+      if (targetEmail.toLowerCase().endsWith("@sin-email.clubarchery.local")) {
+        throw new Error("Este colaborador usa un correo interno temporal. Debe registrar un correo real para recuperar su contraseña.");
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Enlace de recuperación enviado",
+        description: `Se envió un correo de recuperación a ${email.trim()}.`,
+      });
+    },
+    onError: (e: Error) => {
+      toast({ title: "Error al reenviar recuperación", description: getSafeErrorMessage(e), variant: "destructive" });
+    },
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -152,6 +181,16 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
             <div className="space-y-2">
               <Label>Correo electrónico</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => resendRecovery.mutate()}
+                disabled={resendRecovery.isPending}
+              >
+                <Key className="h-4 w-4 mr-2" />
+                {resendRecovery.isPending ? "Enviando..." : "Reenviar recuperación"}
+              </Button>
             </div>
             <div className="space-y-2">
               <Label>Teléfono</Label>
