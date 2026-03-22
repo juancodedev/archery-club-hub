@@ -11,3 +11,7 @@ export const isTesorero = (roles: string[], isSuperAdmin = false) =>
 
 export const isSecretaria = (roles: string[], isSuperAdmin = false) =>
     isSuperAdmin || roles.some(r => ["secretaria", "administrador", "presidente"].includes(r));
+
+export const isReadOnlyMode = (member: { club_status?: string; block_type?: string | null } | null) => {
+    return member?.club_status === 'bloqueado' && member?.block_type === 'partial';
+};
