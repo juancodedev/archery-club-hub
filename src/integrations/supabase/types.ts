@@ -32,6 +32,11 @@ export type Database = {
           subscription_end_date: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
           financial_support_expires_at: string | null
+          block_type: string | null
+          grace_period_days: number | null
+          last_payment_date: string | null
+          next_payment_due_date: string | null
+          student_limit_override: number | null
         }
           allow_superadmin_finances?: boolean | null
           billing_cycle?: string | null
@@ -49,6 +54,11 @@ export type Database = {
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           financial_support_expires_at?: string | null
+          block_type?: string | null
+          grace_period_days?: number | null
+          last_payment_date?: string | null
+          next_payment_due_date?: string | null
+          student_limit_override?: number | null
         }
         Update: {
           allow_superadmin_finances?: boolean | null
@@ -67,6 +77,11 @@ export type Database = {
           subscription_end_date?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
           financial_support_expires_at?: string | null
+          block_type?: string | null
+          grace_period_days?: number | null
+          last_payment_date?: string | null
+          next_payment_due_date?: string | null
+          student_limit_override?: number | null
         }
         Relationships: [
           {
@@ -74,6 +89,50 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_invoices: {
+        Row: {
+          amount: number
+          billing_period_end: string | null
+          billing_period_start: string | null
+          club_id: string
+          created_at: string | null
+          id: string
+          mercadopago_payment_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          club_id: string
+          created_at?: string | null
+          id?: string
+          mercadopago_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
+          club_id?: string
+          created_at?: string | null
+          id?: string
+          mercadopago_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_invoices_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
             referencedColumns: ["id"]
           },
         ]

@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .from("members")
                 .select(`
           id, user_id, club_id, full_name, email, status, is_super_admin, avatar_url,
-          clubs (name, subscription_status, subscription_end_date)
+          clubs (name, subscription_status, subscription_end_date, block_type)
         `)
                 .eq("user_id", userId);
 
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             is_super_admin: m.is_super_admin ?? false,
                             club_status: m.clubs?.subscription_status || 'activo',
                             subscription_end_date: m.clubs?.subscription_end_date,
+                            block_type: m.clubs?.block_type as 'total' | 'partial' | null,
                             club_name: m.clubs?.name,
                             avatar_url: m.avatar_url
                         };

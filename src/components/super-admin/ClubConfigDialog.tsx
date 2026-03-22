@@ -99,6 +99,12 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
         enabled: isOpen,
     });
 
+interface InvitationRecord {
+    expires_at: string;
+    used_at?: string | null;
+    invitation_type: string;
+}
+
     const updateClubMutation = useMutation({
         mutationFn: async (updates: Record<string, unknown>) => {
             const { error } = await supabase
