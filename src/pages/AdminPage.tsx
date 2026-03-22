@@ -20,6 +20,7 @@ import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialo
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
 import { calculateFinancialStatus } from "@/lib/membershipUtils";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface AdminMember {
   id: string;
@@ -121,7 +122,7 @@ export default function AdminPage() {
     mutationFn: async (member: AdminMember) => {
       const email = member.email?.trim();
       if (!email) throw new Error("Este miembro no tiene correo electrónico configurado.");
-      if (email.endsWith("@sin-email.clubarchery.local")) {
+      if (email.toLowerCase().endsWith("@sin-email.clubarchery.local")) {
         throw new Error("Este miembro usa un correo interno temporal. Debe registrar un correo real para recuperar su contraseña.");
       }
 
@@ -138,7 +139,7 @@ export default function AdminPage() {
       });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al enviar recuperación", description: error.message, variant: "destructive" });
+      toast({ title: "Error al enviar recuperación", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 
