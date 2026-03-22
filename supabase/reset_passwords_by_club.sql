@@ -20,7 +20,6 @@ DROP TABLE IF EXISTS tmp_reset_password_params;
 CREATE TEMP TABLE tmp_reset_password_params (
   club_id uuid NOT NULL,
   only_active boolean NOT NULL,
-  use_club_default_password boolean NOT NULL,
   manual_password text,
   dry_run boolean NOT NULL
 ) ON COMMIT DROP;
@@ -28,13 +27,11 @@ CREATE TEMP TABLE tmp_reset_password_params (
 INSERT INTO tmp_reset_password_params (
   club_id,
   only_active,
-  use_club_default_password,
   manual_password,
   dry_run
 )
 VALUES (
   'REEMPLAZAR_UUID_CLUB'::uuid,
-  true,
   true,
   'Temporal#2026',
   true
@@ -72,7 +69,6 @@ DO $$
 DECLARE
   v_club_id uuid;
   v_only_active boolean;
-  v_use_default boolean;
   v_manual_password text;
   v_dry_run boolean;
 
@@ -82,13 +78,11 @@ BEGIN
   SELECT
     p.club_id,
     p.only_active,
-    p.use_club_default_password,
     p.manual_password,
     p.dry_run
   INTO
     v_club_id,
     v_only_active,
-    v_use_default,
     v_manual_password,
     v_dry_run
   FROM tmp_reset_password_params p
@@ -98,27 +92,24 @@ BEGIN
     RAISE EXCEPTION 'No hay parametros en tmp_reset_password_params';
   END IF;
 
-  IF v_use_default THEN
-    SELECT NULLIF(c.default_member_password, '')
-      INTO v_effective_password
-    FROM public.clubs c
-    WHERE c.id = v_club_id;
+  -- La columna public.clubs.default_member_password ha sido eliminada.
+  -- Siempre usamos manual_password.
+  v_effective_password := NULLIF(trim(v_manual_password), '');
 
-    IF v_effective_password IS NULL THEN
-      RAISE EXCEPTION 'El club % no tiene default_member_password configurado. Usa password manual o configura una por club.', v_club_id;
-    END IF;
-  ELSE
-    v_effective_password := NULLIF(v_manual_password, '');
+  IF v_effective_password IS NULL THEN
+    RAISE EXCEPTION 'manual_password no puede estar vacio.';
+  END IF;
 
-    IF v_effective_password IS NULL THEN
-      RAISE EXCEPTION 'manual_password no puede estar vacio cuando use_club_default_password = false';
-    END IF;
+  IF length(v_effective_password) < 12 THEN
+    RAISE EXCEPTION 'manual_password debe tener al menos 12 caracteres.';
   END IF;
 
   IF v_dry_run THEN
+    -- Count with the same JOIN conditions used by the real UPDATE.
     SELECT COUNT(*)
       INTO v_updated_count
     FROM public.members m
+    JOIN auth.users u ON u.id = m.user_id
     WHERE m.club_id = v_club_id
       AND m.user_id IS NOT NULL
       AND (NOT v_only_active OR m.status = 'activo');
@@ -128,7 +119,9 @@ BEGIN
   END IF;
 
   UPDATE auth.users u
-  SET encrypted_password = crypt(v_effective_password, gen_salt('bf'))
+  SET
+    encrypted_password = crypt(v_effective_password, gen_salt('bf')),
+    updated_at = now()
   FROM public.members m
   WHERE m.user_id = u.id
     AND m.club_id = v_club_id

@@ -148,22 +148,58 @@ async function main() {
 
   const clubId = await resolveClubId(supabase, args);
 
-  let query = supabase
+  let baseQuery = supabase
     .from("members")
     .select("id, full_name, email, status")
     .eq("club_id", clubId)
     .order("full_name", { ascending: true });
 
   if (!args.includeInactive) {
-    query = query.eq("status", "activo");
+    baseQuery = baseQuery.eq("status", "activo");
   }
 
-  if (args.limit) {
-    query = query.limit(args.limit);
+  // Paginate explicitly to avoid silent truncation by Supabase/PostgREST max-rows limits.
+  const PAGE_SIZE = 1000;
+  const allMembers = [];
+  let from = 0;
+
+  const effectiveLimit = args.limit && Number.isFinite(args.limit) && args.limit > 0
+    ? args.limit
+    : null;
+
+  while (true) {
+    let to = from + PAGE_SIZE - 1;
+    if (effectiveLimit !== null) {
+      to = Math.min(to, effectiveLimit - 1);
+      if (to < from) {
+        break;
+      }
+    }
+
+    const { data: page, error: pageError } = await baseQuery.range(from, to);
+    if (pageError) throw pageError;
+
+    if (!page || page.length === 0) {
+      break;
+    }
+
+    allMembers.push(...page);
+
+    if (effectiveLimit !== null && allMembers.length >= effectiveLimit) {
+      break;
+    }
+
+    const expectedPageSize = to - from + 1;
+    if (page.length < expectedPageSize) {
+      break;
+    }
+
+    from += PAGE_SIZE;
   }
 
-  const { data: members, error: membersError } = await query;
-  if (membersError) throw membersError;
+  const members = effectiveLimit !== null
+    ? allMembers.slice(0, effectiveLimit)
+    : allMembers;
 
   const candidates = (members || []).filter((m) => isValidRecoveryEmail(m.email));
 

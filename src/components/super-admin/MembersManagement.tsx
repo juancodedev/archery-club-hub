@@ -105,7 +105,7 @@ export default function MembersManagement() {
         mutationFn: async (member: Member) => {
             const email = member.email?.trim();
             if (!email) throw new Error("Este miembro no tiene correo electrónico configurado.");
-            if (email.endsWith("@sin-email.clubarchery.local")) {
+            if (email.toLowerCase().endsWith("@sin-email.clubarchery.local")) {
                 throw new Error("Este miembro usa un correo interno temporal. Debe registrar un correo real para recuperar su contraseña.");
             }
 
