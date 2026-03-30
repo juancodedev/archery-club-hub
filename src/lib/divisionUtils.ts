@@ -49,3 +49,16 @@ export function getDivisionSuggestions(age: number, bowType?: string): string[] 
 
     return suggestions;
 }
+
+/**
+ * Builds an NFAA/IFAA division shortcode from its components.
+ * Example: ageCategory="A", gender="F", bowStyle="BH-C" → "AFBH-C"
+ */
+export function buildDivisionCode(
+    ageCategory: string,
+    gender: string,
+    bowStyle: string
+): string {
+    if (!ageCategory || !gender || !bowStyle) return "";
+    return `${ageCategory}${gender}${bowStyle}`;
+}
