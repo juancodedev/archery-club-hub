@@ -246,19 +246,25 @@ export type SessionModeValue = (typeof SESSION_MODES)[number]["value"];
 
 // ─── ESTILOS DE ARCO NFAA/IFAA ───────────────────────────────────────────────
 
+const createNfaaBowStyle = <T extends string>(value: T, label: string) => ({
+    value,
+    label,
+    code: value,
+} as const);
+
 export const NFAA_BOW_STYLES = [
-    { value: "HB", label: "Histórico Bow", code: "HB" },
-    { value: "LB", label: "Longbow", code: "LB" },
-    { value: "TR", label: "Tradicional Recurvo", code: "TR" },
-    { value: "BU", label: "Bowhunter Unlimited", code: "BU" },
-    { value: "BL", label: "Bowhunter Limited", code: "BL" },
-    { value: "BH-C", label: "Bowhunter Compound", code: "BH-C" },
-    { value: "BH-R", label: "Bowhunter Recurvo", code: "BH-R" },
-    { value: "FU", label: "Freestyle Unlimited", code: "FU" },
-    { value: "FS-C", label: "Freestyle Limited Compound", code: "FS-C" },
-    { value: "FS-R", label: "Freestyle Limited Recurvo", code: "FS-R" },
-    { value: "BB-C", label: "Barebow Compound", code: "BB-C" },
-    { value: "BB-R", label: "Barebow Recurvo", code: "BB-R" },
+    createNfaaBowStyle("HB", "Histórico Bow"),
+    createNfaaBowStyle("LB", "Longbow"),
+    createNfaaBowStyle("TR", "Tradicional Recurvo"),
+    createNfaaBowStyle("BU", "Bowhunter Unlimited"),
+    createNfaaBowStyle("BL", "Bowhunter Limited"),
+    createNfaaBowStyle("BH-C", "Bowhunter Compound"),
+    createNfaaBowStyle("BH-R", "Bowhunter Recurvo"),
+    createNfaaBowStyle("FU", "Freestyle Unlimited"),
+    createNfaaBowStyle("FS-C", "Freestyle Limited Compound"),
+    createNfaaBowStyle("FS-R", "Freestyle Limited Recurvo"),
+    createNfaaBowStyle("BB-C", "Barebow Compound"),
+    createNfaaBowStyle("BB-R", "Barebow Recurvo"),
 ] as const;
 
 export type NfaaBowStyleValue = (typeof NFAA_BOW_STYLES)[number]["value"];
