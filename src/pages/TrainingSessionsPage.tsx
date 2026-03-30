@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, Json } from "@/integrations/supabase/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -192,19 +193,22 @@ export default function TrainingSessionsPage() {
       const creatorId = (member?.id && !isVirtual) ? member.id : null;
 
       if (trainingType === "torneo") {
+        if (sessionMode === "tournament" && !nfaaDiscipline) {
+          throw new Error("Debe seleccionar una disciplina para el torneo");
+        }
         // Tournament session: serialize data into existing fields
-        const tournamentRoundsConfig = {
+        const tournamentRoundsConfig: Json = {
           sessionMode,
           tournamentCity,
           nfaaDiscipline,
           divisionCode,
-          indoorTargetType: nfaaDiscipline === "indoor" ? indoorTargetType : undefined,
-          std1Score: nfaaDiscipline === "indoor" ? parseInt(std1Score) || 0 : undefined,
-          std1X: nfaaDiscipline === "indoor" ? parseInt(std1X) || 0 : undefined,
-          std2Score: nfaaDiscipline === "indoor" ? parseInt(std2Score) || 0 : undefined,
-          std2X: nfaaDiscipline === "indoor" ? parseInt(std2X) || 0 : undefined,
-          totalScore: nfaaDiscipline === "indoor" ? indoorTotalScore : undefined,
-          totalX: nfaaDiscipline === "indoor" ? indoorTotalX : undefined,
+          indoorTargetType: nfaaDiscipline === "indoor" ? indoorTargetType : null,
+          std1Score: nfaaDiscipline === "indoor" ? parseInt(std1Score) || 0 : null,
+          std1X: nfaaDiscipline === "indoor" ? parseInt(std1X) || 0 : null,
+          std2Score: nfaaDiscipline === "indoor" ? parseInt(std2Score) || 0 : null,
+          std2X: nfaaDiscipline === "indoor" ? parseInt(std2X) || 0 : null,
+          totalScore: nfaaDiscipline === "indoor" ? indoorTotalScore : null,
+          totalX: nfaaDiscipline === "indoor" ? indoorTotalX : null,
           equipment: {
             bow: eqBow,
             limbs: eqLimbs,
@@ -215,11 +219,12 @@ export default function TrainingSessionsPage() {
             stabilizer: eqStabilizer,
           },
         };
+        const disciplineLabel = NFAA_DISCIPLINES.find(d => d.value === nfaaDiscipline)?.label ?? nfaaDiscipline.toUpperCase();
         const sessionLabel = sessionMode === "tournament"
-          ? `${tournamentName || "Torneo"} – ${nfaaDiscipline.toUpperCase()}`
-          : `Práctica ${NFAA_DISCIPLINES.find(d => d.value === nfaaDiscipline)?.label ?? nfaaDiscipline}`;
+          ? `${tournamentName || "Torneo"} – ${disciplineLabel}`
+          : `Práctica ${disciplineLabel}`;
 
-        const { error } = await supabase.from("training_sessions").insert({
+        const tournamentPayload: TablesInsert<"training_sessions"> = {
           club_id: targetClubId,
           created_by: creatorId,
           name: sessionLabel,
@@ -228,7 +233,7 @@ export default function TrainingSessionsPage() {
           division: divisionCode || null,
           detail: sessionMode === "tournament" ? (tournamentName || null) : null,
           target_type: nfaaDiscipline === "indoor" ? (indoorTargetType || null) : null,
-          training_type: "libre" as "libre" | "estandar",
+          training_type: "libre",
           rounds_config: tournamentRoundsConfig,
           bow_info: equipmentSummary || null,
           arrow_info: equipmentNotes || null,
@@ -237,7 +242,8 @@ export default function TrainingSessionsPage() {
           wind_direction: windDirection,
           wind_speed: windSpeed,
           arrow_numbers: arrowNumbers,
-        } as never);
+        };
+        const { error } = await supabase.from("training_sessions").insert(tournamentPayload);
         if (error) throw error;
         return;
       }
@@ -759,8 +765,8 @@ export default function TrainingSessionsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-2 col-span-2">
+                    <div className={`grid gap-3 ${trainingType === "torneo" ? "grid-cols-1" : "grid-cols-3"}`}>
+                      <div className={`space-y-2 ${trainingType !== "torneo" ? "col-span-2" : ""}`}>
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Viento</Label>
                         <div className="flex gap-2">
                           <Select value={windDirection} onValueChange={setWindDirection}>
@@ -772,10 +778,12 @@ export default function TrainingSessionsPage() {
                           <Input value={windSpeed} onChange={(e) => setWindSpeed(e.target.value)} placeholder="Km/h" className="h-10 text-xs glass w-20" />
                         </div>
                       </div>
+                      {trainingType !== "torneo" && (
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Arco</Label>
                         <Input value={bowInfo} onChange={(e) => setBowInfo(e.target.value)} placeholder="Ej: Win&Win" className="h-10 text-xs glass" />
                       </div>
+                      )}
                     </div>
 
                     {/* Equipo detallado (para tab torneo activo muestra campos completos) */}
@@ -835,10 +843,12 @@ export default function TrainingSessionsPage() {
                     </div>
                   </div>
 
+                  {trainingType !== "torneo" && (
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Detalle Opcional</Label>
                     <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." className="h-11 glass border-primary/10" />
                   </div>
+                  )}
                   <Button type="submit" className="w-full h-12 rounded-2xl font-black shadow-lg" disabled={createSession.isPending}>
                     {createSession.isPending ? "Configurando..." : "CREAR SESIÓN AHORA"}
                   </Button>
