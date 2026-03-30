@@ -316,7 +316,7 @@ function _buildDivisions(): NfaaDivision[] {
             for (const bow of NFAA_BOW_STYLES) {
                 divisions.push({
                     code: `${age.value}${g.value}${bow.code}`,
-                    label: `${age.label} ${g.label === "Femenino" ? "Femenino" : "Masculino"} ${bow.label}`,
+                    label: `${age.label} ${g.label} ${bow.label}`,
                     age: age.value,
                     gender: g.value,
                     bowStyle: bow.value,
