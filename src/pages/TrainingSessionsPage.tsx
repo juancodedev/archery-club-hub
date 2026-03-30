@@ -979,7 +979,7 @@ export default function TrainingSessionsPage() {
                     {/* Indoor score summary on card */}
                     {(() => {
                       const rc = session.rounds_config as { nfaaDiscipline?: string; totalScore?: number; totalX?: number; indoorTargetType?: string } | null;
-                      if (rc?.nfaaDiscipline !== "indoor" || !rc.totalScore) return null;
+                      if (rc?.nfaaDiscipline !== "indoor" || rc.totalScore == null) return null;
                       return (
                         <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
                           <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
