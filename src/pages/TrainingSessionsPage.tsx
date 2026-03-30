@@ -262,7 +262,7 @@ export default function TrainingSessionsPage() {
         arrow_info: arrowInfo,
         arrow_numbers: arrowNumbers,
         location,
-      } as never);
+      });
       if (error) throw error;
     },
     onSuccess: () => {
