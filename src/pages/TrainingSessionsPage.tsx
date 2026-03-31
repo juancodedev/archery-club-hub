@@ -1,17 +1,19 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert, Json } from "@/integrations/supabase/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Plus, Users, CheckCircle, XCircle, QrCode, Info,
-  User as UserIcon, Target, Sun, Cloud, CloudRain, Wind,
-  MapPin, Activity, Shield, ArrowRight, Settings2, Trash2
+  User as UserIcon, Target, Wind,
+  MapPin, Shield, ArrowRight, Settings2, Trash2, Search, Trophy, Pencil
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,16 +25,28 @@ import { cn } from "@/lib/utils";
 import {
   DISCIPLINES, STANDARD_DISTANCES, formatYards,
   TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
-  type DisciplineValue
+  NFAA_DISCIPLINES, NFAA_BOW_STYLES, NFAA_AGE_CATEGORIES, NFAA_GENDERS,
+  INDOOR_TARGET_TYPES, SESSION_MODES, NFAA_ALL_DIVISIONS,
 } from "@/lib/archeryConstants";
+import { buildDivisionCode } from "@/lib/divisionUtils";
 import { logger } from "@/lib/logger";
 
-const DISCIPLINE_ICONS: Record<string, string> = { outdoor: "🎯", indoor: "🏠", campo: "🌲", "3d": "🐗" };
+const DISCIPLINE_ICONS: Record<string, string> = {
+  ...Object.fromEntries(NFAA_DISCIPLINES.map(d => [d.value, d.icon])),
+  outdoor: "🎯",
+  campo: "🌲",
+};
 const DISCIPLINE_BADGE: Record<string, string> = {
   outdoor: "bg-green-500/10 text-green-600 border-green-500/20",
   indoor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   campo: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   "3d": "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  flint: "bg-stone-500/10 text-stone-600 border-stone-500/20",
+  field: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  hunter: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  animal_marked: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  animal_unmarked: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  hunting: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 function generateSecureToken(bytes = 32): string {
@@ -79,7 +93,7 @@ export default function TrainingSessionsPage() {
   const [clubs, setClubs] = useState<ClubItem[]>([]);
   const [qrSession, setQrSession] = useState<QrSession | null>(null);
 
-  // New state for training types
+  // State for libre / estandar tabs
   const [trainingType, setTrainingType] = useState<string>("libre");
   const [rounds, setRounds] = useState<{ distance: number; target: string; ends: number; arrows: number; presetId?: string }[]>([]);
   const [weather, setWeather] = useState("");
@@ -89,6 +103,54 @@ export default function TrainingSessionsPage() {
   const [arrowInfo, setArrowInfo] = useState("");
   const [arrowNumbers, setArrowNumbers] = useState(false);
   const [location, setLocation] = useState("");
+
+  // State for torneo tab
+  const [sessionMode, setSessionMode] = useState<"practice" | "tournament">("practice");
+  const [nfaaDiscipline, setNfaaDiscipline] = useState("");
+  const [tournamentName, setTournamentName] = useState("");
+  const [tournamentCity, setTournamentCity] = useState("");
+  const [ageCategory, setAgeCategory] = useState("");
+  const [gender, setGender] = useState("");
+  const [bowStyle, setBowStyle] = useState("");
+  const [divisionSearch, setDivisionSearch] = useState("");
+  const [indoorTargetType, setIndoorTargetType] = useState("");
+  const [std1Score, setStd1Score] = useState("");
+  const [std1X, setStd1X] = useState("");
+  const [std2Score, setStd2Score] = useState("");
+  const [std2X, setStd2X] = useState("");
+  // Equipment fields
+  const [eqBow, setEqBow] = useState("");
+  const [eqLimbs, setEqLimbs] = useState("");
+  const [eqString, setEqString] = useState("");
+  const [eqTab, setEqTab] = useState("");
+  const [eqRelease, setEqRelease] = useState("");
+  const [eqSight, setEqSight] = useState("");
+  const [eqStabilizer, setEqStabilizer] = useState("");
+  const [equipmentNotes, setEquipmentNotes] = useState("");
+
+  // Division code auto-generated from selects
+  const divisionCode = useMemo(
+    () => buildDivisionCode(ageCategory, gender, bowStyle),
+    [ageCategory, gender, bowStyle]
+  );
+
+  // Autocomplete divisions from code search
+  const matchedDivisions = useMemo(
+    () =>
+      divisionSearch.length >= 2
+        ? NFAA_ALL_DIVISIONS.filter((d) =>
+          d.code.toLowerCase().startsWith(divisionSearch.toLowerCase())
+        ).slice(0, 8)
+        : [],
+    [divisionSearch]
+  );
+
+  // Indoor totals (auto-calculated)
+  const indoorTotalScore = (parseInt(std1Score) || 0) + (parseInt(std2Score) || 0);
+  const indoorTotalX = (parseInt(std1X) || 0) + (parseInt(std2X) || 0);
+
+  // Equipment summary string for the card display
+  const equipmentSummary = [eqBow, eqLimbs].filter(Boolean).join(" – ");
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -139,6 +201,62 @@ export default function TrainingSessionsPage() {
       const isVirtual = member?.id?.startsWith('00000000');
       const creatorId = (member?.id && !isVirtual) ? member.id : null;
 
+      if (trainingType === "torneo") {
+        if (!nfaaDiscipline) {
+          throw new Error("Debe seleccionar una disciplina");
+        }
+        // Tournament session: serialize data into existing fields
+        const tournamentRoundsConfig: Json = {
+          sessionMode,
+          tournamentCity,
+          nfaaDiscipline,
+          divisionCode,
+          indoorTargetType: nfaaDiscipline === "indoor" ? indoorTargetType : null,
+          std1Score: nfaaDiscipline === "indoor" ? parseInt(std1Score) || 0 : null,
+          std1X: nfaaDiscipline === "indoor" ? parseInt(std1X) || 0 : null,
+          std2Score: nfaaDiscipline === "indoor" ? parseInt(std2Score) || 0 : null,
+          std2X: nfaaDiscipline === "indoor" ? parseInt(std2X) || 0 : null,
+          totalScore: nfaaDiscipline === "indoor" ? indoorTotalScore : null,
+          totalX: nfaaDiscipline === "indoor" ? indoorTotalX : null,
+          equipment: {
+            bow: eqBow,
+            limbs: eqLimbs,
+            string: eqString,
+            tab: eqTab,
+            release: eqRelease,
+            sight: eqSight,
+            stabilizer: eqStabilizer,
+          },
+        };
+        const disciplineLabel = NFAA_DISCIPLINES.find(d => d.value === nfaaDiscipline)?.label ?? nfaaDiscipline.toUpperCase();
+        const sessionLabel = sessionMode === "tournament"
+          ? `${tournamentName || "Torneo"} – ${disciplineLabel}`
+          : `Práctica ${disciplineLabel}`;
+
+        const tournamentPayload: TablesInsert<"training_sessions"> = {
+          club_id: targetClubId,
+          created_by: creatorId,
+          name: sessionLabel,
+          event_date: eventDate,
+          discipline: nfaaDiscipline || null,
+          division: divisionCode || null,
+          detail: sessionMode === "tournament" ? (tournamentName || null) : null,
+          target_type: nfaaDiscipline === "indoor" ? (indoorTargetType || null) : null,
+          training_type: "libre",
+          rounds_config: tournamentRoundsConfig,
+          bow_info: equipmentSummary || null,
+          arrow_info: equipmentNotes || null,
+          location: sessionMode === "tournament" ? (tournamentCity || location) : location,
+          weather,
+          wind_direction: windDirection,
+          wind_speed: windSpeed,
+          arrow_numbers: arrowNumbers,
+        };
+        const { error } = await supabase.from("training_sessions").insert(tournamentPayload);
+        if (error) throw error;
+        return;
+      }
+
       const [distYards] = distanceYards.split("-");
       const { error } = await supabase.from("training_sessions").insert({
         club_id: targetClubId,
@@ -166,9 +284,15 @@ export default function TrainingSessionsPage() {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
       toast({ title: "Sesión creada exitosamente" });
       setDialogOpen(false);
+      // Reset libre/estandar
       setName(""); setDiscipline(""); setDistanceYards(""); setTargetType(""); setDetail(""); setDialogClubId("");
       setTrainingType("libre"); setRounds([]); setWeather(""); setWindDirection(""); setWindSpeed("");
       setBowInfo(""); setArrowInfo(""); setArrowNumbers(false); setLocation("");
+      // Reset torneo
+      setSessionMode("practice"); setNfaaDiscipline(""); setTournamentName(""); setTournamentCity("");
+      setAgeCategory(""); setGender(""); setBowStyle(""); setDivisionSearch("");
+      setIndoorTargetType(""); setStd1Score(""); setStd1X(""); setStd2Score(""); setStd2X("");
+      setEqBow(""); setEqLimbs(""); setEqString(""); setEqTab(""); setEqRelease(""); setEqSight(""); setEqStabilizer(""); setEquipmentNotes("");
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -196,8 +320,14 @@ export default function TrainingSessionsPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["training-sessions"] });
-      const currentSession = sessions?.find((s: { id: string }) => s.id === data.sessionId);
-      if (currentSession) { setQrSession({ ...currentSession, attendance_token: data.token }); }
+      const currentSession = (sessions as typeof sessions)?.find((s) => s?.id === data.sessionId);
+      if (currentSession) {
+        setQrSession({
+          id: currentSession.id,
+          name: currentSession.name,
+          attendance_token: data.token
+        });
+      }
       toast({ title: "Código QR generado", description: "Válido por 24 horas." });
     },
   });
@@ -270,12 +400,15 @@ export default function TrainingSessionsPage() {
 
                   {/* Tipo de Entrenamiento TABS */}
                   <Tabs value={trainingType} onValueChange={setTrainingType} className="w-full">
-                    <TabsList className="grid grid-cols-2 w-full glass p-1 h-12 mb-4">
+                    <TabsList className="grid grid-cols-3 w-full glass p-1 h-12 mb-4">
                       {TRAINING_TYPES.map(t => (
                         <TabsTrigger key={t.value} value={t.value} className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                           {t.icon} {t.label}
                         </TabsTrigger>
                       ))}
+                      <TabsTrigger value="torneo" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                        🏆 Torneo/Práctica
+                      </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="libre" className="space-y-4 animate-in fade-in-50 duration-300">
@@ -312,6 +445,230 @@ export default function TrainingSessionsPage() {
                         <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Diana / Target</Label>
                         <Input value={targetType} onChange={(e) => setTargetType(e.target.value)} placeholder="Ej: 40 cm" className="h-11 glass border-primary/10" />
                       </div>
+                    </TabsContent>
+
+                    {/* ─── TAB: TORNEO / PRÁCTICA ─────────────────────────────── */}
+                    <TabsContent value="torneo" className="space-y-4 animate-in fade-in-50 duration-300">
+
+                      {/* 1. Modalidad toggle */}
+                      <div className="grid grid-cols-2 gap-2">
+                        {SESSION_MODES.map(m => (
+                          <button
+                            key={m.value}
+                            type="button"
+                            aria-pressed={sessionMode === m.value}
+                            onClick={() => setSessionMode(m.value as "practice" | "tournament")}
+                            className={cn(
+                              "flex items-center justify-center gap-2 h-11 rounded-xl border font-bold text-sm transition-all",
+                              sessionMode === m.value
+                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                                : "glass border-white/10 text-muted-foreground hover:border-primary/30"
+                            )}
+                          >
+                            {m.value === "tournament" ? <Trophy className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* 2. Nombre + Ciudad del torneo (solo si es "tournament") */}
+                      {sessionMode === "tournament" && (
+                        <div className="space-y-3 p-3 glass rounded-2xl border-primary/10 border">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Nombre del Torneo</Label>
+                            <Input value={tournamentName} onChange={e => setTournamentName(e.target.value)} placeholder="Ej: Torneo Primavera 2025" className="h-10 glass border-primary/10 text-sm" />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Ciudad</Label>
+                            <div className="relative">
+                              <MapPin className="h-3 w-3 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                              <Input value={tournamentCity} onChange={e => setTournamentCity(e.target.value)} placeholder="Ej: La Serena" className="h-10 glass border-primary/10 text-sm pl-8" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3. Disciplina NFAA/IFAA */}
+                      <div className="space-y-1.5">
+                        <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Disciplina</Label>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {NFAA_DISCIPLINES.map(d => (
+                            <button
+                              key={d.value}
+                              type="button"
+                              aria-pressed={nfaaDiscipline === d.value}
+                              onClick={() => { setNfaaDiscipline(d.value); setIndoorTargetType(""); }}
+                              className={cn(
+                                "flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-[10px] font-bold transition-all",
+                                nfaaDiscipline === d.value
+                                  ? "bg-primary/10 border-primary/50 text-primary"
+                                  : "glass border-white/5 text-muted-foreground hover:border-primary/20"
+                              )}
+                            >
+                              <span className="text-lg">{d.icon}</span>
+                              <span className="leading-none text-center">{d.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* 4. División */}
+                      <div className="space-y-2">
+                        <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">División</Label>
+
+                        {/* Búsqueda por código (CFTR, AFBH-C, etc.) */}
+                        <div className="relative">
+                          <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={divisionSearch}
+                            onChange={e => setDivisionSearch(e.target.value)}
+                            placeholder="Escribe código (ej: CFTR, AFBH-C…)"
+                            className="h-10 glass border-primary/10 pl-9 text-sm font-mono"
+                          />
+                        </div>
+
+                        {/* Autocomplete dropdown */}
+                        {matchedDivisions.length > 0 && (
+                          <div className="glass rounded-xl border border-primary/10 overflow-hidden">
+                            {matchedDivisions.map(div => (
+                              <button
+                                key={div.code}
+                                type="button"
+                                onClick={() => {
+                                  setAgeCategory(div.age);
+                                  setGender(div.gender);
+                                  setBowStyle(div.bowStyle);
+                                  setDivisionSearch("");
+                                }}
+                                className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-primary/5 transition-colors border-b border-white/5 last:border-none"
+                              >
+                                <span className="text-[11px] text-muted-foreground">{div.label}</span>
+                                <span className="text-[10px] font-black font-mono text-primary">{div.code}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* — ó — selects manuales */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Edad</Label>
+                            <Select value={ageCategory} onValueChange={setAgeCategory}>
+                              <SelectTrigger className="h-9 glass text-xs"><SelectValue placeholder="…" /></SelectTrigger>
+                              <SelectContent className="glass">
+                                {NFAA_AGE_CATEGORIES.map(a => (
+                                  <SelectItem key={a.value} value={a.value}>
+                                    <span className="font-bold">{a.value}</span> – {a.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Género</Label>
+                            <Select value={gender} onValueChange={setGender}>
+                              <SelectTrigger className="h-9 glass text-xs"><SelectValue placeholder="…" /></SelectTrigger>
+                              <SelectContent className="glass">
+                                {NFAA_GENDERS.map(g => (
+                                  <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Estilo</Label>
+                            <Select value={bowStyle} onValueChange={setBowStyle}>
+                              <SelectTrigger className="h-9 glass text-xs"><SelectValue placeholder="…" /></SelectTrigger>
+                              <SelectContent className="glass">
+                                {NFAA_BOW_STYLES.map(b => (
+                                  <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Badge con código generado */}
+                        {divisionCode && (
+                          <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-3 py-2">
+                            <span className="text-[10px] text-muted-foreground">División:</span>
+                            <Badge className="bg-primary text-primary-foreground font-mono text-xs tracking-wider px-2">{divisionCode}</Badge>
+                            <span className="text-[10px] text-muted-foreground">
+                              {NFAA_ALL_DIVISIONS.find(d => d.code === divisionCode)?.label}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 5. Puntuación Indoor (solo si disciplina = indoor) */}
+                      {nfaaDiscipline === "indoor" && (
+                        <div className="space-y-3 p-3 glass rounded-2xl border-blue-500/20 border">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] uppercase font-black tracking-widest text-blue-400">🏠 Puntuación Indoor</Label>
+                            <div className="flex gap-1.5">
+                              {INDOOR_TARGET_TYPES.map(t => (
+                                <button
+                                  key={t.value}
+                                  type="button"
+                                  onClick={() => setIndoorTargetType(t.value)}
+                                  className={cn(
+                                    "px-3 py-1 rounded-lg text-[10px] font-black border transition-all",
+                                    indoorTargetType === t.value
+                                      ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                                      : "glass border-white/10 text-muted-foreground"
+                                  )}
+                                >
+                                  {t.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            {/* 1er Standard */}
+                            <div className="glass p-3 rounded-xl border-white/5 space-y-2">
+                              <p className="text-[10px] font-black uppercase text-muted-foreground text-center">1er Standard</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-bold text-muted-foreground">Puntuación</Label>
+                                  <Input type="number" min={0} max={600} value={std1Score} onChange={e => setStd1Score(e.target.value)} placeholder="0" className="h-9 text-sm glass text-center font-mono" />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-bold text-muted-foreground"># de X</Label>
+                                  <Input type="number" min={0} value={std1X} onChange={e => setStd1X(e.target.value)} placeholder="0" className="h-9 text-sm glass text-center font-mono" />
+                                </div>
+                              </div>
+                            </div>
+                            {/* 2do Standard */}
+                            <div className="glass p-3 rounded-xl border-white/5 space-y-2">
+                              <p className="text-[10px] font-black uppercase text-muted-foreground text-center">2do Standard</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-bold text-muted-foreground">Puntuación</Label>
+                                  <Input type="number" min={0} max={600} value={std2Score} onChange={e => setStd2Score(e.target.value)} placeholder="0" className="h-9 text-sm glass text-center font-mono" />
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[9px] font-bold text-muted-foreground"># de X</Label>
+                                  <Input type="number" min={0} value={std2X} onChange={e => setStd2X(e.target.value)} placeholder="0" className="h-9 text-sm glass text-center font-mono" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Totales automáticos */}
+                          <div className="flex items-center justify-center gap-6 bg-primary/5 rounded-xl py-2 border border-primary/10">
+                            <div className="text-center">
+                              <p className="text-[9px] uppercase font-black text-muted-foreground">Total Puntos</p>
+                              <p className="text-xl font-black text-primary tabular-nums">{indoorTotalScore}</p>
+                            </div>
+                            <div className="w-px h-8 bg-border" />
+                            <div className="text-center">
+                              <p className="text-[9px] uppercase font-black text-muted-foreground">Total X</p>
+                              <p className="text-xl font-black text-amber-400 tabular-nums">{indoorTotalX}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </TabsContent>
 
                     <TabsContent value="estandar" className="space-y-4 animate-in fade-in-50 duration-300">
@@ -419,8 +776,8 @@ export default function TrainingSessionsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="space-y-2 col-span-2">
+                    <div className={`grid gap-3 ${trainingType === "torneo" ? "grid-cols-1" : "grid-cols-3"}`}>
+                      <div className={`space-y-2 ${trainingType !== "torneo" ? "col-span-2" : ""}`}>
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Viento</Label>
                         <div className="flex gap-2">
                           <Select value={windDirection} onValueChange={setWindDirection}>
@@ -432,11 +789,61 @@ export default function TrainingSessionsPage() {
                           <Input value={windSpeed} onChange={(e) => setWindSpeed(e.target.value)} placeholder="Km/h" className="h-10 text-xs glass w-20" />
                         </div>
                       </div>
+                      {trainingType !== "torneo" && (
                       <div className="space-y-2">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Arco</Label>
                         <Input value={bowInfo} onChange={(e) => setBowInfo(e.target.value)} placeholder="Ej: Win&Win" className="h-10 text-xs glass" />
                       </div>
+                      )}
                     </div>
+
+                    {/* Equipo detallado (para tab torneo activo muestra campos completos) */}
+                    {trainingType === "torneo" && (
+                      <div className="space-y-3 pt-2">
+                        <p className="text-[9px] uppercase font-black tracking-widest text-muted-foreground">Detalle de Equipo</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Marca/Modelo Arco</Label>
+                            <Input value={eqBow} onChange={e => setEqBow(e.target.value)} placeholder="Ej: Win&Win Inno EX" className="h-9 text-xs glass" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Palas (marca, peso)</Label>
+                            <Input value={eqLimbs} onChange={e => setEqLimbs(e.target.value)} placeholder="Ej: Mybo X7 36#" className="h-9 text-xs glass" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Cuerda</Label>
+                            <Input value={eqString} onChange={e => setEqString(e.target.value)} placeholder="Ej: BCY 8125 16h" className="h-9 text-xs glass" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Tab / Dactilera / Guante</Label>
+                            <Input value={eqTab} onChange={e => setEqTab(e.target.value)} placeholder="Ej: Shibuya Ultima" className="h-9 text-xs glass" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Mira</Label>
+                            <Input value={eqSight} onChange={e => setEqSight(e.target.value)} placeholder="Ej: Shrewd Micro" className="h-9 text-xs glass" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[9px] font-bold uppercase text-muted-foreground">Estabilizador</Label>
+                            <Input value={eqStabilizer} onChange={e => setEqStabilizer(e.target.value)} placeholder="Ej: Doinker A27" className="h-9 text-xs glass" />
+                          </div>
+                          {(bowStyle === "BH-C" || bowStyle === "FS-C" || bowStyle === "FU" || bowStyle === "BB-C") && (
+                            <div className="space-y-1 col-span-2">
+                              <Label className="text-[9px] font-bold uppercase text-muted-foreground">Disparador</Label>
+                              <Input value={eqRelease} onChange={e => setEqRelease(e.target.value)} placeholder="Ej: Stan SX3" className="h-9 text-xs glass" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[9px] font-bold uppercase text-muted-foreground">Notas de Equipo y Observaciones</Label>
+                          <Textarea
+                            value={equipmentNotes}
+                            onChange={e => setEquipmentNotes(e.target.value)}
+                            placeholder="Anota cambios en tu equipo, ajustes técnicos, observaciones de rendimiento..."
+                            className="glass text-xs resize-none border-primary/10 min-h-[80px]"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between glass p-3 rounded-2xl border-white/5 mt-2">
                       <div className="space-y-0.5">
@@ -447,10 +854,12 @@ export default function TrainingSessionsPage() {
                     </div>
                   </div>
 
+                  {trainingType !== "torneo" && (
                   <div className="space-y-2">
                     <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Detalle Opcional</Label>
                     <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." className="h-11 glass border-primary/10" />
                   </div>
+                  )}
                   <Button type="submit" className="w-full h-12 rounded-2xl font-black shadow-lg" disabled={createSession.isPending}>
                     {createSession.isPending ? "Configurando..." : "CREAR SESIÓN AHORA"}
                   </Button>
@@ -499,6 +908,21 @@ export default function TrainingSessionsPage() {
                       {session.training_type === 'estandar' && (
                         <Badge className="bg-primary/20 text-primary border-primary/30 h-5 text-[9px] uppercase font-black">Serie Estándar</Badge>
                       )}
+                      {/* Tournament badge */}
+                      {(() => {
+                        const rc = session.rounds_config as { sessionMode?: string; divisionCode?: string; nfaaDiscipline?: string; tournamentCity?: string } | null;
+                        if (!rc?.sessionMode) return null;
+                        return (
+                          <>
+                            <Badge className={cn("h-5 text-[9px] uppercase font-black", rc.sessionMode === "tournament" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-sky-500/20 text-sky-400 border-sky-500/20")}>
+                              {rc.sessionMode === "tournament" ? "🏆 Torneo" : "📝 Práctica"}
+                            </Badge>
+                            {rc.divisionCode && (
+                              <Badge className="bg-secondary/20 text-secondary-foreground border-secondary/30 h-5 text-[9px] font-mono font-black">{rc.divisionCode}</Badge>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-medium">
@@ -572,6 +996,19 @@ export default function TrainingSessionsPage() {
                         ))}
                       </div>
                     )}
+
+                    {/* Indoor score summary on card */}
+                    {(() => {
+                      const rc = session.rounds_config as { nfaaDiscipline?: string; totalScore?: number; totalX?: number; indoorTargetType?: string } | null;
+                      if (rc?.nfaaDiscipline !== "indoor" || rc.totalScore == null) return null;
+                      return (
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
+                          <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
+                            🏠 {rc.indoorTargetType === "5spots" ? "5 Spots" : "1 Spot"} · {rc.totalScore} pts · {rc.totalX ?? 0} X
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-3 pt-4 sm:pt-0 border-t sm:border-none border-border/50">
