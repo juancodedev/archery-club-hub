@@ -31,12 +31,22 @@ import {
 import { buildDivisionCode } from "@/lib/divisionUtils";
 import { logger } from "@/lib/logger";
 
-const DISCIPLINE_ICONS: Record<string, string> = { outdoor: "🎯", indoor: "🏠", campo: "🌲", "3d": "🐗" };
+const DISCIPLINE_ICONS: Record<string, string> = {
+  ...Object.fromEntries(NFAA_DISCIPLINES.map(d => [d.value, d.icon])),
+  outdoor: "🎯",
+  campo: "🌲",
+};
 const DISCIPLINE_BADGE: Record<string, string> = {
   outdoor: "bg-green-500/10 text-green-600 border-green-500/20",
   indoor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
   campo: "bg-amber-500/10 text-amber-600 border-amber-500/20",
   "3d": "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  flint: "bg-stone-500/10 text-stone-600 border-stone-500/20",
+  field: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  hunter: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  animal_marked: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  animal_unmarked: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  hunting: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 function generateSecureToken(bytes = 32): string {
@@ -192,8 +202,8 @@ export default function TrainingSessionsPage() {
       const creatorId = (member?.id && !isVirtual) ? member.id : null;
 
       if (trainingType === "torneo") {
-        if (sessionMode === "tournament" && !nfaaDiscipline) {
-          throw new Error("Debe seleccionar una disciplina para el torneo");
+        if (!nfaaDiscipline) {
+          throw new Error("Debe seleccionar una disciplina");
         }
         // Tournament session: serialize data into existing fields
         const tournamentRoundsConfig: Json = {
@@ -486,6 +496,7 @@ export default function TrainingSessionsPage() {
                             <button
                               key={d.value}
                               type="button"
+                              aria-pressed={nfaaDiscipline === d.value}
                               onClick={() => { setNfaaDiscipline(d.value); setIndoorTargetType(""); }}
                               className={cn(
                                 "flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-[10px] font-bold transition-all",
