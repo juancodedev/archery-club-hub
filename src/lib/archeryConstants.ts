@@ -220,3 +220,111 @@ export const RING_COLORS: { min: number; max: number; color: string; name: strin
     { min: 2, max: 2, color: "#FFFFFF", name: "Blanco (2)" },
     { min: 1, max: 1, color: "#FFFFFF", name: "Blanco (1)" },
 ];
+
+// ─── DISCIPLINAS NFAA/IFAA ──────────────────────────────────────────────────
+
+export const NFAA_DISCIPLINES = [
+    { value: "indoor", label: "Indoor", icon: "🏠" },
+    { value: "flint", label: "Flint", icon: "🪨" },
+    { value: "field", label: "Field", icon: "🌲" },
+    { value: "hunter", label: "Hunter", icon: "🦌" },
+    { value: "animal_marked", label: "Animal Marked", icon: "🐾" },
+    { value: "animal_unmarked", label: "Animal Unmarked", icon: "🐾" },
+    { value: "hunting", label: "Hunting", icon: "🎯" },
+    { value: "3d", label: "3D", icon: "🐗" },
+] as const;
+
+export type NfaaDisciplineValue = (typeof NFAA_DISCIPLINES)[number]["value"];
+
+// Modalidades de sesión: torneo o práctica
+export const SESSION_MODES = [
+    { value: "practice", label: "Práctica" },
+    { value: "tournament", label: "Torneo" },
+] as const;
+
+export type SessionModeValue = (typeof SESSION_MODES)[number]["value"];
+
+// ─── ESTILOS DE ARCO NFAA/IFAA ───────────────────────────────────────────────
+
+const createNfaaBowStyle = <T extends string>(value: T, label: string) => ({
+    value,
+    label,
+    code: value,
+} as const);
+
+export const NFAA_BOW_STYLES = [
+    createNfaaBowStyle("HB", "Histórico Bow"),
+    createNfaaBowStyle("LB", "Longbow"),
+    createNfaaBowStyle("TR", "Tradicional Recurvo"),
+    createNfaaBowStyle("BU", "Bowhunter Unlimited"),
+    createNfaaBowStyle("BL", "Bowhunter Limited"),
+    createNfaaBowStyle("BH-C", "Bowhunter Compound"),
+    createNfaaBowStyle("BH-R", "Bowhunter Recurvo"),
+    createNfaaBowStyle("FU", "Freestyle Unlimited"),
+    createNfaaBowStyle("FS-C", "Freestyle Limited Compound"),
+    createNfaaBowStyle("FS-R", "Freestyle Limited Recurvo"),
+    createNfaaBowStyle("BB-C", "Barebow Compound"),
+    createNfaaBowStyle("BB-R", "Barebow Recurvo"),
+] as const;
+
+export type NfaaBowStyleValue = (typeof NFAA_BOW_STYLES)[number]["value"];
+
+// ─── CATEGORÍAS DE EDAD NFAA/IFAA ────────────────────────────────────────────
+
+export const NFAA_AGE_CATEGORIES = [
+    { value: "C", label: "Cub", description: "Hasta 13 años" },
+    { value: "J", label: "Junior", description: "14-17 años" },
+    { value: "Y", label: "Joven Adulto", description: "18-20 años" },
+    { value: "A", label: "Adulto", description: "21-49 años" },
+    { value: "V", label: "Veterano", description: "50-59 años" },
+    { value: "S", label: "Senior", description: "60+ años" },
+] as const;
+
+export type NfaaAgeCategoryValue = (typeof NFAA_AGE_CATEGORIES)[number]["value"];
+
+export const NFAA_GENDERS = [
+    { value: "F", label: "Femenino" },
+    { value: "M", label: "Masculino" },
+] as const;
+
+export type NfaaGenderValue = (typeof NFAA_GENDERS)[number]["value"];
+
+// ─── DIANA INDOOR ────────────────────────────────────────────────────────────
+
+export const INDOOR_TARGET_TYPES = [
+    { value: "1spot", label: "1 Spot" },
+    { value: "5spots", label: "5 Spots" },
+] as const;
+
+export type IndoorTargetTypeValue = (typeof INDOOR_TARGET_TYPES)[number]["value"];
+
+// ─── TABLA COMPLETA DE DIVISIONES NFAA/IFAA ─────────────────────────────────
+// Generada combinando edad × género × estilo para búsqueda por código corto
+
+export interface NfaaDivision {
+    code: string;    // ej: "AFBH-C"
+    label: string;   // ej: "Adulto Femenino Bowhunter Compound"
+    age: string;
+    gender: string;
+    bowStyle: string;
+}
+
+function _buildDivisions(): NfaaDivision[] {
+    const divisions: NfaaDivision[] = [];
+    for (const age of NFAA_AGE_CATEGORIES) {
+        for (const g of NFAA_GENDERS) {
+            for (const bow of NFAA_BOW_STYLES) {
+                divisions.push({
+                    code: `${age.value}${g.value}${bow.code}`,
+                    label: `${age.label} ${g.label} ${bow.label}`,
+                    age: age.value,
+                    gender: g.value,
+                    bowStyle: bow.value,
+                });
+            }
+        }
+    }
+    return divisions;
+}
+
+export const NFAA_ALL_DIVISIONS: NfaaDivision[] = _buildDivisions();
