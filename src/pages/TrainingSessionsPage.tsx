@@ -446,6 +446,7 @@ export default function TrainingSessionsPage() {
                           <button
                             key={m.value}
                             type="button"
+                            aria-pressed={sessionMode === m.value}
                             onClick={() => setSessionMode(m.value as "practice" | "tournament")}
                             className={cn(
                               "flex items-center justify-center gap-2 h-11 rounded-xl border font-bold text-sm transition-all",
