@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert, Json } from "@/integrations/supabase/types";
+import type { Database, TablesInsert, Json } from "@/integrations/supabase/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -238,18 +238,18 @@ export default function TrainingSessionsPage() {
           created_by: creatorId,
           name: sessionLabel,
           event_date: eventDate,
-          discipline: nfaaDiscipline || null,
+          discipline: (nfaaDiscipline as any) || null,
           division: divisionCode || null,
           detail: sessionMode === "tournament" ? (tournamentName || null) : null,
           target_type: nfaaDiscipline === "indoor" ? (indoorTargetType || null) : null,
-          training_type: "libre",
+          training_type: "libre" as Database["public"]["Enums"]["training_type"],
           rounds_config: tournamentRoundsConfig,
           bow_info: equipmentSummary || null,
           arrow_info: equipmentNotes || null,
           location: sessionMode === "tournament" ? (tournamentCity || location) : location,
-          weather,
-          wind_direction: windDirection,
-          wind_speed: windSpeed,
+          weather: weather || null,
+          wind_direction: windDirection || null,
+          wind_speed: windSpeed || null,
           arrow_numbers: arrowNumbers,
         };
         const { error } = await supabase.from("training_sessions").insert(tournamentPayload);
@@ -313,7 +313,10 @@ export default function TrainingSessionsPage() {
       const expires = new Date(); expires.setHours(expires.getHours() + 24);
       const { error } = await supabase
         .from("training_sessions")
-        .update({ attendance_token: tokenHash, attendance_token_expires: expires.toISOString() } as never)
+        .update({
+          attendance_token: tokenHash,
+          attendance_token_expires: expires.toISOString()
+        })
         .eq("id", sessionId);
       if (error) throw error;
       return { token, sessionId };
@@ -790,10 +793,10 @@ export default function TrainingSessionsPage() {
                         </div>
                       </div>
                       {trainingType !== "torneo" && (
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Arco</Label>
-                        <Input value={bowInfo} onChange={(e) => setBowInfo(e.target.value)} placeholder="Ej: Win&Win" className="h-10 text-xs glass" />
-                      </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Arco</Label>
+                          <Input value={bowInfo} onChange={(e) => setBowInfo(e.target.value)} placeholder="Ej: Win&Win" className="h-10 text-xs glass" />
+                        </div>
                       )}
                     </div>
 
@@ -855,10 +858,10 @@ export default function TrainingSessionsPage() {
                   </div>
 
                   {trainingType !== "torneo" && (
-                  <div className="space-y-2">
-                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Detalle Opcional</Label>
-                    <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." className="h-11 glass border-primary/10" />
-                  </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Detalle Opcional</Label>
+                      <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas..." className="h-11 glass border-primary/10" />
+                    </div>
                   )}
                   <Button type="submit" className="w-full h-12 rounded-2xl font-black shadow-lg" disabled={createSession.isPending}>
                     {createSession.isPending ? "Configurando..." : "CREAR SESIÓN AHORA"}
