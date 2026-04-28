@@ -104,7 +104,6 @@
     "overrides": {
       "minimatch": "10.2.3",
       "ajv": "6.14.0",
-      "esbuild": ">=0.25.0",
       "rollup": ">=4.59.0",
       "@tootallnate/once": ">=3.0.1",
       "flatted": ">=3.4.0",

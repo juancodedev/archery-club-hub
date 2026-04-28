@@ -29,7 +29,7 @@ vi.mock("@/hooks/use-toast", () => ({
 const renderPage = (token = "test-token") => {
     window.history.pushState({}, "Test page", `/join?token=${token}`);
     return render(
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <InvitationRegisterPage />
         </BrowserRouter>
     );
@@ -64,9 +64,13 @@ describe("InvitationRegisterPage", () => {
         }, { timeout: 5000 });
     });
 
-    it("debe renderizar la página sin crashear", () => {
+    it("debe renderizar la página sin crashear", async () => {
         (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: [], error: null });
         const { container } = renderPage();
-        expect(container).toBeDefined();
+        
+        // Wait for the initial loading to finish to avoid act() warnings
+        await waitFor(() => {
+            expect(container).toBeDefined();
+        });
     });
 });
