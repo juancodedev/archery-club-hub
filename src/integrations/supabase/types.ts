@@ -38,6 +38,7 @@ export type Database = {
           next_payment_due_date: string | null
           student_limit_override: number | null
         }
+        Insert: {
           allow_superadmin_finances?: boolean | null
           billing_cycle?: string | null
           city?: string | null
@@ -1264,17 +1265,17 @@ export type Database = {
     }
     Enums: {
       club_role:
-      | "administrador"
-      | "presidente"
-      | "entrenador"
-      | "arquero"
-      | "socio"
-      | "secretaria"
-      | "tesorero"
-      | "alumno"
-      member_status: "activo" | "inactivo"
-      subscription_status: "activo" | "pendiente" | "bloqueado"
-      training_type: "libre" | "estandar"
+        | "administrador"
+        | "presidente"
+        | "entrenador"
+        | "arquero"
+        | "socio"
+        | "secretaria"
+        | "tesorero"
+        | "alumno";
+      member_status: "activo" | "inactivo";
+      subscription_status: "activo" | "pendiente" | "bloqueado";
+      training_type: "libre" | "estandar";
     }
     CompositeTypes: {
       [_ in never]: never
