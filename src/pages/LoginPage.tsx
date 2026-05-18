@@ -24,6 +24,15 @@ export default function LoginPage() {
             if (member) {
                 logger.log("🎯 [LoginPage] Miembro cargado, verificando accesos...");
 
+                // Support custom redirect after login
+                const searchParams = new URLSearchParams(window.location.search);
+                const redirectPath = searchParams.get("redirect");
+                if (redirectPath) {
+                    logger.log(`➡️ [LoginPage] Redirecting to custom path: ${redirectPath}`);
+                    navigate(redirectPath);
+                    return;
+                }
+
                 const isAdmin = member.roles?.some(role => ['administrador', 'presidente'].includes(role));
                 const isExpired = member.subscription_end_date && new Date(member.subscription_end_date) < new Date();
                 const graceEndDate = member.subscription_end_date ? new Date(member.subscription_end_date) : null;
