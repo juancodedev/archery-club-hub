@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Plus, Users, CheckCircle, XCircle, QrCode, Info,
   User as UserIcon, Target, Wind,
-  MapPin, Shield, ArrowRight, Settings2, Trash2, Search, Trophy, Pencil
+  MapPin, Shield, ArrowRight, Settings2, Trash2, Search, Trophy, Pencil,
+  Printer, Smartphone, Loader2, Navigation, Copy
 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ import {
   TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
   NFAA_DISCIPLINES, NFAA_BOW_STYLES, NFAA_AGE_CATEGORIES, NFAA_GENDERS,
   INDOOR_TARGET_TYPES, SESSION_MODES, NFAA_ALL_DIVISIONS,
+  type DisciplineValue
 } from "@/lib/archeryConstants";
 import { buildDivisionCode } from "@/lib/divisionUtils";
 import { logger } from "@/lib/logger";
@@ -36,6 +38,29 @@ const DISCIPLINE_ICONS: Record<string, string> = {
   outdoor: "🎯",
   campo: "🌲",
 };
+
+interface AttendanceRecord {
+  id: string;
+  user_id: string;
+  attended_at: string;
+  distance_meters: number | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface GpsTrainingRecord {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  location_lat: number;
+  location_lng: number;
+  allowed_radius_meters: number;
+  training_attendance?: AttendanceRecord[];
+}
+
 const DISCIPLINE_BADGE: Record<string, string> = {
   outdoor: "bg-green-500/10 text-green-600 border-green-500/20",
   indoor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -151,6 +176,224 @@ export default function TrainingSessionsPage() {
 
   // Equipment summary string for the card display
   const equipmentSummary = [eqBow, eqLimbs].filter(Boolean).join(" – ");
+
+  // New state variables for QR + GPS attendance
+  const [mainTab, setMainTab] = useState<string>("gps_qr");
+  const [gpsDialogOpen, setGpsDialogOpen] = useState(false);
+  const [gpsTitle, setGpsTitle] = useState("");
+  const [gpsStartsAt, setGpsStartsAt] = useState(() => {
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
+  const [gpsEndsAt, setGpsEndsAt] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setMinutes(0, 0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
+  const [gpsLat, setGpsLat] = useState<string>("");
+  const [gpsLng, setGpsLng] = useState<string>("");
+  const [gpsRadius, setGpsRadius] = useState<number>(100);
+  const [fetchingMyGps, setFetchingMyGps] = useState(false);
+  const [selectedGpsTraining, setSelectedGpsTraining] = useState<GpsTrainingRecord | null>(null);
+  const [activeMapId, setActiveMapId] = useState<string | null>(null);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const markerRef = useRef<any>(null);
+
+  // Dynamically load Leaflet for the Interactive Map Picker
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).L) {
+      setLeafletLoaded(true);
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.async = true;
+    script.onload = () => {
+      setLeafletLoaded(true);
+    };
+    document.body.appendChild(script);
+  }, []);
+
+  // Auto-trigger geolocation fetch when the dialog is opened
+  useEffect(() => {
+    if (gpsDialogOpen) {
+      if (!gpsLat && !gpsLng) {
+        fetchCurrentCoordinates();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gpsDialogOpen]);
+
+  // Dynamic Leaflet Map Picker Initialization & Synchronization
+  useEffect(() => {
+    if (!gpsDialogOpen) {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      }
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = (window as any).L;
+    if (!L || !leafletLoaded) return;
+
+    const latNum = parseFloat(gpsLat) || -33.45678;
+    const lngNum = parseFloat(gpsLng) || -70.65432;
+
+    const mapContainer = document.getElementById("admin-map");
+    if (mapContainer && !mapRef.current) {
+      // Initialize map
+      mapRef.current = L.map("admin-map").setView([latNum, lngNum], 16);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(mapRef.current);
+
+      // Dark Mode Filter for the Map Layer
+      const tileContainer = mapContainer.querySelector(".leaflet-tile-container");
+      if (tileContainer) {
+        tileContainer.classList.add("filter", "invert-[0.9]", "hue-rotate-[180deg]", "opacity-80");
+      }
+
+      // Add draggable Marker
+      markerRef.current = L.marker([latNum, lngNum], { draggable: true }).addTo(mapRef.current);
+
+      // Marker Drag Event
+      markerRef.current.on("dragend", () => {
+        const pos = markerRef.current.getLatLng();
+        setGpsLat(pos.lat.toFixed(6));
+        setGpsLng(pos.lng.toFixed(6));
+      });
+
+      // Map Click Event
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      mapRef.current.on("click", (e: any) => {
+        const pos = e.latlng;
+        markerRef.current.setLatLng(pos);
+        setGpsLat(pos.lat.toFixed(6));
+        setGpsLng(pos.lng.toFixed(6));
+      });
+    } else if (mapRef.current && markerRef.current) {
+      // Synchronize Marker position if lat/lng state changed via input or device GPS fetch
+      const currentLatLng = markerRef.current.getLatLng();
+      if (!isNaN(latNum) && !isNaN(lngNum)) {
+        if (Math.abs(currentLatLng.lat - latNum) > 0.0001 || Math.abs(currentLatLng.lng - lngNum) > 0.0001) {
+          markerRef.current.setLatLng([latNum, lngNum]);
+          mapRef.current.setView([latNum, lngNum]);
+        }
+      }
+    }
+  }, [gpsDialogOpen, gpsLat, gpsLng, leafletLoaded]);
+
+  // Queries for GPS Trainings and Members List
+  const { data: gpsTrainings, isLoading: gpsLoading } = useQuery({
+    queryKey: ["gps-trainings", selectedClubId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
+      const { data, error } = await supabase
+        .from("trainings" as never)
+        .select("*, training_attendance(*)")
+        .eq("club_id", selectedClubId)
+        .order("starts_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedClubId && selectedClubId !== "null" && selectedClubId !== "00000000-0000-0000-0000-000000000000",
+  });
+
+  const { data: clubMembers } = useQuery({
+    queryKey: ["club-members", selectedClubId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
+      const { data, error } = await supabase
+        .from("members")
+        .select("id, user_id, full_name")
+        .eq("club_id", selectedClubId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedClubId && selectedClubId !== "null" && selectedClubId !== "00000000-0000-0000-0000-000000000000",
+  });
+
+  // Mutations for GPS Trainings
+  const createGpsTraining = useMutation({
+    mutationFn: async () => {
+      const targetClubId = isSuperAdmin ? dialogClubId : selectedClubId;
+      if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
+      if (!gpsTitle) throw new Error("Debe ingresar un título");
+      if (!gpsLat || !gpsLng) throw new Error("Debe ingresar las coordenadas GPS");
+
+      const { error } = await supabase.from("trainings" as never).insert({
+        club_id: targetClubId,
+        title: gpsTitle,
+        starts_at: new Date(gpsStartsAt).toISOString(),
+        ends_at: new Date(gpsEndsAt).toISOString(),
+        location_lat: parseFloat(gpsLat),
+        location_lng: parseFloat(gpsLng),
+        allowed_radius_meters: gpsRadius,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gps-trainings"] });
+      toast({ title: "Entrenamiento GPS creado exitosamente" });
+      setGpsDialogOpen(false);
+      setGpsTitle("");
+      setGpsLat("");
+      setGpsLng("");
+      setGpsRadius(100);
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteGpsTraining = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trainings" as never).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gps-trainings"] });
+      toast({ title: "Entrenamiento eliminado exitosamente" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const fetchCurrentCoordinates = () => {
+    setFetchingMyGps(true);
+    if (!navigator.geolocation) {
+      toast({ title: "Error", description: "Tu navegador no soporta geolocalización.", variant: "destructive" });
+      setFetchingMyGps(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLat(pos.coords.latitude.toString());
+        setGpsLng(pos.coords.longitude.toString());
+        setFetchingMyGps(false);
+        toast({ title: "Coordenadas obtenidas", description: "Se han cargado tus coordenadas actuales con éxito." });
+      },
+      (err) => {
+        logger.error("Error fetching admin coords:", err);
+        toast({ title: "Error GPS", description: "No se pudieron obtener las coordenadas actuales. Inténtalo de nuevo.", variant: "destructive" });
+        setFetchingMyGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   useEffect(() => {
     if (isSuperAdmin) {
