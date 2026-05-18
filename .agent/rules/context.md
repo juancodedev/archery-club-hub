@@ -31,6 +31,12 @@ QuiverApp is a multi-tenant SaaS platform designed for the comprehensive managem
 5.  **Components**: Follow the shadcn-ui pattern. Reusable components reside in `src/components/ui`.
 6.  **Coding**: Consider very precise and optimal interventions for the system, as it is currently in production with a functional client.
 7.  **Documentation**: References to README.md text should be in English and as technical as possible.
+8.  **Security and Credentials**:
+    - **NEVER** commit or track files containing local configurations or secrets (like `.env`, `.env.local`, `.env.production`). These must always be untracked and defined in `.gitignore`.
+    - **NEVER** hardcode sensitive credentials (such as database URLs, raw JWT tokens, API keys, private keys, or passwords) in the codebase.
+    - All secrets must be loaded dynamically using standard environment variables (`import.meta.env`).
+    - The repository uses a pre-commit hook (`.git/hooks/pre-commit`) and GitGuardian `ggshield` configuration (`.pre-commit-config.yaml`) to block commits containing exposed credentials or tracked environment files.
+
 
 ## Data Structure (Core)
 
