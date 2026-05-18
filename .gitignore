@@ -25,3 +25,5 @@ dist-ssr
 .env
 .env.local
 supabase/.temp/
+.env*.local
+.env*
