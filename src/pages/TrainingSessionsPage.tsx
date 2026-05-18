@@ -911,49 +911,15 @@ export default function TrainingSessionsPage() {
         )}
       </motion.div>
 
-      {isLoading ? (
-        <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}</div>
-      ) : sessions && sessions.length > 0 ? (
-        <div className="space-y-4">
-          {sessions.map((session, i: number) => {
-            const enrolled = isEnrolled(session);
-            const enrollments: { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[] =
-              (session.training_enrollments as { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[]) || [];
-            const enrollCount = enrollments.length;
-            const attendedCount = enrollments.filter(e => e.attended).length;
-            const disc = session.discipline || session.division || null;
-
-            return (
-              <motion.div
-                key={session.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-white/5 active:scale-[0.99] transition-transform"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-foreground text-xl leading-tight">{session.name}</h3>
-                      {session.training_type === 'estandar' && (
-                        <Badge className="bg-primary/20 text-primary border-primary/30 h-5 text-[9px] uppercase font-black">Serie Estándar</Badge>
-                      )}
-                      {/* Tournament badge */}
-                      {(() => {
-                        const rc = session.rounds_config as { sessionMode?: string; divisionCode?: string; nfaaDiscipline?: string; tournamentCity?: string } | null;
-                        if (!rc?.sessionMode) return null;
-                        return (
-                          <>
-                            <Badge className={cn("h-5 text-[9px] uppercase font-black", rc.sessionMode === "tournament" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-sky-500/20 text-sky-400 border-sky-500/20")}>
-                              {rc.sessionMode === "tournament" ? "🏆 Torneo" : "📝 Práctica"}
-                            </Badge>
-                            {rc.divisionCode && (
-                              <Badge className="bg-secondary/20 text-secondary-foreground border-secondary/30 h-5 text-[9px] font-mono font-black">{rc.divisionCode}</Badge>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
+      <Tabs defaultValue="sessions" className="w-full space-y-6">
+        <TabsList className="grid grid-cols-2 w-full max-w-md glass p-1 h-12">
+          <TabsTrigger value="sessions" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Programación Estándar
+          </TabsTrigger>
+          <TabsTrigger value="gps_qr" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Asistencia GPS / QR
+          </TabsTrigger>
+        </TabsList>
 
         <TabsContent value="sessions" className="space-y-6 animate-in fade-in-50 duration-300">
           {isLoading ? (
@@ -1033,23 +999,20 @@ export default function TrainingSessionsPage() {
                             {session.bow_info && <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> {session.bow_info}</span>}
                             {session.arrow_info && <span className="flex items-center gap-1"><ArrowRight className="h-2.5 w-2.5" /> {session.arrow_info}</span>}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        )}
 
-                    {/* Indoor score summary on card */}
-                    {(() => {
-                      const rc = session.rounds_config as { nfaaDiscipline?: string; totalScore?: number; totalX?: number; indoorTargetType?: string } | null;
-                      if (rc?.nfaaDiscipline !== "indoor" || rc.totalScore == null) return null;
-                      return (
-                        <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
-                          <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
-                            🏠 {rc.indoorTargetType === "5spots" ? "5 Spots" : "1 Spot"} · {rc.totalScore} pts · {rc.totalX ?? 0} X
-                          </span>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                        {/* Indoor score summary on card */}
+                        {(() => {
+                          const rc = session.rounds_config as { nfaaDiscipline?: string; totalScore?: number; totalX?: number; indoorTargetType?: string } | null;
+                          if (rc?.nfaaDiscipline !== "indoor" || rc.totalScore == null) return null;
+                          return (
+                            <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
+                              <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
+                                🏠 {rc.indoorTargetType === "5spots" ? "5 Spots" : "1 Spot"} · {rc.totalScore} pts · {rc.totalX ?? 0} X
+                              </span>
+                            </div>
+                          );
+                        })()}
 
                         {session.detail && (
                           <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
