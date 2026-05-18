@@ -75,8 +75,8 @@ describe('TrainingSessionsPage', () => {
 
     it('should render the training heading', () => {
         renderComponent();
-        expect(screen.getByText(/entrenamientos/i)).toBeInTheDocument();
-        expect(screen.getByText(/gestiona tu asistencia/i)).toBeInTheDocument();
+        expect(screen.getByText(/asistencia y geolocalización/i)).toBeInTheDocument();
+        expect(screen.getByText(/configuración de geocercas gps/i)).toBeInTheDocument();
     });
 
     it('should list training sessions', async () => {
