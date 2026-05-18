@@ -29,6 +29,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import AttendanceCheckinPage from "./pages/AttendanceCheckinPage";
 import AttendanceMarkPage from "./pages/AttendanceMarkPage";
 import BillingPage from "./pages/BillingPage";
 import FinancePage from "./pages/FinancePage";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-club" element={<RegisterClubPage />} />
             <Route path="/join" element={<InvitationRegisterPage />} />
+            <Route path="/attendance/checkin" element={<AttendanceCheckinPage />} />
             <Route path="/attendance/:sessionId" element={<AttendanceMarkPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />

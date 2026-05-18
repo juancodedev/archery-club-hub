@@ -6,7 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, Plus, Users, CheckCircle, XCircle, QrCode, Info,
   User as UserIcon, Target, Sun, Cloud, CloudRain, Wind,
-  MapPin, Activity, Shield, ArrowRight, Settings2, Trash2
+  MapPin, Activity, Shield, ArrowRight, Settings2, Trash2,
+  Globe, Smartphone, Printer, Copy, Check, ExternalLink,
+  Navigation, Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +30,24 @@ import {
 import { logger } from "@/lib/logger";
 
 const DISCIPLINE_ICONS: Record<string, string> = { outdoor: "🎯", indoor: "🏠", campo: "🌲", "3d": "🐗" };
+
+interface GpsTrainingRecord {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  location_lat: number;
+  location_lng: number;
+  allowed_radius_meters: number;
+  training_attendance?: {
+    id: string;
+    user_id: string;
+    attended_at: string;
+    distance_meters: number | null;
+    ip_address: string | null;
+    user_agent: string | null;
+  }[];
+}
 const DISCIPLINE_BADGE: Record<string, string> = {
   outdoor: "bg-green-500/10 text-green-600 border-green-500/20",
   indoor: "bg-blue-500/10 text-blue-600 border-blue-500/20",
@@ -90,17 +110,141 @@ export default function TrainingSessionsPage() {
   const [arrowNumbers, setArrowNumbers] = useState(false);
   const [location, setLocation] = useState("");
 
+  // New state variables for QR + GPS attendance
+  const [mainTab, setMainTab] = useState<string>("gps_qr");
+  const [gpsDialogOpen, setGpsDialogOpen] = useState(false);
+  const [gpsTitle, setGpsTitle] = useState("");
+  const [gpsStartsAt, setGpsStartsAt] = useState(() => {
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
+  const [gpsEndsAt, setGpsEndsAt] = useState(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 2);
+    d.setMinutes(0, 0, 0);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
+  const [gpsLat, setGpsLat] = useState<string>("");
+  const [gpsLng, setGpsLng] = useState<string>("");
+  const [gpsRadius, setGpsRadius] = useState<number>(100);
+  const [fetchingMyGps, setFetchingMyGps] = useState(false);
+  const [selectedGpsTraining, setSelectedGpsTraining] = useState<GpsTrainingRecord | null>(null);
+
+  // Queries for GPS Trainings and Members List
+  const { data: gpsTrainings, isLoading: gpsLoading } = useQuery({
+    queryKey: ["gps-trainings", selectedClubId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
+      const { data, error } = await supabase
+        .from("trainings" as never)
+        .select("*, training_attendance(*)")
+        .eq("club_id", selectedClubId)
+        .order("starts_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedClubId && selectedClubId !== "null" && selectedClubId !== "00000000-0000-0000-0000-000000000000",
+  });
+
+  const { data: clubMembers } = useQuery({
+    queryKey: ["club-members", selectedClubId],
+    queryFn: async () => {
+      if (!selectedClubId || selectedClubId === "null" || selectedClubId === "00000000-0000-0000-0000-000000000000") return [];
+      const { data, error } = await supabase
+        .from("members")
+        .select("id, user_id, full_name")
+        .eq("club_id", selectedClubId);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedClubId && selectedClubId !== "null" && selectedClubId !== "00000000-0000-0000-0000-000000000000",
+  });
+
+  // Mutations for GPS Trainings
+  const createGpsTraining = useMutation({
+    mutationFn: async () => {
+      const targetClubId = isSuperAdmin ? dialogClubId : selectedClubId;
+      if (!targetClubId || targetClubId === "null") throw new Error("Debe seleccionar un club");
+      if (!gpsTitle) throw new Error("Debe ingresar un título");
+      if (!gpsLat || !gpsLng) throw new Error("Debe ingresar las coordenadas GPS");
+
+      const { error } = await supabase.from("trainings" as never).insert({
+        club_id: targetClubId,
+        title: gpsTitle,
+        starts_at: new Date(gpsStartsAt).toISOString(),
+        ends_at: new Date(gpsEndsAt).toISOString(),
+        location_lat: parseFloat(gpsLat),
+        location_lng: parseFloat(gpsLng),
+        allowed_radius_meters: gpsRadius,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gps-trainings"] });
+      toast({ title: "Entrenamiento GPS creado exitosamente" });
+      setGpsDialogOpen(false);
+      setGpsTitle("");
+      setGpsLat("");
+      setGpsLng("");
+      setGpsRadius(100);
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteGpsTraining = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trainings" as never).delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gps-trainings"] });
+      toast({ title: "Entrenamiento eliminado exitosamente" });
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const fetchCurrentCoordinates = () => {
+    setFetchingMyGps(true);
+    if (!navigator.geolocation) {
+      toast({ title: "Error", description: "Tu navegador no soporta geolocalización.", variant: "destructive" });
+      setFetchingMyGps(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLat(pos.coords.latitude.toString());
+        setGpsLng(pos.coords.longitude.toString());
+        setFetchingMyGps(false);
+        toast({ title: "Coordenadas obtenidas", description: "Se han cargado tus coordenadas actuales con éxito." });
+      },
+      (err) => {
+        logger.error("Error fetching admin coords:", err);
+        toast({ title: "Error GPS", description: "No se pudieron obtener las coordenadas actuales. Inténtalo de nuevo.", variant: "destructive" });
+        setFetchingMyGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
   useEffect(() => {
     if (isSuperAdmin) {
       fetchClubs();
     } else if (member?.club_id) {
       setSelectedClubId(member.club_id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [member, isSuperAdmin]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) {
+      setClubs(data);
+      if (data.length > 0 && !selectedClubId) {
+        setSelectedClubId(data[0].id);
+      }
+    }
   };
 
   const { data: sessions, isLoading } = useQuery({
@@ -229,6 +373,30 @@ export default function TrainingSessionsPage() {
   const getDisciplineIcon = (d: string | null) => DISCIPLINE_ICONS[d || ""] || "";
   const getDisciplineBadge = (d: string | null) => DISCIPLINE_BADGE[d || ""] || "bg-muted/30";
 
+  const isClubAdmin = member?.roles?.includes("administrador");
+  const hasAccess = isSuperAdmin || isClubAdmin;
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="glass max-w-md w-full p-8 rounded-3xl text-center space-y-6 border border-white/10 shadow-2xl relative z-10">
+          <div className="h-16 w-16 bg-destructive/10 border border-destructive/20 rounded-full flex items-center justify-center mx-auto">
+            <Shield className="h-8 w-8 text-destructive animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-display font-bold text-foreground">Acceso Restringido</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              El panel de administración de asistencia está reservado exclusivamente para el Administrador del Club y el Superadministrador.
+            </p>
+          </div>
+          <Button className="w-full h-11 font-bold rounded-xl" onClick={() => window.location.href = "/dashboard"}>
+            Volver al Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
@@ -236,9 +404,9 @@ export default function TrainingSessionsPage() {
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
               <Calendar className="h-7 w-7 text-primary" />
-              Entrenamientos
+              Asistencia y Geolocalización
             </h1>
-            <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">Gestiona tu asistencia y sesiones de práctica</p>
+            <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">Configuración de geocercas GPS y consulta de asistencia</p>
           </div>
 
           {(isAdmin || isSuperAdmin) && (
@@ -472,190 +640,580 @@ export default function TrainingSessionsPage() {
         )}
       </motion.div>
 
-      {isLoading ? (
-        <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}</div>
-      ) : sessions && sessions.length > 0 ? (
-        <div className="space-y-4">
-          {sessions.map((session, i: number) => {
-            const enrolled = isEnrolled(session);
-            const enrollments: { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[] =
-              (session.training_enrollments as { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[]) || [];
-            const enrollCount = enrollments.length;
-            const attendedCount = enrollments.filter(e => e.attended).length;
-            const disc = session.discipline || session.division || null;
+      {/* Main content split by Tabs */}
+      <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
+        <TabsList className="grid grid-cols-2 w-full glass p-1 h-12 mb-6">
+          <TabsTrigger value="sessions" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            🎯 Sesiones de Práctica
+          </TabsTrigger>
+          <TabsTrigger value="gps_qr" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            📍 Asistencia QR Fijo + GPS
+          </TabsTrigger>
+        </TabsList>
 
-            return (
-              <motion.div
-                key={session.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-white/5 active:scale-[0.99] transition-transform"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-foreground text-xl leading-tight">{session.name}</h3>
-                      {session.training_type === 'estandar' && (
-                        <Badge className="bg-primary/20 text-primary border-primary/30 h-5 text-[9px] uppercase font-black">Serie Estándar</Badge>
-                      )}
-                    </div>
+        <TabsContent value="sessions" className="space-y-6 animate-in fade-in-50 duration-300">
+          {isLoading ? (
+            <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="glass rounded-2xl p-6 h-32 animate-pulse" />)}</div>
+          ) : sessions && sessions.length > 0 ? (
+            <div className="space-y-4">
+              {sessions.map((session, i: number) => {
+                const enrolled = isEnrolled(session);
+                const enrollments: { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[] =
+                  (session.training_enrollments as { id: string; member_id: string; attended: boolean; members?: { full_name?: string } }[]) || [];
+                const enrollCount = enrollments.length;
+                const attendedCount = enrollments.filter(e => e.attended).length;
+                const disc = session.discipline || session.division || null;
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-medium">
-                      <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(session.event_date).toLocaleDateString("es-CL", { day: "numeric", month: "long" })}
-                      </span>
-                      {disc && (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${getDisciplineBadge(disc)}`}>
-                          {getDisciplineIcon(disc)} {disc}
-                        </span>
-                      )}
-                      {session.location && (
-                        <span className="flex items-center gap-1.5 opacity-70">
-                          <MapPin className="h-3 w-3" /> {session.location}
-                        </span>
-                      )}
-                    </div>
+                return (
+                  <motion.div
+                    key={session.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-white/5 active:scale-[0.99] transition-transform"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-foreground text-xl leading-tight">{session.name}</h3>
+                          {session.training_type === 'estandar' && (
+                            <span className="inline-flex items-center rounded-full bg-primary/20 text-primary border border-primary/30 h-5 px-2.5 text-[9px] uppercase font-black">Serie Estándar</span>
+                          )}
+                        </div>
 
-                    <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
-                      {session.distance_yards && !(session.rounds_config as { length?: number } | null)?.length && (
-                        <span className="flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-lg font-mono">
-                          📏 {session.distance_yards} yd
-                        </span>
-                      )}
-                      {session.target_type && (
-                        <span className="flex items-center gap-1.5 bg-muted/20 px-2 py-0.5 rounded-lg">
-                          <Target className="h-3 w-3 opacity-70" /> {session.target_type}
-                        </span>
-                      )}
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-medium">
+                          <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(session.event_date).toLocaleDateString("es-CL", { day: "numeric", month: "long" })}
+                          </span>
+                          {disc && (
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${getDisciplineBadge(disc)}`}>
+                              {getDisciplineIcon(disc)} {disc}
+                            </span>
+                          )}
+                          {session.location && (
+                            <span className="flex items-center gap-1.5 opacity-70">
+                              <MapPin className="h-3 w-3" /> {session.location}
+                            </span>
+                          )}
+                        </div>
 
-                      {/* Weather & Wind */}
-                      {session.weather && (
-                        <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-lg border border-primary/10">
-                          {WEATHER_TYPES.find(t => t.value === session.weather)?.icon} {session.weather}
-                        </span>
-                      )}
-                      {session.wind_direction && (
-                        <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-lg border border-primary/10">
-                          <Wind className="h-3 w-3" /> {WIND_DIRECTIONS.find(d => d.value === session.wind_direction)?.icon} {session.wind_speed && `${session.wind_speed} km/h`}
-                        </span>
-                      )}
-                    </div>
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
+                          {session.distance_yards && !(session.rounds_config as { length?: number } | null)?.length && (
+                            <span className="flex items-center gap-1 bg-muted/20 px-2 py-0.5 rounded-lg font-mono">
+                              📏 {session.distance_yards} yd
+                            </span>
+                          )}
+                          {session.target_type && (
+                            <span className="flex items-center gap-1.5 bg-muted/20 px-2 py-0.5 rounded-lg">
+                              <Target className="h-3 w-3 opacity-70" /> {session.target_type}
+                            </span>
+                          )}
 
-                    {/* Equipment Info */}
-                    {(session.bow_info || session.arrow_info) && (
-                      <div className="flex flex-wrap items-center gap-3 mt-1 text-[10px] opacity-60">
-                        {session.bow_info && <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> {session.bow_info}</span>}
-                        {session.arrow_info && <span className="flex items-center gap-1"><ArrowRight className="h-2.5 w-2.5" /> {session.arrow_info}</span>}
-                      </div>
-                    )}
+                          {/* Weather & Wind */}
+                          {session.weather && (
+                            <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-lg border border-primary/10">
+                              {WEATHER_TYPES.find(t => t.value === session.weather)?.icon} {session.weather}
+                            </span>
+                          )}
+                          {session.wind_direction && (
+                            <span className="flex items-center gap-1.5 bg-primary/5 text-primary/80 px-2 py-0.5 rounded-lg border border-primary/10">
+                              <Wind className="h-3 w-3" /> {WIND_DIRECTIONS.find(d => d.value === session.wind_direction)?.icon} {session.wind_speed && `${session.wind_speed} km/h`}
+                            </span>
+                          )}
+                        </div>
 
-                    {session.detail && (
-                      <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
-                        <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
-                        <p className="text-[11px] leading-relaxed italic text-muted-foreground line-clamp-2">"{session.detail}"</p>
-                      </div>
-                    )}
-
-                    {/* Rondas Compactas para Estándar */}
-                    {session.training_type === 'estandar' && (session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[] | null)?.length && (
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {(session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[]).map((r: { distance: number; target: string; ends: number; arrows: number }, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-white/5 text-[10px]">
-                            <div className="flex items-center gap-2">
-                              <span className="font-black text-primary">R{idx + 1}</span>
-                              <span className="font-bold opacity-80">{r.distance} yd • {r.target}</span>
-                            </div>
-                            <span className="opacity-60">{r.ends}x{r.arrows} flechas</span>
+                        {/* Equipment Info */}
+                        {(session.bow_info || session.arrow_info) && (
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-[10px] opacity-60">
+                            {session.bow_info && <span className="flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> {session.bow_info}</span>}
+                            {session.arrow_info && <span className="flex items-center gap-1"><ArrowRight className="h-2.5 w-2.5" /> {session.arrow_info}</span>}
                           </div>
-                        ))}
+                        )}
+
+                        {session.detail && (
+                          <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
+                            <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
+                            <p className="text-[11px] leading-relaxed italic text-muted-foreground line-clamp-2">"{session.detail}"</p>
+                          </div>
+                        )}
+
+                        {/* Rondas Compactas para Estándar */}
+                        {session.training_type === 'estandar' && (session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[] | null)?.length && (
+                          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {(session.rounds_config as { distance: number; target: string; ends: number; arrows: number }[]).map((r: { distance: number; target: string; ends: number; arrows: number }, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-white/5 text-[10px]">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-primary">R{idx + 1}</span>
+                                  <span className="font-bold opacity-80">{r.distance} yd • {r.target}</span>
+                                </div>
+                                <span className="opacity-60">{r.ends}x{r.arrows} flechas</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-4 sm:pt-0 border-t sm:border-none border-border/50">
+                        <div className="flex flex-col items-center sm:items-end mr-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/50 min-w-[70px]">
+                          <span className="text-[8px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Asistencia</span>
+                          <span className="text-lg font-black text-primary tabular-nums">{attendedCount}/{enrollCount}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          {isAdmin && (
+                            <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl glass border-primary/20 hover:border-primary/50 text-primary" onClick={() => generateQR.mutate(session.id)} disabled={generateQR.isPending}>
+                              <QrCode className="h-5 w-5" />
+                            </Button>
+                          )}
+
+                          {enrolled && (
+                            <Link to={`/scores/new?sessionId=${session.id}`} className="flex-1 sm:flex-initial">
+                              <Button size="sm" className="h-11 px-6 gap-2 rounded-xl font-black shadow-lg shadow-primary/20 w-full">
+                                <Target className="h-4 w-4" /> REGISTRAR PUNTOS
+                              </Button>
+                            </Link>
+                          )}
+
+                          {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
+                            <>
+                              {!enrolled && (
+                                <Button size="sm" className="h-11 px-6 gap-2 rounded-xl font-black shadow-lg shadow-primary/20" onClick={() => enroll.mutate(session.id)}>
+                                  <CheckCircle className="h-4 w-4" /> INSCRIBIRME
+                                </Button>
+                              )}
+                              {enrolled && (
+                                <Button variant="ghost" size="sm" className="h-11 px-4 gap-2 text-destructive font-black rounded-xl hover:bg-destructive/5" onClick={() => unenroll.mutate(session.id)}>
+                                  <XCircle className="h-4 w-4" /> SALIR
+                                </Button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Registered Members Row */}
+                    {isAdmin && enrollCount > 0 && (
+                      <div className="pt-4 border-t border-border/50">
+                        <p className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground mb-3 px-1 flex items-center gap-2">
+                          <Users className="h-3 w-3" /> Miembros Inscritos
+                        </p>
+                        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 text-left">
+                          {enrollments.map((e) => (
+                            <button
+                              key={e.id}
+                              disabled={toggleAttendance.isPending}
+                              onClick={() => toggleAttendance.mutate({ enrollmentId: e.id, currentStatus: e.attended })}
+                              className={cn(
+                                "flex flex-col items-center justify-center p-2 rounded-2xl border transition-all relative group",
+                                e.attended ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/30 border-transparent hover:bg-muted/50"
+                              )}
+                            >
+                              <div className={cn("h-1.5 w-1.5 rounded-full absolute top-2 right-2", e.attended ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/20")} />
+                              <div className={cn("h-8 w-8 rounded-full mb-1.5 flex items-center justify-center border transition-colors", e.attended ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-500" : "bg-background/50 border-border text-muted-foreground")}>
+                                <UserIcon className="h-4 w-4" />
+                              </div>
+                              <span className={cn("text-[10px] font-bold truncate w-full text-center px-1", e.attended ? "text-emerald-600" : "text-muted-foreground")}>
+                                {e.members?.full_name?.split(" ")[0]}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
-                  </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="glass rounded-[2rem] p-20 text-center space-y-6 border-dashed border-2 border-border/50">
+              <Calendar className="h-16 w-16 mx-auto text-muted-foreground/20 animate-bounce" />
+              <div className="space-y-1">
+                <p className="text-xl font-bold text-foreground">Bandeja Vacía</p>
+                <p className="text-sm text-muted-foreground max-w-xs mx-auto font-medium leading-relaxed">No hay sesiones programadas en este servidor para el club seleccionado.</p>
+              </div>
+              {(isAdmin || isSuperAdmin) && (
+                <Button onClick={() => setDialogOpen(true)} className="rounded-xl px-8 h-11 font-black">PROGRAMAR PRIMERA SESIÓN</Button>
+              )}
+            </div>
+          )}
+        </TabsContent>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-4 sm:pt-0 border-t sm:border-none border-border/50">
-                    <div className="flex flex-col items-center sm:items-end mr-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/50 min-w-[70px]">
-                      <span className="text-[8px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Asistencia</span>
-                      <span className="text-lg font-black text-primary tabular-nums">{attendedCount}/{enrollCount}</span>
+        <TabsContent value="gps_qr" className="space-y-6 animate-in fade-in-50 duration-300">
+          {/* 1. Club Permanent QR Code Section */}
+          <div className="glass rounded-3xl p-6 border border-white/5">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              <div className="md:col-span-4 flex flex-col items-center justify-center gap-3 bg-black/10 p-5 rounded-2xl border border-white/5">
+                <QRCodeCanvas 
+                  value={`${window.location.origin}/attendance/checkin?club_id=${selectedClubId}`} 
+                  size={160} 
+                />
+                <div className="flex gap-2 w-full mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/attendance/checkin?club_id=${selectedClubId}`);
+                      toast({ title: "Enlace copiado", description: "El enlace de asistencia fija fue copiado al portapapeles." });
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Copiar Enlace
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                    onClick={() => window.print()}
+                  >
+                    <Printer className="h-3.5 w-3.5" /> Imprimir QR
+                  </Button>
+                </div>
+              </div>
+
+              <div className="md:col-span-8 space-y-4 text-left">
+                <div>
+                  <span className="text-[10px] text-primary uppercase font-black tracking-widest leading-none">Módulo de Asistencia</span>
+                  <h3 className="text-xl font-bold text-foreground mt-0.5">Código QR Fijo + Ubicación GPS</h3>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Este es el código QR permanente del club. Imprímelo y colócalo en la entrada de las instalaciones. 
+                  Los arqueros solo tienen que escanearlo desde sus teléfonos para registrar asistencia de forma inmediata.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                  <div className="flex gap-2.5 items-start bg-white/5 p-3 rounded-xl border border-white/5">
+                    <Smartphone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-foreground">Escaneo Móvil Fijo</h4>
+                      <p className="text-muted-foreground text-[11px] leading-relaxed">No es necesario generar nuevos códigos QR dinámicos cada día.</p>
                     </div>
-                    <div className="flex gap-2">
-                      {isAdmin && (
-                        <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl glass border-primary/20 hover:border-primary/50 text-primary" onClick={() => generateQR.mutate(session.id)} disabled={generateQR.isPending}>
-                          <QrCode className="h-5 w-5" />
-                        </Button>
-                      )}
-
-                      {enrolled && (
-                        <Link to={`/scores/new?sessionId=${session.id}`} className="flex-1 sm:flex-initial">
-                          <Button size="sm" className="h-11 px-6 gap-2 rounded-xl font-black shadow-lg shadow-primary/20 w-full">
-                            <Target className="h-4 w-4" /> REGISTRAR PUNTOS
-                          </Button>
-                        </Link>
-                      )}
-
-                      {member?.id && member.id !== "00000000-0000-0000-0000-000000000000" && (
-                        <>
-                          {!enrolled && (
-                            <Button size="sm" className="h-11 px-6 gap-2 rounded-xl font-black shadow-lg shadow-primary/20" onClick={() => enroll.mutate(session.id)}>
-                              <CheckCircle className="h-4 w-4" /> INSCRIBIRME
-                            </Button>
-                          )}
-                          {enrolled && (
-                            <Button variant="ghost" size="sm" className="h-11 px-4 gap-2 text-destructive font-black rounded-xl hover:bg-destructive/5" onClick={() => unenroll.mutate(session.id)}>
-                              <XCircle className="h-4 w-4" /> SALIR
-                            </Button>
-                          )}
-                        </>
-                      )}
+                  </div>
+                  <div className="flex gap-2.5 items-start bg-white/5 p-3 rounded-xl border border-white/5">
+                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-foreground">Validación GPS Cruzada</h4>
+                      <p className="text-muted-foreground text-[11px] leading-relaxed">Evita marcas de asistencia fraudulentas desde fuera de las instalaciones.</p>
                     </div>
                   </div>
                 </div>
-
-                {isAdmin && enrollCount > 0 && (
-                  <div className="pt-4 border-t border-border/50">
-                    <p className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground mb-3 px-1 flex items-center gap-2">
-                      <Users className="h-3 w-3" /> Miembros Inscritos
-                    </p>
-                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                      {enrollments.map((e) => (
-                        <button
-                          key={e.id}
-                          disabled={toggleAttendance.isPending}
-                          onClick={() => toggleAttendance.mutate({ enrollmentId: e.id, currentStatus: e.attended })}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-2 rounded-2xl border transition-all relative group",
-                            e.attended ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/30 border-transparent hover:bg-muted/50"
-                          )}
-                        >
-                          <div className={cn("h-1.5 w-1.5 rounded-full absolute top-2 right-2", e.attended ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/20")} />
-                          <div className={cn("h-8 w-8 rounded-full mb-1.5 flex items-center justify-center border transition-colors", e.attended ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-500" : "bg-background/50 border-border text-muted-foreground")}>
-                            <UserIcon className="h-4 w-4" />
-                          </div>
-                          <span className={cn("text-[10px] font-bold truncate w-full text-center px-1", e.attended ? "text-emerald-600" : "text-muted-foreground")}>
-                            {e.members?.full_name?.split(" ")[0]}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="glass rounded-[2rem] p-20 text-center space-y-6 border-dashed border-2 border-border/50">
-          <Calendar className="h-16 w-16 mx-auto text-muted-foreground/20 animate-bounce" />
-          <div className="space-y-1">
-            <p className="text-xl font-bold text-foreground">Bandeja Vacía</p>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto font-medium leading-relaxed">No hay sesiones programadas en este servidor para el club seleccionado.</p>
+              </div>
+            </div>
           </div>
-          {(isAdmin || isSuperAdmin) && (
-            <Button onClick={() => setDialogOpen(true)} className="rounded-xl px-8 h-11 font-black">PROGRAMAR PRIMERA SESIÓN</Button>
-          )}
-        </div>
-      )}
+
+          {/* 2. GPS Trainings Panel */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="text-left">
+                <h3 className="font-bold text-foreground text-lg leading-tight">Calendario de Asistencia GPS</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Sesiones activas configuradas con validación de geocercas</p>
+              </div>
+
+              {(isAdmin || isSuperAdmin) && (
+                <Button 
+                  className="gap-2 w-full sm:w-auto h-10 font-bold shadow-lg shadow-primary/10"
+                  onClick={() => setGpsDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4" /> Programar GPS
+                </Button>
+              )}
+            </div>
+
+            {gpsLoading ? (
+              <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="glass rounded-2xl p-6 h-28 animate-pulse" />)}</div>
+            ) : gpsTrainings && gpsTrainings.length > 0 ? (
+              <div className="space-y-3">
+                {(gpsTrainings as GpsTrainingRecord[]).map((t) => {
+                  const attendees = t.training_attendance || [];
+                  const isCurrentActive = new Date() >= new Date(t.starts_at) && new Date() <= new Date(t.ends_at);
+                  const isFinished = new Date() > new Date(t.ends_at);
+                  const isUpcoming = new Date() < new Date(t.starts_at);
+
+                  return (
+                    <div 
+                      key={t.id}
+                      className="glass rounded-2xl p-5 border border-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-white/10 transition-colors"
+                    >
+                      <div className="space-y-2 text-left">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-foreground text-base leading-tight">{t.title}</h4>
+                          {isCurrentActive && (
+                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 h-5 px-2 text-[9px] uppercase font-bold animate-pulse">
+                              Activo Ahora
+                            </span>
+                          )}
+                          {isUpcoming && (
+                            <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 h-5 px-2 text-[9px] uppercase font-bold">
+                              Programado
+                            </span>
+                          )}
+                          {isFinished && (
+                            <span className="inline-flex items-center rounded-full bg-muted-foreground/10 border border-white/5 text-muted-foreground h-5 px-2 text-[9px] uppercase font-bold">
+                              Finalizado
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground font-medium">
+                          <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(t.starts_at).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
+                            ⏰ {new Date(t.starts_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} a {new Date(t.ends_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          <span className="flex items-center gap-1.5 bg-primary/10 px-2 py-0.5 rounded-md font-semibold text-primary">
+                            📍 Radio: {t.allowed_radius_meters}m
+                          </span>
+                          <span className="opacity-65">
+                            Lat: {t.location_lat.toFixed(5)}, Lng: {t.location_lng.toFixed(5)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                          onClick={() => setSelectedGpsTraining(t)}
+                        >
+                          <Users className="h-3.5 w-3.5 text-primary" /> Asistencias ({attendees.length})
+                        </Button>
+                        
+                        {(isAdmin || isSuperAdmin) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-xl h-9 w-9 text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              if (confirm("¿Estás seguro de que deseas eliminar este entrenamiento GPS y todo su historial de asistencia?")) {
+                                deleteGpsTraining.mutate(t.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="glass rounded-[2rem] py-14 text-center space-y-4 border-dashed border-2 border-border/50">
+                <MapPin className="h-12 w-12 mx-auto text-muted-foreground/20" />
+                <div className="space-y-1">
+                  <p className="text-base font-bold text-foreground">Sin Entrenamientos GPS</p>
+                  <p className="text-xs text-muted-foreground max-w-[280px] mx-auto leading-relaxed font-medium">No hay entrenamientos GPS programados para el club seleccionado.</p>
+                </div>
+                {(isAdmin || isSuperAdmin) && (
+                  <Button onClick={() => setGpsDialogOpen(true)} className="rounded-xl px-6 h-9 font-bold text-xs">CREAR PRIMER GPS</Button>
+                )}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* GPS Training Creation Dialog */}
+      <Dialog open={gpsDialogOpen} onOpenChange={setGpsDialogOpen}>
+        <DialogContent className="rounded-3xl glass max-w-[95vw] sm:max-w-lg scrollbar-hide max-h-[90vh] overflow-y-auto border-none p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display font-bold text-xl text-left">Programar Entrenamiento GPS</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-1 text-left font-medium">Crea una sesión geolocalizada en el club para validación de presencia.</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={(e) => { e.preventDefault(); createGpsTraining.mutate(); }} className="space-y-5 pt-4 text-left">
+            {isSuperAdmin && (
+              <div className="space-y-2">
+                <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Club para el entrenamiento</Label>
+                <Select value={dialogClubId} onValueChange={setDialogClubId}>
+                  <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
+                  <SelectContent className="glass">
+                    {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Título del Entrenamiento</Label>
+              <Input 
+                value={gpsTitle} 
+                onChange={(e) => setGpsTitle(e.target.value)} 
+                placeholder="Ej: Práctica Sabatina - Turno Mañana" 
+                required 
+                className="h-11 glass border-primary/10" 
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Inicio</Label>
+                <Input 
+                  type="datetime-local" 
+                  value={gpsStartsAt} 
+                  onChange={(e) => setGpsStartsAt(e.target.value)} 
+                  required 
+                  className="h-11 glass border-primary/10" 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">Término</Label>
+                <Input 
+                  type="datetime-local" 
+                  value={gpsEndsAt} 
+                  onChange={(e) => setGpsEndsAt(e.target.value)} 
+                  required 
+                  className="h-11 glass border-primary/10" 
+                />
+              </div>
+            </div>
+
+            <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-4">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs uppercase font-black tracking-widest text-primary flex items-center gap-1">
+                  📍 Ubicación Geográfica
+                </Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 rounded-lg text-[10px] font-bold gap-1 border-primary/20 hover:bg-primary/10"
+                  onClick={fetchCurrentCoordinates}
+                  disabled={fetchingMyGps}
+                >
+                  {fetchingMyGps ? <Loader2 className="h-3 w-3 animate-spin" /> : <Navigation className="h-3 w-3" />}
+                  Usar mi GPS actual
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Latitud</Label>
+                  <Input 
+                    type="number" 
+                    step="any" 
+                    value={gpsLat} 
+                    onChange={(e) => setGpsLat(e.target.value)} 
+                    placeholder="-33.45678" 
+                    required 
+                    className="h-10 glass border-primary/10" 
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Longitud</Label>
+                  <Input 
+                    type="number" 
+                    step="any" 
+                    value={gpsLng} 
+                    onChange={(e) => setGpsLng(e.target.value)} 
+                    placeholder="-70.65432" 
+                    required 
+                    className="h-10 glass border-primary/10" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[10px] uppercase font-black tracking-widest text-muted-foreground font-medium">
+                  <span>Radio de Tolerancia:</span>
+                  <span className="text-primary font-bold">{gpsRadius} metros</span>
+                </div>
+                <Input 
+                  type="range" 
+                  min="20" 
+                  max="500" 
+                  step="10"
+                  value={gpsRadius} 
+                  onChange={(e) => setGpsRadius(parseInt(e.target.value))} 
+                  className="h-6 accent-primary cursor-pointer w-full bg-white/5 rounded-lg appearance-none" 
+                />
+                <p className="text-[9px] text-muted-foreground leading-none mt-1 font-medium">
+                  Los arqueros deberán encontrarse a menos de {gpsRadius}m de este punto para que se apruebe su asistencia.
+                </p>
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-12 rounded-2xl font-black shadow-lg" 
+              disabled={createGpsTraining.isPending}
+            >
+              {createGpsTraining.isPending ? "CREANDO..." : "PROGRAMAR AHORA"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* GPS Attendance Details Dialog */}
+      <Dialog open={!!selectedGpsTraining} onOpenChange={(open) => !open && setSelectedGpsTraining(null)}>
+        <DialogContent className="rounded-3xl glass max-w-[95vw] sm:max-w-xl scrollbar-hide max-h-[85vh] overflow-y-auto border-none p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display font-bold text-lg flex items-center gap-1.5 text-left">
+              <Users className="h-5 w-5 text-primary" /> Asistencias: {selectedGpsTraining?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground text-left font-medium">
+              Lista de arqueros que registraron asistencia mediante código QR y validación por GPS.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="pt-4 space-y-4">
+            {selectedGpsTraining && (!selectedGpsTraining.training_attendance || selectedGpsTraining.training_attendance.length === 0) ? (
+              <div className="text-center py-10 space-y-2">
+                <Users className="h-10 w-10 text-muted-foreground/30 mx-auto" />
+                <p className="text-sm font-bold text-foreground">Sin Registros</p>
+                <p className="text-xs text-muted-foreground px-4 leading-relaxed font-medium">Ningún arquero ha marcado asistencia para este entrenamiento aún.</p>
+              </div>
+            ) : (
+              <div className="space-y-3.5 max-h-[50vh] overflow-y-auto pr-1">
+                {selectedGpsTraining?.training_attendance?.map((att) => {
+                  const archerName = clubMembers?.find((m) => m.user_id === att.user_id)?.full_name || "Arquero Desconocido";
+                  
+                  return (
+                    <div 
+                      key={att.id}
+                      className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col sm:flex-row justify-between gap-3 text-left hover:bg-white/10 transition-colors"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <h4 className="font-bold text-foreground text-sm">{archerName}</h4>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2.5 text-[10px] text-muted-foreground font-medium">
+                          <span>📅 {new Date(att.attended_at).toLocaleDateString("es-CL")}</span>
+                          <span>⏰ {new Date(att.attended_at).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</span>
+                          {att.distance_meters !== null && (
+                            <span className="text-primary font-bold">
+                              📍 a {att.distance_meters.toFixed(1)}m del centro
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:items-end justify-center text-[9px] text-muted-foreground shrink-0 border-t sm:border-t-0 sm:border-l border-white/5 pt-2 sm:pt-0 sm:pl-3">
+                        <span className="flex items-center gap-1">🌐 IP: <b className="text-foreground font-mono">{att.ip_address || "Desconocida"}</b></span>
+                        <span className="truncate max-w-[150px] mt-0.5" title={att.user_agent}>
+                          📱 {att.user_agent?.includes("Mobi") ? "Dispositivo Móvil" : "Computador"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            <Button 
+              variant="outline" 
+              className="w-full h-11 font-bold rounded-xl border-white/10 hover:bg-white/5 mt-2" 
+              onClick={() => setSelectedGpsTraining(null)}
+            >
+              Cerrar Detalle
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* QR Code Dialog */}
       <Dialog open={!!qrSession} onOpenChange={(open) => !open && setQrSession(null)}>
