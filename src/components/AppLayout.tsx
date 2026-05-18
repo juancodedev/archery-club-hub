@@ -216,17 +216,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto relative">
-          {member?.club_status === 'bloqueado' && !isSuperAdmin ? (
+          {member?.club_status === 'bloqueado' && (member?.block_type === 'total' || member?.block_type === null) && !isSuperAdmin ? (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
-              <div className="max-w-md w-full glass p-8 rounded-[2rem] text-center space-y-6 shadow-2xl border-destructive/20">
+              <div className="max-w-md w-full glass p-8 rounded-[2rem] text-center space-y-6 shadow-2xl border-destructive/20 animate-in fade-in zoom-in duration-300">
                 <div className="h-20 w-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto text-destructive">
                   <Lock className="h-10 w-10" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-display font-bold text-foreground">Acceso Limitado</h2>
+                  <h2 className="text-2xl font-display font-bold text-foreground">Acceso Bloqueado</h2>
                   <p className="text-muted-foreground text-sm">
-                    La suscripción de tu club ha sido desactivada o bloqueada por el administrador del sistema.
-                    Por favor, contacta al tesorero de tu club o al soporte técnico.
+                    La suscripción de tu club ha sido bloqueada totalmente.
+                    Por favor, contacta al administrador para regularizar el pago.
                   </p>
                 </div>
                 <div className="pt-4">
@@ -238,7 +238,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ) : (
-            children
+            <>
+              {member?.club_status === 'bloqueado' && member?.block_type === 'partial' && !isSuperAdmin && (
+                <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-center gap-4 animate-in slide-in-from-top duration-500">
+                  <div className="h-10 w-10 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-500 shrink-0">
+                    <History className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-yellow-500">Modo Lectura - Suscripción Vencida</p>
+                    <p className="text-xs text-yellow-500/70">Tu club tiene pagos pendientes. Puedes ver tus datos, pero las funciones de edición están deshabilitadas.</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="bg-yellow-500/10 border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/20" asChild>
+                    <Link to="/billing">Pagar ahora</Link>
+                  </Button>
+                </div>
+              )}
+              {children}
+            </>
           )}
         </main>
       </div>

@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface Props {
     clubId: string;
+    disabled?: boolean;
 }
 
-export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
+export default function InviteMemberDialog({ clubId: initialClubId, disabled }: Props) {
     const { member } = useAuth();
     const isSuperAdmin = !!member?.is_super_admin;
     const { toast } = useToast();
@@ -80,7 +81,7 @@ export default function InviteMemberDialog({ clubId: initialClubId }: Props) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" disabled={disabled}>
                     <Link className="h-4 w-4" />
                     Invitar vía Link
                 </Button>

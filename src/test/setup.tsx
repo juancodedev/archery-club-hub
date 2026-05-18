@@ -18,11 +18,27 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+const MockResizeObserver = vi.fn().mockImplementation(() => ({
     observe: vi.fn(),
     unobserve: vi.fn(),
     disconnect: vi.fn(),
 }));
+
+global.ResizeObserver = MockResizeObserver;
+window.ResizeObserver = MockResizeObserver;
+
+// Mock IntersectionObserver
+const MockIntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    root: null,
+    rootMargin: "",
+    thresholds: [],
+}));
+
+global.IntersectionObserver = MockIntersectionObserver;
+window.IntersectionObserver = MockIntersectionObserver;
 
 // Mock import.meta.env
 (globalThis as Record<string, unknown>).import = {

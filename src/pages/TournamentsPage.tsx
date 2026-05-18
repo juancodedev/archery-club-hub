@@ -15,6 +15,7 @@ import {
     Users,
     ChevronDown,
     ChevronUp,
+    Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,12 +94,29 @@ export default function TournamentsPage() {
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
     const [searchQuery, setSearchQuery] = useState("");
     const [expandedManager, setExpandedManager] = useState<string | null>(null);
+    const [selectedClubId, setSelectedClubId] = useState<string | null>(null);
 
-    const clubId = member?.club_id;
+    const isSuperAdmin = member?.is_super_admin ?? false;
+    // Superadmins pick a club to manage; regular users use their own club_id
+    const clubId = isSuperAdmin ? selectedClubId : (member?.club_id ?? null);
     const memberId = member?.id;
     const roles = member?.roles || [];
-    const isAdmin = roles.some(r => ["administrador", "presidente", "entrenador"].includes(r));
-    const isManager = roles.some(r => ["gestor_torneos", "administrador", "presidente"].includes(r));
+    const isAdmin = isSuperAdmin || roles.some(r => ["administrador", "presidente", "entrenador"].includes(r));
+    const isManager = isSuperAdmin || roles.some(r => ["gestor_torneos", "administrador", "presidente"].includes(r));
+
+    // --- Clubs list (superadmin only) ---
+    const { data: allClubs } = useQuery<{ id: string; name: string }[]>({
+        queryKey: ["all-clubs-for-superadmin"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("clubs")
+                .select("id, name")
+                .order("name");
+            if (error) throw error;
+            return data as { id: string; name: string }[];
+        },
+        enabled: isSuperAdmin,
+    });
 
     // --- Tournaments ---
     const { data: tournaments, isLoading } = useQuery<Tournament[]>({
@@ -248,7 +266,11 @@ export default function TournamentsPage() {
                 {isAdmin && (
                     <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                         <DialogTrigger asChild>
-                            <Button className="gap-2 shadow-lg shadow-primary/20 h-11 px-6 rounded-xl font-bold">
+                            <Button
+                                className="gap-2 shadow-lg shadow-primary/20 h-11 px-6 rounded-xl font-bold"
+                                disabled={isSuperAdmin && !selectedClubId}
+                                title={isSuperAdmin && !selectedClubId ? "Selecciona un club primero" : undefined}
+                            >
                                 <Plus className="h-4 w-4" /> Crear Torneo
                             </Button>
                         </DialogTrigger>
@@ -281,6 +303,30 @@ export default function TournamentsPage() {
                     </Dialog>
                 )}
             </motion.div>
+
+            {/* SuperAdmin: club selector */}
+            {isSuperAdmin && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                    className="glass border border-yellow-500/20 rounded-[1.5rem] p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2 text-yellow-500 shrink-0">
+                        <Building2 className="h-5 w-5" />
+                        <span className="text-sm font-bold uppercase tracking-wider">Vista SuperAdmin</span>
+                    </div>
+                    <Select value={selectedClubId ?? ""} onValueChange={(v) => setSelectedClubId(v || null)}>
+                        <SelectTrigger className="glass h-11 rounded-xl max-w-xs border-yellow-500/20 text-sm">
+                            <SelectValue placeholder="Selecciona un club para gestionar..." />
+                        </SelectTrigger>
+                        <SelectContent className="glass">
+                            {allClubs?.map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {!selectedClubId && (
+                        <p className="text-xs text-muted-foreground italic">Selecciona un club para ver y gestionar sus torneos.</p>
+                    )}
+                </motion.div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 {/* --- Calendar Side --- */}
@@ -417,31 +463,33 @@ export default function TournamentsPage() {
                                                 </div>
                                             )}
 
-                                            {/* Registration action for archers */}
-                                            <div className="pt-1">
-                                                {myRegistration ? (
-                                                    <div className="flex items-center justify-between">
-                                                        <Badge variant="outline" className={cn("rounded-lg border text-[10px] uppercase font-black tracking-widest px-3 h-6 gap-1", statusConfig?.color)}>
-                                                            {StatusIcon && <StatusIcon className="h-3 w-3" />}
-                                                            {statusConfig?.label}
-                                                        </Badge>
-                                                        {myRegistration.status === "pendiente" && (
-                                                            <Button variant="ghost" size="sm" onClick={() => cancelMutation.mutate(myRegistration.id)}
-                                                                className="text-[10px] h-7 text-destructive hover:bg-destructive/10 font-bold uppercase tracking-wide">
-                                                                Cancelar
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <Button size="sm" variant="outline"
-                                                        className="w-full h-9 rounded-xl font-bold text-xs border-primary/20 hover:bg-primary/5 hover:border-primary/40 gap-2"
-                                                        onClick={() => registerMutation.mutate(t.id)}
-                                                        disabled={registerMutation.isPending}>
-                                                        <Trophy className="h-3.5 w-3.5" />
-                                                        Inscribirme
-                                                    </Button>
-                                                )}
-                                            </div>
+                                            {/* Registration action for archers (hidden for superadmins) */}
+                                            {!isSuperAdmin && (
+                                                <div className="pt-1">
+                                                    {myRegistration ? (
+                                                        <div className="flex items-center justify-between">
+                                                            <Badge variant="outline" className={cn("rounded-lg border text-[10px] uppercase font-black tracking-widest px-3 h-6 gap-1", statusConfig?.color)}>
+                                                                {StatusIcon && <StatusIcon className="h-3 w-3" />}
+                                                                {statusConfig?.label}
+                                                            </Badge>
+                                                            {myRegistration.status === "pendiente" && (
+                                                                <Button variant="ghost" size="sm" onClick={() => cancelMutation.mutate(myRegistration.id)}
+                                                                    className="text-[10px] h-7 text-destructive hover:bg-destructive/10 font-bold uppercase tracking-wide">
+                                                                    Cancelar
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <Button size="sm" variant="outline"
+                                                            className="w-full h-9 rounded-xl font-bold text-xs border-primary/20 hover:bg-primary/5 hover:border-primary/40 gap-2"
+                                                            onClick={() => registerMutation.mutate(t.id)}
+                                                            disabled={registerMutation.isPending}>
+                                                            <Trophy className="h-3.5 w-3.5" />
+                                                            Inscribirme
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            )}
 
                                             {/* Manager panel */}
                                             {isManager && (pending.length > 0 || isExpanded) && (
