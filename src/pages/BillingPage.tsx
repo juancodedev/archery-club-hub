@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Check, Info, Zap, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -111,6 +112,23 @@ export default function BillingPage() {
         }
     }, [member?.club_id, isAnnualPro, isAnnualBusiness]);
 
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        const status = searchParams.get("status");
+        if (status === "success") {
+            toast.success("¡Pago procesado con éxito! Tu suscripción se actualizará en unos instantes.");
+            fetchClubAndStudents();
+            setSearchParams({}); // Clear params
+        } else if (status === "failure") {
+            toast.error("El pago no pudo ser procesado. Por favor, intenta de nuevo.");
+            setSearchParams({});
+        } else if (status === "pending") {
+            toast.info("Tu pago está pendiente de confirmación.");
+            setSearchParams({});
+        }
+    }, [searchParams, fetchClubAndStudents, setSearchParams]);
+
     useEffect(() => {
         if (member?.club_id) {
             fetchClubAndStudents();
@@ -140,23 +158,28 @@ export default function BillingPage() {
     };
 
     const handlePaymentSubmit = async () => {
+        if (!selectedPlan || !member?.club_id) return;
+
         setIsProcessing(true);
-        // Simulate Mercado Pago transaction
-        await new Promise(r => setTimeout(r, 2000));
+        try {
+            const { data, error } = await supabase.functions.invoke('mercadopago-checkout', {
+                body: {
+                    plan_id: selectedPlan.id,
+                    club_id: member.club_id,
+                    is_annual: selectedPlan.isAnnual
+                }
+            });
 
-        const { error } = await supabase.from("clubs").update({
-            plan_id: selectedPlan?.id,
-            billing_cycle: selectedPlan?.isAnnual ? "annual" : "monthly",
-            subscription_status: "activo"
-        }).eq("id", member?.club_id);
-
-        if (error) {
-            toast.error("Error al procesar pago");
-        } else {
-            toast.success(`Plan ${selectedPlan?.name} activado con éxito`);
-            setIsPaymentDialogOpen(false);
+            if (error) throw error;
+            if (data?.init_point) {
+                window.location.href = data.init_point;
+            } else {
+                throw new Error("No se pudo generar el link de pago");
+            }
+        } catch (error) {
+            toast.error("Error al iniciar el pago: " + (error instanceof Error ? error.message : String(error)));
+            setIsProcessing(false);
         }
-        setIsProcessing(false);
     };
     return (
         <div className="max-w-7xl mx-auto space-y-10 pb-20">

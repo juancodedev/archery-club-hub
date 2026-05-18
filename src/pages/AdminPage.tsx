@@ -20,6 +20,7 @@ import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialo
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
 import { calculateFinancialStatus } from "@/lib/membershipUtils";
+import { isReadOnlyMode } from "@/lib/permissions";
 
 interface AdminMember {
   id: string;
@@ -119,25 +120,26 @@ export default function AdminPage() {
 
   const resetPassword = useMutation({
     mutationFn: async (member: AdminMember) => {
-      if (!member.user_id) throw new Error("Este miembro no tiene cuenta de usuario asociada.");
+      const email = member.email?.trim();
+      if (!email) throw new Error("Este miembro no tiene correo electrónico configurado.");
+      if (email.toLowerCase().endsWith("@sin-email.clubarchery.local")) {
+        throw new Error("Este miembro usa un correo interno temporal. Debe registrar un correo real para recuperar su contraseña.");
+      }
 
-      const { data, error } = await supabase.rpc('admin_reset_user_password', {
-        p_user_id: member.user_id,
-        p_club_id: member.club_id,
-        p_new_password: null as unknown as string
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
-
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, member) => {
       toast({
-        title: "Contraseña reseteada exitosamente",
-        description: "Se generó una nueva contraseña temporal de forma segura."
+        title: "Enlace de recuperación enviado",
+        description: `Se envió un correo de recuperación a ${member.email}.`
       });
     },
-    onError: () => {
-      toast({ title: "Error al resetear la contraseña", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Error al enviar recuperación", description: getSafeErrorMessage(error), variant: "destructive" });
     },
   });
 
@@ -159,8 +161,8 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-col xs:flex-row gap-2">
-            {selectedClubId && <InviteMemberDialog clubId={selectedClubId} />}
-            {selectedClubId && <AddMemberDialog clubId={selectedClubId} />}
+            {selectedClubId && <InviteMemberDialog clubId={selectedClubId} disabled={isReadOnlyMode(member)} />}
+            {selectedClubId && <AddMemberDialog clubId={selectedClubId} disabled={isReadOnlyMode(member)} />}
           </div>
         </div>
 
@@ -253,10 +255,10 @@ export default function AdminPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="glass">
-                                <DropdownMenuItem onClick={() => setEditMember(m)}>
+                                <DropdownMenuItem onClick={() => setEditMember(m)} disabled={isReadOnlyMode(member)}>
                                   <Pencil className="h-4 w-4 mr-2" />Editar datos
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })}>
+                                <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles })} disabled={isReadOnlyMode(member)}>
                                   <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setHistoryMember(m)}>
@@ -271,18 +273,18 @@ export default function AdminPage() {
                                 <DropdownMenuItem
                                   disabled={m.user_id === member?.user_id}
                                   onClick={() => {
-                                    if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                                    if (confirm(`¿Enviar correo de recuperación de contraseña a ${m.full_name}?`)) {
                                       resetPassword.mutate(m);
                                     }
                                   }}>
-                                  <Key className="h-4 w-4 mr-2" />Resetear contraseña
+                                  <Key className="h-4 w-4 mr-2" />Enviar recuperación por correo
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
+                                <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })} disabled={isReadOnlyMode(member)}>
                                   {m.status === "activo" ? <XCircle className="h-4 w-4 mr-2 text-destructive" /> : <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />}
                                   {m.status === "activo" ? "Desactivar Miembro" : "Activar Miembro"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)}>
+                                <DropdownMenuItem className="text-destructive" onClick={() => setDeleteMember(m)} disabled={isReadOnlyMode(member)}>
                                   <Trash2 className="h-4 w-4 mr-2" />Eliminar
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -339,11 +341,11 @@ export default function AdminPage() {
                         <DropdownMenuItem
                           disabled={m.user_id === member?.user_id}
                           onClick={() => {
-                            if (confirm(`¿Estás seguro de resetear la contraseña de ${m.full_name}?`)) {
+                            if (confirm(`¿Enviar correo de recuperación de contraseña a ${m.full_name}?`)) {
                               resetPassword.mutate(m);
                             }
                           }}>
-                          <Key className="h-4 w-4 mr-2" />Resetear Contraseña
+                          <Key className="h-4 w-4 mr-2" />Enviar recuperación por correo
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => toggleStatus.mutate({ id: m.id, status: m.status as string })}>
