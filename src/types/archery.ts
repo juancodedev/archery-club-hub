@@ -18,6 +18,7 @@ export interface TournamentType {
     is_system: boolean;
     club_id?: string | null;
     active?: boolean;
+    ifaa_round?: 'field' | 'hunter' | 'animal_2d' | 'animal_3d' | '3d_hunting' | '3d_standard' | 'field_expert' | 'indoor_standard' | 'flint_indoor' | null;
 }
 
 export interface Division {

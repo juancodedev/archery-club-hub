@@ -28,7 +28,7 @@ export function arrowValue(value: string, isIndoor: boolean = false): number {
     }
 
     const numValue = Number(v);
-    if (isNaN(numValue) || numValue < 0 || numValue > 10) {
+    if (isNaN(numValue) || numValue < 0 || numValue > 20) {
         return 0;
     }
 
@@ -105,9 +105,9 @@ export function validateArrowValue(value: string): boolean {
         return true;
     }
 
-    // Valores numéricos del 0 al 10 (solo enteros)
+    // Valores numéricos del 0 al 20 (solo enteros)
     const numValue = Number(v);
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 10 && Number.isInteger(numValue)) {
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 20 && Number.isInteger(numValue)) {
         return true;
     }
 

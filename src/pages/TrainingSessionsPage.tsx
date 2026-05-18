@@ -639,16 +639,13 @@ export default function TrainingSessionsPage() {
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
               <Calendar className="h-7 w-7 text-primary" />
-              Asistencia y Geolocalización
+              Asistencia y Localización
             </h1>
             <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">Configuración de geocercas GPS y consulta de asistencia</p>
           </div>
 
           {(isAdmin || isSuperAdmin) && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 w-full sm:w-auto h-11 sm:h-10 font-bold shadow-lg shadow-primary/20"><Plus className="h-4 w-4" />Nueva Sesión</Button>
-              </DialogTrigger>
               <DialogContent className="rounded-3xl glass max-w-[95vw] sm:max-w-lg scrollbar-hide max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-display font-bold text-xl">Crear Sesión de Entrenamiento</DialogTitle>
@@ -1154,11 +1151,8 @@ export default function TrainingSessionsPage() {
         )}
       </motion.div>
 
-      <Tabs defaultValue="sessions" className="w-full space-y-6">
-        <TabsList className="grid grid-cols-2 w-full max-w-md glass p-1 h-12">
-          <TabsTrigger value="sessions" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            Programación Estándar
-          </TabsTrigger>
+      <Tabs defaultValue="gps_qr" className="w-full space-y-6">
+        <TabsList className="grid grid-cols-1 w-full max-w-xs glass p-1 h-12">
           <TabsTrigger value="gps_qr" className="rounded-xl font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             Asistencia GPS / QR
           </TabsTrigger>
