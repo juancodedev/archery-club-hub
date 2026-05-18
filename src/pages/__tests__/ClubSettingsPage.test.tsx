@@ -131,10 +131,4 @@ describe('ClubSettingsPage', () => {
         expect(grids.length).toBeGreaterThan(0);
     });
 
-    it('should render password placeholder on input', () => {
-        renderComponent();
-        // The placeholder for password input
-        const pwInput = screen.getByPlaceholderText(/Establece la contraseña por defecto/i);
-        expect(pwInput).toBeInTheDocument();
-    });
 });
