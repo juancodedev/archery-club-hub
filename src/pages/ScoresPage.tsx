@@ -1,8 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info } from "lucide-react";
+import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Club, MemberBasic } from "@/types/archery";
+import { toast } from "sonner";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 
 interface Score {
@@ -24,16 +26,21 @@ interface Score {
   division: string | null;
   ends: string[][] | null;
   detail: string | null;
-  members: { full_name: string } | null;
+  members: { full_name: string; identification: string | null } | null;
   clubs: { name: string } | null;
+  division_id?: string | null;
+  tournament_type_id?: string | null;
+  ifaa_class?: string | null;
+  divisions?: { name: string; abbreviation: string } | null;
+  tournament_types?: { name: string; ends_per_round: number; arrows_per_end: number; is_indoor: boolean; ifaa_round: string | null } | null;
 }
 
 export default function ScoresPage() {
   const { member } = useAuth();
   const isSuperAdmin = member?.is_super_admin ?? false;
-
   const isAdmin = member?.roles?.includes("administrador") || member?.roles?.includes("presidente") || member?.roles?.includes("entrenador");
 
+  const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("all");
@@ -44,6 +51,99 @@ export default function ScoresPage() {
 
   const [clubs, setClubs] = useState<Club[]>([]);
   const [membersList, setMembersList] = useState<MemberBasic[]>([]);
+  const [activeExportScore, setActiveExportScore] = useState<Score | null>(null);
+
+  const handleDeleteScore = async (scoreId: string) => {
+    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar este registro de entrenamiento/puntaje? Esta acción no se puede deshacer.");
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase.from("scores").delete().eq("id", scoreId);
+      if (error) throw error;
+      toast.success("Registro eliminado correctamente");
+      queryClient.invalidateQueries({ queryKey: ["all-scores"] });
+    } catch (err) {
+      toast.error("Error al eliminar el registro: " + getSafeErrorMessage(err));
+    }
+  };
+
+  const canManage = (score: Score) => {
+    return isSuperAdmin || isAdmin || score.member_id === member?.id;
+  };
+
+  const [downloadingPDF, setDownloadingPDF] = useState(false);
+
+  const handleDownloadPDF = () => {
+    const html2pdf = (window as any).html2pdf;
+    if (html2pdf) {
+      generatePDF(html2pdf);
+      return;
+    }
+
+    setDownloadingPDF(true);
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+    script.onload = () => {
+      setDownloadingPDF(false);
+      const loadedHtml2pdf = (window as any).html2pdf;
+      if (loadedHtml2pdf) {
+        generatePDF(loadedHtml2pdf);
+      } else {
+        toast.error("Error al iniciar el motor de PDF");
+      }
+    };
+    script.onerror = () => {
+      setDownloadingPDF(false);
+      toast.error("Fallo al descargar la librería de PDF. Por favor verifica tu conexión a internet.");
+    };
+    document.body.appendChild(script);
+  };
+
+  const generatePDF = (html2pdf: any) => {
+    const element = document.querySelector(".print-scorecard") as HTMLElement;
+    if (!element) {
+      toast.error("No se encontró el elemento de la ficha");
+      return;
+    }
+
+    // Save current scroll position to restore it later
+    const currentScrollY = window.scrollY;
+
+    // Temporarily scroll to top so html2canvas matches absolute coordinate layout exactly
+    window.scrollTo(0, 0);
+
+    const opt = {
+      margin:       0.25,
+      filename:     `Ficha_IFAA_${activeExportScore?.members?.full_name?.replace(/\s+/g, "_") || "arquero"}_${activeExportScore?.score_date || "fecha"}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { 
+        scale: 2, 
+        useCORS: true, 
+        letterRendering: true, 
+        backgroundColor: "#ffffff",
+        scrollX: 0,
+        scrollY: 0,
+        logging: false
+      },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    toast.info("Generando PDF...");
+
+    // Wait a brief tick (150ms) for browser layout to settle at top-scroll before rendering
+    setTimeout(() => {
+      html2pdf().from(element).set(opt).save().then(() => {
+        // Restore scroll position
+        window.scrollTo(0, currentScrollY);
+        toast.success("¡Ficha PDF generada y descargada!");
+      }).catch((err: any) => {
+        // Restore scroll position even on error
+        window.scrollTo(0, currentScrollY);
+        console.error(err);
+        toast.error("Error al exportar PDF: " + err.message);
+      });
+    }, 150);
+  };
 
 
   useEffect(() => {
@@ -79,8 +179,10 @@ export default function ScoresPage() {
     queryFn: async () => {
       let query = supabase.from("scores").select(`
         *,
-        members(full_name),
-        clubs(name)
+        members(full_name, identification),
+        clubs(name),
+        divisions(name, abbreviation),
+        tournament_types(name, ends_per_round, arrows_per_end, is_indoor, ifaa_round)
       `);
 
       if (isSuperAdmin) {
@@ -331,6 +433,39 @@ export default function ScoresPage() {
                         <p className="italic leading-relaxed">"{score.detail}"</p>
                       </div>
                     )}
+
+                    <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5 justify-end">
+                      <Button
+                        onClick={() => setActiveExportScore(score)}
+                        className="gap-2 text-xs font-black uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 shadow-lg shadow-emerald-500/20"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Exportar Tarjeta IFAA
+                      </Button>
+                      
+                      {canManage(score) && (
+                        <>
+                          <Link to={`/scores/new?editId=${score.id}`}>
+                            <Button
+                              variant="outline"
+                              className="gap-2 text-xs font-black uppercase tracking-widest border-white/10 hover:border-primary/50 text-foreground glass rounded-xl h-9 px-4"
+                            >
+                              <Edit className="h-3.5 w-3.5 text-primary" />
+                              Editar
+                            </Button>
+                          </Link>
+                          
+                          <Button
+                            onClick={() => handleDeleteScore(score.id)}
+                            variant="destructive"
+                            className="gap-2 text-xs font-black uppercase tracking-widest rounded-xl h-9 px-4 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 transition-all"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Eliminar
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -349,6 +484,280 @@ export default function ScoresPage() {
             <Link to="/scores/new">
               <Button size="sm" className="rounded-xl px-6">Nuevo Registro</Button>
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* IFAA SCORECARD EXPORT MODAL */}
+      {activeExportScore && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm no-print overflow-y-auto animate-in fade-in duration-200">
+          <div className="glass w-full max-w-4xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveExportScore(null)}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-white/5 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 pb-4">
+              <div>
+                <h2 className="text-xl font-display font-bold text-foreground flex items-center gap-2">
+                  <Printer className="h-5 w-5 text-primary animate-pulse" /> Vista de Exportación
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Generación oficial de ficha de puntaje IFAA</p>
+              </div>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveExportScore(null)}
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-white/10"
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => window.print()}
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-white/10 text-foreground hover:bg-white/5 gap-2"
+                >
+                  <Printer className="h-4 w-4 text-primary" />
+                  Imprimir Físico
+                </Button>
+                <Button
+                  onClick={handleDownloadPDF}
+                  disabled={downloadingPDF}
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/20 gap-2"
+                >
+                  {downloadingPDF ? "Cargando motor..." : "Generar y Descargar PDF"}
+                </Button>
+              </div>
+            </div>
+
+            {/* PRINT CONTAINER */}
+            <div className="print-scorecard bg-white text-black p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-xl space-y-6 font-sans">
+              <style>{`
+                @media print {
+                  body * {
+                    visibility: hidden;
+                  }
+                  .print-scorecard, .print-scorecard * {
+                    visibility: visible;
+                  }
+                  .print-scorecard {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100% !important;
+                    margin: 0 !important;
+                    padding: 1.5cm !important;
+                    border: none !important;
+                    box-shadow: none !important;
+                    background: white !important;
+                    color: black !important;
+                  }
+                }
+              `}</style>
+
+              <div className="border-4 border-black p-4 space-y-4">
+                <div className="grid grid-cols-12 gap-4 items-center border-b-2 border-black pb-4">
+                  {/* Left Logo */}
+                  <div className="col-span-3 flex flex-col items-center justify-center border-r-2 border-black pr-2">
+                    <svg className="w-16 h-16 text-yellow-600 font-bold" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="50,5 95,85 5,85" stroke="red" strokeWidth="4" fill="yellow" />
+                      <circle cx="50" cy="55" r="18" fill="white" stroke="blue" strokeWidth="2" />
+                      <path d="M 50,55 L 50,37 M 50,55 L 65,65 M 50,55 L 35,65" stroke="black" strokeWidth="3" />
+                      <text x="50" y="58" fontSize="10" fontWeight="black" textAnchor="middle" fill="blue">IFAA</text>
+                    </svg>
+                    <span className="text-[7px] text-center font-black uppercase text-red-600 tracking-tighter mt-1">
+                      Field Archery Assoc.
+                    </span>
+                  </div>
+
+                  {/* Center Metadata Banner */}
+                  <div className="col-span-6 text-center space-y-2 px-2">
+                    <div className="bg-[#4a90e2] text-white py-1.5 px-4 rounded-sm font-sans font-black text-lg tracking-wider uppercase border border-black shadow-sm">
+                      {activeExportScore.event_name || "SESIÓN DE ENTRENAMIENTO"}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-left mt-2">
+                      <div className="border border-black p-1 rounded-sm">
+                        <span className="text-[7px] font-black uppercase block text-gray-500">Name:</span>
+                        <span className="text-xs font-bold uppercase">{activeExportScore.members?.full_name}</span>
+                      </div>
+                      <div className="border border-black p-1 rounded-sm">
+                        <span className="text-[7px] font-black uppercase block text-gray-500">Registration No.:</span>
+                        <span className="text-xs font-mono font-bold uppercase">
+                          {activeExportScore.members?.identification || "N/A"}
+                        </span>
+                      </div>
+                      <div className="border border-black p-1 rounded-sm">
+                        <span className="text-[7px] font-black uppercase block text-gray-500">Style:</span>
+                        <span className="text-xs font-bold uppercase">
+                          {activeExportScore.divisions?.abbreviation || activeExportScore.division || "N/A"}
+                        </span>
+                      </div>
+                      <div className="border border-black p-1 rounded-sm">
+                        <span className="text-[7px] font-black uppercase block text-gray-500">Date:</span>
+                        <span className="text-xs font-bold uppercase">
+                          {new Date(activeExportScore.score_date).toLocaleDateString("es-CL")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Logo */}
+                  <div className="col-span-3 flex flex-col items-center justify-center border-l-2 border-black pl-2">
+                    <svg className="w-16 h-16 text-blue-800" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="50" cy="50" r="40" stroke="blue" strokeWidth="3" />
+                      <path d="M 50,10 A 30,30 0 0,0 20,40 L 80,40 A 30,30 0 0,0 50,10 Z" fill="blue" opacity="0.1" />
+                      <path d="M 50,25 C 45,25 35,35 35,45 C 35,55 45,65 50,75 C 55,65 65,55 65,45 C 65,35 55,25 50,25 Z" stroke="blue" strokeWidth="3" />
+                      <text x="50" y="47" fontSize="8" fontWeight="bold" textAnchor="middle" fill="blue">WFAA</text>
+                    </svg>
+                    <span className="text-[7px] text-center font-black uppercase text-blue-900 tracking-tighter mt-1">
+                      World Family of Archers
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-xs font-bold">
+                  <div className="border border-black p-2 rounded-sm bg-gray-50">
+                    <span className="text-[8px] font-black uppercase block text-gray-500">Round:</span>
+                    <span className="text-sm font-black italic uppercase text-blue-900">
+                      {activeExportScore.tournament_types?.name || "Sin Especificar"}
+                    </span>
+                  </div>
+                  <div className="border border-black p-2 rounded-sm bg-gray-50">
+                    <span className="text-[8px] font-black uppercase block text-gray-500">Range name:</span>
+                    <span className="text-sm font-black uppercase">
+                      {activeExportScore.clubs?.name || "N/A"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  {(() => {
+                    const ends = activeExportScore.ends as string[][];
+                    if (!ends || ends.length === 0) return null;
+
+                    const arrowVal = (v: string) => {
+                      if (v === "X") return 10;
+                      if (v === "M" || v === "" || v === "0") return 0;
+                      return Number(v) || 0;
+                    };
+
+                    let cumulativeScore = 0;
+                    const endTotals = ends.map((end: string[]) => {
+                      const endSum = end.reduce((s, a) => s + arrowVal(a), 0);
+                      cumulativeScore += endSum;
+                      return { endSum, cumulativeScore };
+                    });
+
+                    const endsCount = ends.length;
+                    const maxArrows = ends[0]?.length || 4;
+
+                    if (endsCount > 10) {
+                      const half = Math.ceil(endsCount / 2);
+                      const renderTable = (startIdx: number, endIdx: number, unitName: string) => (
+                        <div className="flex-1 border border-black">
+                          <div className="bg-gray-100 text-center font-black uppercase text-[9px] py-1 border-b border-black">
+                            {unitName}
+                          </div>
+                          <table className="w-full text-xs font-sans text-center border-collapse">
+                            <thead>
+                              <tr className="border-b border-black text-[8px] font-black uppercase">
+                                <th className="py-1 px-1 border-r border-black w-8">Target</th>
+                                <th className="py-1 px-1 border-r border-black" colSpan={maxArrows}>Arrows</th>
+                                <th className="py-1 px-1 w-12">Running</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Array.from({ length: endIdx - startIdx }).map((_, localIdx) => {
+                                const actualIdx = startIdx + localIdx;
+                                if (actualIdx >= endsCount) return null;
+                                const end = ends[actualIdx];
+                                const { cumulativeScore } = endTotals[actualIdx];
+
+                                return (
+                                  <tr key={actualIdx} className="border-b border-black font-bold h-7">
+                                    <td className="border-r border-black font-black bg-gray-50 text-[9px]">#{actualIdx + 1}</td>
+                                    {Array.from({ length: maxArrows }).map((_, arrowIdx) => {
+                                      const arrow = end[arrowIdx] || "";
+                                      return (
+                                        <td key={arrowIdx} className="border-r border-black w-6 text-center text-xs font-black">
+                                          {arrow || "—"}
+                                        </td>
+                                      );
+                                    })}
+                                    <td className="text-center font-black bg-yellow-50/50 tabular-nums">{cumulativeScore}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+
+                      return (
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          {renderTable(0, half, "Standard Unit 1")}
+                          {renderTable(half, endsCount, "Standard Unit 2")}
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="border border-black rounded-sm overflow-hidden">
+                          <table className="w-full text-xs font-sans text-center border-collapse">
+                            <thead>
+                              <tr className="bg-gray-100 border-b border-black text-[9px] font-black uppercase">
+                                <th className="py-1.5 px-2 border-r border-black w-10">Target</th>
+                                {Array.from({ length: maxArrows }).map((_, arrowIdx) => (
+                                  <th key={arrowIdx} className="py-1.5 px-1 border-r border-black">Arrow {arrowIdx + 1}</th>
+                                ))}
+                                <th className="py-1.5 px-2 border-r border-black w-16">End Sum</th>
+                                <th className="py-1.5 px-2 w-16">Running</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {ends.map((end, endIdx) => {
+                                const { endSum, cumulativeScore } = endTotals[endIdx];
+                                return (
+                                  <tr key={endIdx} className="border-b border-black font-bold h-8">
+                                    <td className="border-r border-black font-black bg-gray-50">#{endIdx + 1}</td>
+                                    {Array.from({ length: maxArrows }).map((_, arrowIdx) => {
+                                      const arrow = end[arrowIdx] || "";
+                                      return (
+                                        <td key={arrowIdx} className="border-r border-black w-10 text-center text-xs font-black">
+                                          {arrow || "—"}
+                                        </td>
+                                      );
+                                    })}
+                                    <td className="border-r border-black text-center font-black bg-gray-50/50">{endSum}</td>
+                                    <td className="text-center font-black bg-yellow-50/50 tabular-nums">{cumulativeScore}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+
+                <div className="grid grid-cols-12 gap-4 items-center border-t-2 border-black pt-4">
+                  <div className="col-span-4 border border-black p-2 text-center rounded-sm bg-gray-50">
+                    <span className="text-[9px] font-black uppercase block text-gray-500">Puntaje Total</span>
+                    <span className="text-2xl font-black text-blue-900 tabular-nums">{activeExportScore.total_score}</span>
+                  </div>
+                  <div className="col-span-4 border border-black p-2 text-center rounded-sm">
+                    <span className="text-[7px] font-black uppercase block text-gray-400 mb-4">Firma del Arquero</span>
+                    <div className="border-b border-gray-400 w-full mx-auto"></div>
+                  </div>
+                  <div className="col-span-4 border border-black p-2 text-center rounded-sm">
+                    <span className="text-[7px] font-black uppercase block text-gray-400 mb-4">Firma del Anotador</span>
+                    <div className="border-b border-gray-400 w-full mx-auto"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

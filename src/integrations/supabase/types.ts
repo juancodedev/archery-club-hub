@@ -739,6 +739,7 @@ export type Database = {
           tournament_type_id: string | null
           training_session_id: string | null
           x_count: number | null
+          ifaa_class: string | null
         }
         Insert: {
           club_id: string
@@ -758,6 +759,7 @@ export type Database = {
           tournament_type_id?: string | null
           training_session_id?: string | null
           x_count?: number | null
+          ifaa_class?: string | null
         }
         Update: {
           club_id?: string
@@ -777,6 +779,7 @@ export type Database = {
           tournament_type_id?: string | null
           training_session_id?: string | null
           x_count?: number | null
+          ifaa_class?: string | null
         }
         Relationships: [
           {
@@ -887,6 +890,7 @@ export type Database = {
           scoring_zones: Json | null
           target_size_cm: number | null
           tournament_format: string | null
+          ifaa_round: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Insert: {
           active?: boolean
@@ -906,6 +910,7 @@ export type Database = {
           scoring_zones?: Json | null
           target_size_cm?: number | null
           tournament_format?: string | null
+          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Update: {
           active?: boolean
@@ -925,6 +930,7 @@ export type Database = {
           scoring_zones?: Json | null
           target_size_cm?: number | null
           tournament_format?: string | null
+          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Relationships: [
           {
@@ -1275,7 +1281,17 @@ export type Database = {
         | "alumno";
       member_status: "activo" | "inactivo";
       subscription_status: "activo" | "pendiente" | "bloqueado";
-      training_type: "libre" | "estandar";
+      training_type: "libre" | "estandar"
+      ifaa_round_type:
+        | "field"
+        | "hunter"
+        | "animal_2d"
+        | "animal_3d"
+        | "3d_hunting"
+        | "3d_standard"
+        | "field_expert"
+        | "indoor_standard"
+        | "flint_indoor"
     }
     CompositeTypes: {
       [_ in never]: never

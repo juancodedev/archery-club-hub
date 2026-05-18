@@ -22,7 +22,13 @@ describe("scoringUtils", () => {
 
         it("should return 0 for invalid values", () => {
             expect(arrowValue("invalid")).toBe(0);
-            expect(arrowValue("11")).toBe(0);
+            expect(arrowValue("21")).toBe(0);
+        });
+
+        it("should support IFAA values up to 20", () => {
+            expect(arrowValue("20")).toBe(20);
+            expect(arrowValue("18")).toBe(18);
+            expect(arrowValue("12")).toBe(12);
         });
     });
 
@@ -34,6 +40,12 @@ describe("scoringUtils", () => {
             expect(result.xCount).toBe(1);
             expect(result.tensCount).toBe(2);
         });
+
+        it("should calculate IFAA round ends correctly", () => {
+            const animalEnd = ["20", "M", "M"];
+            const result = calculateEndScore(animalEnd);
+            expect(result.score).toBe(20);
+        });
     });
 
     describe("validateArrowValue", () => {
@@ -42,7 +54,8 @@ describe("scoringUtils", () => {
             expect(validateArrowValue("M")).toBe(true);
             expect(validateArrowValue("10")).toBe(true);
             expect(validateArrowValue("5")).toBe(true);
-            expect(validateArrowValue("11")).toBe(false);
+            expect(validateArrowValue("20")).toBe(true);
+            expect(validateArrowValue("21")).toBe(false);
             expect(validateArrowValue("A")).toBe(false);
         });
     });

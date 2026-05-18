@@ -3,10 +3,12 @@ import { Navigate } from "react-router-dom";
 
 export default function ProtectedRoute({
   children,
-  requireSuperAdmin = false
+  requireSuperAdmin = false,
+  requireArquero = false
 }: {
   children: React.ReactNode;
   requireSuperAdmin?: boolean;
+  requireArquero?: boolean;
 }) {
   const { session, member, loading, signOut, systemMode } = useAuth();
 
@@ -25,6 +27,13 @@ export default function ProtectedRoute({
 
   if (member?.is_super_admin) {
     return <>{children}</>;
+  }
+
+  if (requireArquero) {
+    const isArquero = member?.roles?.includes("arquero");
+    if (!isArquero) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   // If we are in "pruebas" mode, we don't apply access restrictions based on club status

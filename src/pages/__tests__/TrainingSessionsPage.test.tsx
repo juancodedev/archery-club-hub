@@ -27,17 +27,18 @@ vi.mock('@/integrations/supabase/client', () => ({
             update: vi.fn().mockResolvedValue({ error: null }),
             delete: vi.fn().mockResolvedValue({ error: null }),
             then: vi.fn().mockImplementation((callback) => {
-                if (table === 'training_sessions') {
+                if (table === 'trainings') {
                     return Promise.resolve(callback({
                         data: [
                             {
-                                id: 'session-1',
-                                name: 'Entrenamiento Sábado',
-                                event_date: '2024-03-16',
-                                discipline: 'outdoor',
-                                distance_yards: 70,
-                                target_type: '122 cm',
-                                training_enrollments: []
+                                id: 'gps-session-1',
+                                title: 'Entrenamiento GPS Sábado',
+                                starts_at: new Date(Date.now() - 3600000).toISOString(),
+                                ends_at: new Date(Date.now() + 3600000).toISOString(),
+                                location_lat: -33.45678,
+                                location_lng: -70.65432,
+                                allowed_radius_meters: 100,
+                                training_attendance: []
                             }
                         ], error: null
                     }));
@@ -75,24 +76,24 @@ describe('TrainingSessionsPage', () => {
 
     it('should render the training heading', () => {
         renderComponent();
-        expect(screen.getByText(/entrenamientos/i)).toBeInTheDocument();
-        expect(screen.getByText(/gestiona tu asistencia/i)).toBeInTheDocument();
+        expect(screen.getByText(/asistencia y localización/i)).toBeInTheDocument();
+        expect(screen.getByText(/configuración de geocercas gps/i)).toBeInTheDocument();
     });
 
-    it('should list training sessions', async () => {
+    it('should render the fixed QR section', () => {
         renderComponent();
-        expect(await screen.findByText('Entrenamiento Sábado')).toBeInTheDocument();
-        expect(screen.getByText(/🎯 outdoor/i)).toBeInTheDocument();
-        expect(screen.getByText(/70 yd/i)).toBeInTheDocument();
+        expect(screen.getByText(/código qr fijo \+ ubicación gps/i)).toBeInTheDocument();
+        expect(screen.getByText(/módulo de asistencia/i)).toBeInTheDocument();
     });
 
-    it('should show new session button for admins', () => {
+    it('should list GPS training sessions', async () => {
         renderComponent();
-        expect(screen.getByText(/nueva sesión/i)).toBeInTheDocument();
+        expect(await screen.findByText('Entrenamiento GPS Sábado')).toBeInTheDocument();
+        expect(screen.getByText(/📍 radio: 100m/i)).toBeInTheDocument();
     });
 
-    it('should show enroll button for members', async () => {
+    it('should show program button for admins', () => {
         renderComponent();
-        expect(await screen.findByText(/inscribirme/i)).toBeInTheDocument();
+        expect(screen.getByText(/programar gps/i)).toBeInTheDocument();
     });
 });
