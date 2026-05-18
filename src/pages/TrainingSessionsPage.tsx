@@ -111,7 +111,7 @@ export default function TrainingSessionsPage() {
   const [location, setLocation] = useState("");
 
   // New state variables for QR + GPS attendance
-  const [mainTab, setMainTab] = useState<string>("sessions");
+  const [mainTab, setMainTab] = useState<string>("gps_qr");
   const [gpsDialogOpen, setGpsDialogOpen] = useState(false);
   const [gpsTitle, setGpsTitle] = useState("");
   const [gpsStartsAt, setGpsStartsAt] = useState(() => {
@@ -234,11 +234,17 @@ export default function TrainingSessionsPage() {
     } else if (member?.club_id) {
       setSelectedClubId(member.club_id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [member, isSuperAdmin]);
 
   const fetchClubs = async () => {
     const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
+    if (data) {
+      setClubs(data);
+      if (data.length > 0 && !selectedClubId) {
+        setSelectedClubId(data[0].id);
+      }
+    }
   };
 
   const { data: sessions, isLoading } = useQuery({
@@ -367,6 +373,30 @@ export default function TrainingSessionsPage() {
   const getDisciplineIcon = (d: string | null) => DISCIPLINE_ICONS[d || ""] || "";
   const getDisciplineBadge = (d: string | null) => DISCIPLINE_BADGE[d || ""] || "bg-muted/30";
 
+  const isClubAdmin = member?.roles?.includes("administrador");
+  const hasAccess = isSuperAdmin || isClubAdmin;
+
+  if (!hasAccess) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="glass max-w-md w-full p-8 rounded-3xl text-center space-y-6 border border-white/10 shadow-2xl relative z-10">
+          <div className="h-16 w-16 bg-destructive/10 border border-destructive/20 rounded-full flex items-center justify-center mx-auto">
+            <Shield className="h-8 w-8 text-destructive animate-pulse" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-display font-bold text-foreground">Acceso Restringido</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              El panel de administración de asistencia está reservado exclusivamente para el Administrador del Club y el Superadministrador.
+            </p>
+          </div>
+          <Button className="w-full h-11 font-bold rounded-xl" onClick={() => window.location.href = "/dashboard"}>
+            Volver al Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
@@ -374,9 +404,9 @@ export default function TrainingSessionsPage() {
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
               <Calendar className="h-7 w-7 text-primary" />
-              Entrenamientos
+              Asistencia y Geolocalización
             </h1>
-            <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">Gestiona tu asistencia y sesiones de práctica</p>
+            <p className="text-sm text-muted-foreground mt-1 font-medium leading-relaxed">Configuración de geocercas GPS y consulta de asistencia</p>
           </div>
 
           {(isAdmin || isSuperAdmin) && (

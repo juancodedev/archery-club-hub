@@ -15,8 +15,6 @@ const navItems = [
   { to: "/profile", icon: User, label: "Mi Perfil" },
   { to: "/scores/new", icon: Crosshair, label: "Registrar Puntaje" },
   { to: "/scores", icon: History, label: "Historial" },
-  { to: "/training", icon: Calendar, label: "Entrenamientos" },
-  { to: "/admin/tournaments", icon: Trophy, label: "Torneos" },
   { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
 ];
 
@@ -83,6 +81,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Remove duplicates and ensure order
   const uniqueItems = Array.from(new Map(allAdminItems.map(item => [item.to, item])).values());
 
+  const isClubAdmin = member?.roles?.includes("administrador");
+  const showAttendanceMenu = isSuperAdmin || isClubAdmin;
+
+  const visibleNavItems = [
+    ...navItems,
+    ...(showAttendanceMenu ? [{ to: "/training", icon: Calendar, label: "Asistencia" }] : [])
+  ];
+
 
   const renderLink = ({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) => (
 
@@ -140,7 +146,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navItems.map(renderLink)}
+          {visibleNavItems.map(renderLink)}
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border" />
