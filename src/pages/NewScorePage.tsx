@@ -76,6 +76,71 @@ export default function NewScorePage() {
     }
   }, [member, isSuperAdmin]);
 
+  // Load score for edit if editId param is present
+  const editId = searchParams.get("editId");
+  useEffect(() => {
+    if (editId) {
+      fetchScoreForEdit(editId);
+    }
+  }, [editId]);
+
+  const fetchScoreForEdit = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setEventName(data.event_name || "");
+        setScoreDate(data.score_date);
+        setDivisionId(data.division_id || "");
+        setTournamentTypeId(data.tournament_type_id || "");
+        setDetail(data.detail || "");
+        setTrainingSessionId(data.training_session_id || "none");
+        setSelectedClubId(data.club_id);
+        
+        // Fetch members for that club first to populate list
+        await fetchMembers(data.club_id);
+        setSelectedMemberId(data.member_id);
+
+        if (data.tournament_type_id) {
+          const { data: tType } = await supabase
+            .from("tournament_types")
+            .select("*")
+            .eq("id", data.tournament_type_id)
+            .single();
+          if (tType) {
+            setIfaaRound(tType.ifaa_round || null);
+            setArrowsPerEnd(tType.arrows_per_end);
+            setEndsCount(tType.ends_per_round);
+            setIsIndoor(tType.is_indoor);
+          }
+        }
+
+        if (data.ifaa_class) {
+          setIfaaClass(data.ifaa_class);
+        }
+
+        if (data.ends) {
+          setEnds(data.ends as string[][]);
+          if (data.ends.length > 0) {
+            setEndsCount(data.ends.length);
+            setArrowsPerEnd(data.ends[0].length);
+          }
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Error al cargar puntaje",
+        description: getSafeErrorMessage(err),
+        variant: "destructive"
+      });
+    }
+  };
+
   // Fetch available sessions for today or recent
   useEffect(() => {
     if (selectedClubId) {
@@ -85,10 +150,10 @@ export default function NewScorePage() {
 
   // Fetch session data if sessionId exists
   useEffect(() => {
-    if (trainingSessionId && trainingSessionId !== "none") {
+    if (trainingSessionId && trainingSessionId !== "none" && !editId) {
       fetchSessionDetails(trainingSessionId);
     }
-  }, [trainingSessionId]);
+  }, [trainingSessionId, editId]);
 
   const fetchSessions = async (clubId: string) => {
     const today = new Date().toISOString().split("T")[0];
@@ -333,24 +398,49 @@ export default function NewScorePage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("scores").insert({
-        member_id: selectedMemberId,
-        club_id: selectedClubId,
-        training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
-        event_name: eventName || "Entrenamiento",
-        score_date: scoreDate,
-        division_id: divisionId || null,
-        tournament_type_id: tournamentTypeId || null,
-        detail,
-        ends: ends as string[][],
-        total_score: grandTotal,
-        x_count: xCount,
-        ifaa_class: ifaaRound ? ifaaClass || null : null,
-      });
+      const editId = searchParams.get("editId");
+      let error;
+
+      if (editId) {
+        const { error: err } = await supabase
+          .from("scores")
+          .update({
+            member_id: selectedMemberId,
+            club_id: selectedClubId,
+            training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
+            event_name: eventName || "Entrenamiento",
+            score_date: scoreDate,
+            division_id: divisionId || null,
+            tournament_type_id: tournamentTypeId || null,
+            detail,
+            ends: ends as string[][],
+            total_score: grandTotal,
+            x_count: xCount,
+            ifaa_class: ifaaRound ? ifaaClass || null : null,
+          })
+          .eq("id", editId);
+        error = err;
+      } else {
+        const { error: err } = await supabase.from("scores").insert({
+          member_id: selectedMemberId,
+          club_id: selectedClubId,
+          training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
+          event_name: eventName || "Entrenamiento",
+          score_date: scoreDate,
+          division_id: divisionId || null,
+          tournament_type_id: tournamentTypeId || null,
+          detail,
+          ends: ends as string[][],
+          total_score: grandTotal,
+          x_count: xCount,
+          ifaa_class: ifaaRound ? ifaaClass || null : null,
+        });
+        error = err;
+      }
 
       if (error) throw error;
       toast({
-        title: "¡Puntaje registrado!",
+        title: editId ? "¡Puntaje actualizado!" : "¡Puntaje registrado!",
         description: `Total: ${grandTotal} puntos${xCount > 0 ? ` (${xCount}X)` : ''}`
       });
       navigate("/scores");
@@ -368,9 +458,11 @@ export default function NewScorePage() {
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <Crosshair className="h-7 w-7 text-primary" />
-            Registrar Puntaje
+            {searchParams.get("editId") ? "Editar Puntaje" : "Registrar Puntaje"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-medium italic">"Ingresa tu tarjeta de rendimiento"</p>
+          <p className="text-sm text-muted-foreground mt-1 font-medium italic">
+            {searchParams.get("editId") ? "Modifica los datos de tu tarjeta" : '"Ingresa tu tarjeta de rendimiento"'}
+          </p>
         </div>
       </motion.div>
 
@@ -905,7 +997,7 @@ export default function NewScorePage() {
             Cancelar
           </Button>
           <Button type="submit" disabled={loading || isReadOnlyMode(member)} className="h-12 w-full sm:w-80 font-bold rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all">
-            {loading ? "Sincronizando..." : isReadOnlyMode(member) ? "Modo Lectura (Suscripción Vencida)" : "Guardar Puntaje en la Nube"}
+            {loading ? "Sincronizando..." : isReadOnlyMode(member) ? "Modo Lectura (Suscripción Vencida)" : searchParams.get("editId") ? "Guardar Cambios" : "Guardar Puntaje en la Nube"}
           </Button>
         </div>
       </form>
