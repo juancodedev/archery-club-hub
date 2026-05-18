@@ -40,6 +40,8 @@ export default function AttendanceCheckinPage() {
   const [activeTraining, setActiveTraining] = useState<ActiveTraining | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [distance, setDistance] = useState<number | null>(null);
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
   const [allowedRadius, setAllowedRadius] = useState<number>(100);
   const [gpsLoading, setGpsLoading] = useState<boolean>(false);
 
@@ -166,6 +168,8 @@ export default function AttendanceCheckinPage() {
       async (position) => {
         setGpsLoading(false);
         const { latitude, longitude, accuracy } = position.coords;
+        setUserLat(latitude);
+        setUserLng(longitude);
         logger.log(`📍 GPS Ubicación obtenida: Lat ${latitude}, Lng ${longitude} (Precisión: ${accuracy}m)`);
 
         // If GPS accuracy is extremely poor, warn/retry? We'll log it and let the server check.
@@ -356,6 +360,22 @@ export default function AttendanceCheckinPage() {
                 )}
               </div>
 
+              {userLat !== null && userLng !== null && (
+                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                  <iframe
+                    title="Ubicación de Check-in"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight={0}
+                    marginWidth={0}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${userLng - 0.0015}%2C${userLat - 0.0015}%2C${userLng + 0.0015}%2C${userLat + 0.0015}&layer=mapnik&marker=${userLat}%2C${userLng}`}
+                    className="filter invert-[0.9] hue-rotate-[180deg] opacity-80"
+                  />
+                </div>
+              )}
+
               <Button className="w-full h-11 font-bold rounded-xl mt-2" onClick={() => navigate("/dashboard")}>
                 Ir al Dashboard
               </Button>
@@ -383,6 +403,22 @@ export default function AttendanceCheckinPage() {
                   </div>
                 )}
               </div>
+
+              {activeTraining?.location_lat && activeTraining?.location_lng && (
+                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                  <iframe
+                    title="Ubicación del Entrenamiento"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight={0}
+                    marginWidth={0}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${activeTraining.location_lng - 0.0015}%2C${activeTraining.location_lat - 0.0015}%2C${activeTraining.location_lng + 0.0015}%2C${activeTraining.location_lat + 0.0015}&layer=mapnik&marker=${activeTraining.location_lat}%2C${activeTraining.location_lng}`}
+                    className="filter invert-[0.9] hue-rotate-[180deg] opacity-80"
+                  />
+                </div>
+              )}
 
               <Button className="w-full h-11 font-bold rounded-xl mt-2" onClick={() => navigate("/dashboard")}>
                 Ir al Dashboard
@@ -415,6 +451,22 @@ export default function AttendanceCheckinPage() {
                   <b className="text-foreground">{allowedRadius}m</b>
                 </div>
               </div>
+
+              {userLat !== null && userLng !== null && (
+                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                  <iframe
+                    title="Tu Ubicación actual"
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight={0}
+                    marginWidth={0}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${userLng - 0.002}%2C${userLat - 0.002}%2C${userLng + 0.002}%2C${userLat + 0.002}&layer=mapnik&marker=${userLat}%2C${userLng}`}
+                    className="filter invert-[0.9] hue-rotate-[180deg] opacity-80"
+                  />
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button 
