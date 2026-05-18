@@ -1,0 +1,15 @@
+# Pre-commit configuration for secret detection using GitGuardian ggshield
+# To install pre-commit on your machine:
+#   brew install pre-commit (macOS) or pip install pre-commit
+# To install the hooks:
+#   pre-commit install
+# To run against all files:
+#   pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.35.0
+    hooks:
+      - id: ggshield
+        language_version: python3
+        stages: [pre-commit]

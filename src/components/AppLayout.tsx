@@ -13,8 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/profile", icon: User, label: "Mi Perfil" },
-  { to: "/scores/new", icon: Crosshair, label: "Registrar Puntaje" },
-  { to: "/scores", icon: History, label: "Historial" },
   { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
 ];
 
@@ -84,8 +82,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isClubAdmin = member?.roles?.includes("administrador");
   const showAttendanceMenu = isSuperAdmin || isClubAdmin;
 
+  const isArquero = member?.roles?.includes("arquero");
+  const showEntrenamientoYPuntaje = isSuperAdmin || isArquero;
+
   const visibleNavItems = [
-    ...navItems,
+    { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { to: "/profile", icon: User, label: "Mi Perfil" },
+    ...(showEntrenamientoYPuntaje ? [{ to: "/scores", icon: Target, label: "Entrenamiento y puntaje" }] : []),
+    { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
     ...(showAttendanceMenu ? [{ to: "/training", icon: Calendar, label: "Asistencia" }] : [])
   ];
 

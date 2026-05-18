@@ -39,6 +39,12 @@ export default function NewScorePage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("sessionId");
 
+  // IFAA states
+  const [ifaaRound, setIfaaRound] = useState<string | null>(null);
+  const [ifaaClass, setIfaaClass] = useState<string>("");
+  const [activeEndIdx, setActiveEndIdx] = useState<number>(0);
+  const [activeArrowIdx, setActiveArrowIdx] = useState<number>(0);
+
   // Training session state
   const [trainingSessionId, setTrainingSessionId] = useState<string>(sessionId || "none");
   const [availableSessions, setAvailableSessions] = useState<{ id: string; name: string; event_date: string }[]>([]);
@@ -70,6 +76,71 @@ export default function NewScorePage() {
     }
   }, [member, isSuperAdmin]);
 
+  // Load score for edit if editId param is present
+  const editId = searchParams.get("editId");
+  useEffect(() => {
+    if (editId) {
+      fetchScoreForEdit(editId);
+    }
+  }, [editId]);
+
+  const fetchScoreForEdit = async (id: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("scores")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setEventName(data.event_name || "");
+        setScoreDate(data.score_date);
+        setDivisionId(data.division_id || "");
+        setTournamentTypeId(data.tournament_type_id || "");
+        setDetail(data.detail || "");
+        setTrainingSessionId(data.training_session_id || "none");
+        setSelectedClubId(data.club_id);
+        
+        // Fetch members for that club first to populate list
+        await fetchMembers(data.club_id);
+        setSelectedMemberId(data.member_id);
+
+        if (data.tournament_type_id) {
+          const { data: tType } = await supabase
+            .from("tournament_types")
+            .select("*")
+            .eq("id", data.tournament_type_id)
+            .single();
+          if (tType) {
+            setIfaaRound(tType.ifaa_round || null);
+            setArrowsPerEnd(tType.arrows_per_end);
+            setEndsCount(tType.ends_per_round);
+            setIsIndoor(tType.is_indoor);
+          }
+        }
+
+        if (data.ifaa_class) {
+          setIfaaClass(data.ifaa_class);
+        }
+
+        if (data.ends) {
+          setEnds(data.ends as string[][]);
+          if (data.ends.length > 0) {
+            setEndsCount(data.ends.length);
+            setArrowsPerEnd(data.ends[0].length);
+          }
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Error al cargar puntaje",
+        description: getSafeErrorMessage(err),
+        variant: "destructive"
+      });
+    }
+  };
+
   // Fetch available sessions for today or recent
   useEffect(() => {
     if (selectedClubId) {
@@ -79,10 +150,10 @@ export default function NewScorePage() {
 
   // Fetch session data if sessionId exists
   useEffect(() => {
-    if (trainingSessionId && trainingSessionId !== "none") {
+    if (trainingSessionId && trainingSessionId !== "none" && !editId) {
       fetchSessionDetails(trainingSessionId);
     }
-  }, [trainingSessionId]);
+  }, [trainingSessionId, editId]);
 
   const fetchSessions = async (clubId: string) => {
     const today = new Date().toISOString().split("T")[0];
@@ -160,11 +231,41 @@ export default function NewScorePage() {
   // Handle tournament type change
   const handleTournamentTypeChange = (type: TournamentType | null) => {
     if (type) {
-      setArrowsPerEnd(type.arrows_per_end);
-      setEndsCount(type.ends_per_round);
+      const ifaa = type.ifaa_round || null;
+      setIfaaRound(ifaa);
+      if (!ifaa) {
+        setIfaaClass("");
+      }
+
+      // Automatically override layout configuration based on IFAA round rules
+      let arrows = type.arrows_per_end;
+      const endsVal = type.ends_per_round;
+
+      if (ifaa === 'field' || ifaa === 'hunter' || ifaa === 'field_expert' || ifaa === 'indoor_standard' || ifaa === 'flint_indoor') {
+        arrows = 4;
+      } else if (ifaa === 'animal_2d' || ifaa === 'animal_3d') {
+        arrows = 3;
+      } else if (ifaa === '3d_hunting') {
+        arrows = 1;
+      } else if (ifaa === '3d_standard') {
+        arrows = 2;
+      }
+
+      setArrowsPerEnd(arrows);
+      setEndsCount(endsVal);
       setIsIndoor(type.is_indoor);
+      
       // Recreate ends array with new dimensions
-      setEnds(createEmptyEnds(type.arrows_per_end, type.ends_per_round));
+      setEnds(createEmptyEnds(arrows, endsVal));
+      
+      // Reset active cursor selection
+      setActiveEndIdx(0);
+      setActiveArrowIdx(0);
+    } else {
+      setIfaaRound(null);
+      setIfaaClass("");
+      setActiveEndIdx(0);
+      setActiveArrowIdx(0);
     }
   };
 
@@ -192,6 +293,98 @@ export default function NewScorePage() {
     return result.score;
   };
 
+  // IFAA score input handlers
+  const handleIfaaArrowInput = (value: string) => {
+    const newEnds = ends.map((end, i) =>
+      i === activeEndIdx ? end.map((a, j) => (j === activeArrowIdx ? value : a)) : end
+    );
+    setEnds(newEnds);
+
+    // Auto-advance logic
+    if (activeArrowIdx < arrowsPerEnd - 1) {
+      setActiveArrowIdx(activeArrowIdx + 1);
+    } else if (activeEndIdx < endsCount - 1) {
+      setActiveEndIdx(activeEndIdx + 1);
+      setActiveArrowIdx(0);
+    }
+  };
+
+  const handleAnimalArrowInput = (arrowIdx: number, resultType: "KILL" | "WOUND" | "MISS") => {
+    let val = "";
+    if (resultType === "KILL") {
+      val = arrowIdx === 0 ? "20" : arrowIdx === 1 ? "16" : "12";
+    } else if (resultType === "WOUND") {
+      val = arrowIdx === 0 ? "18" : arrowIdx === 1 ? "14" : "10";
+    } else {
+      val = "M";
+    }
+
+    const updatedArrows = [...(ends[activeEndIdx] || ["", "", ""])];
+    updatedArrows[arrowIdx] = val;
+
+    // If KILL or WOUND, automatically fill the remaining arrows for this target with "" and lock it
+    if (resultType === "KILL" || resultType === "WOUND") {
+      for (let i = arrowIdx + 1; i < 3; i++) {
+        updatedArrows[i] = "";
+      }
+      const newEnds = ends.map((end, i) => (i === activeEndIdx ? updatedArrows : end));
+      setEnds(newEnds);
+
+      // Auto-advance to next target
+      if (activeEndIdx < endsCount - 1) {
+        setActiveEndIdx(activeEndIdx + 1);
+        setActiveArrowIdx(0);
+      }
+    } else {
+      // MISS
+      if (arrowIdx === 2) {
+        // Last arrow missed -> target done
+        const newEnds = ends.map((end, i) => (i === activeEndIdx ? updatedArrows : end));
+        setEnds(newEnds);
+        if (activeEndIdx < endsCount - 1) {
+          setActiveEndIdx(activeEndIdx + 1);
+          setActiveArrowIdx(0);
+        }
+      } else {
+        // Wait for next arrow input
+        const newEnds = ends.map((end, i) => (i === activeEndIdx ? updatedArrows : end));
+        setEnds(newEnds);
+        setActiveArrowIdx(arrowIdx + 1);
+      }
+    }
+  };
+
+  const handle3dHuntingInput = (value: string) => {
+    const newEnds = ends.map((end, i) => (i === activeEndIdx ? [value] : end));
+    setEnds(newEnds);
+    if (activeEndIdx < endsCount - 1) {
+      setActiveEndIdx(activeEndIdx + 1);
+    }
+  };
+
+  const handle3dStandardInput = (value: string) => {
+    const newEnds = ends.map((end, i) =>
+      i === activeEndIdx ? end.map((a, j) => (j === activeArrowIdx ? value : a)) : end
+    );
+    setEnds(newEnds);
+    if (activeArrowIdx === 0) {
+      setActiveArrowIdx(1);
+    } else {
+      setActiveArrowIdx(0);
+      if (activeEndIdx < endsCount - 1) {
+        setActiveEndIdx(activeEndIdx + 1);
+      }
+    }
+  };
+
+  const resetTarget = (idx: number) => {
+    const newEnds = ends.map((end, i) => (i === idx ? Array(arrowsPerEnd).fill("") : end));
+    setEnds(newEnds);
+    if (idx === activeEndIdx) {
+      setActiveArrowIdx(0);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMemberId || selectedMemberId === "null") {
@@ -205,23 +398,49 @@ export default function NewScorePage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("scores").insert({
-        member_id: selectedMemberId,
-        club_id: selectedClubId,
-        training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
-        event_name: eventName || "Entrenamiento",
-        score_date: scoreDate,
-        division_id: divisionId || null,
-        tournament_type_id: tournamentTypeId || null,
-        detail,
-        ends: ends as string[][],
-        total_score: grandTotal,
-        x_count: xCount,
-      });
+      const editId = searchParams.get("editId");
+      let error;
+
+      if (editId) {
+        const { error: err } = await supabase
+          .from("scores")
+          .update({
+            member_id: selectedMemberId,
+            club_id: selectedClubId,
+            training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
+            event_name: eventName || "Entrenamiento",
+            score_date: scoreDate,
+            division_id: divisionId || null,
+            tournament_type_id: tournamentTypeId || null,
+            detail,
+            ends: ends as string[][],
+            total_score: grandTotal,
+            x_count: xCount,
+            ifaa_class: ifaaRound ? ifaaClass || null : null,
+          })
+          .eq("id", editId);
+        error = err;
+      } else {
+        const { error: err } = await supabase.from("scores").insert({
+          member_id: selectedMemberId,
+          club_id: selectedClubId,
+          training_session_id: (trainingSessionId && trainingSessionId !== "none") ? trainingSessionId : null,
+          event_name: eventName || "Entrenamiento",
+          score_date: scoreDate,
+          division_id: divisionId || null,
+          tournament_type_id: tournamentTypeId || null,
+          detail,
+          ends: ends as string[][],
+          total_score: grandTotal,
+          x_count: xCount,
+          ifaa_class: ifaaRound ? ifaaClass || null : null,
+        });
+        error = err;
+      }
 
       if (error) throw error;
       toast({
-        title: "¡Puntaje registrado!",
+        title: editId ? "¡Puntaje actualizado!" : "¡Puntaje registrado!",
         description: `Total: ${grandTotal} puntos${xCount > 0 ? ` (${xCount}X)` : ''}`
       });
       navigate("/scores");
@@ -239,9 +458,11 @@ export default function NewScorePage() {
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <Crosshair className="h-7 w-7 text-primary" />
-            Registrar Puntaje
+            {searchParams.get("editId") ? "Editar Puntaje" : "Registrar Puntaje"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-medium italic">"Ingresa tu tarjeta de rendimiento"</p>
+          <p className="text-sm text-muted-foreground mt-1 font-medium italic">
+            {searchParams.get("editId") ? "Modifica los datos de tu tarjeta" : '"Ingresa tu tarjeta de rendimiento"'}
+          </p>
         </div>
       </motion.div>
 
@@ -355,6 +576,22 @@ export default function NewScorePage() {
               />
             </div>
 
+            {ifaaRound && (
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground">Clase IFAA</Label>
+                <Select value={ifaaClass} onValueChange={setIfaaClass}>
+                  <SelectTrigger className="glass h-11 border-primary/20">
+                    <SelectValue placeholder="Seleccionar clase..." />
+                  </SelectTrigger>
+                  <SelectContent className="glass">
+                    <SelectItem value="A">Clase A</SelectItem>
+                    <SelectItem value="B">Clase B</SelectItem>
+                    <SelectItem value="C">Clase C</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-2 sm:col-span-2 lg:col-span-3">
               <Label className="text-xs font-bold text-muted-foreground">Detalle</Label>
               <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." className="h-11 glass border-primary/10" />
@@ -366,83 +603,377 @@ export default function NewScorePage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" /> Tarjeta de Puntuación
+              <Target className="h-5 w-5 text-primary" /> {ifaaRound ? `Tarjeta IFAA (${ifaaRound.toUpperCase().replace('_', ' ')})` : "Tarjeta de Puntuación"}
             </h3>
             <Badge variant="outline" className="font-mono text-xs border-primary/30">
               {arrowsPerEnd} flechas / {endsCount} rondas
             </Badge>
           </div>
 
-          {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto pb-4">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border uppercase tracking-widest text-[10px] text-muted-foreground font-bold">
-                  <th className="py-3 px-2 text-left">Round</th>
-                  {Array.from({ length: arrowsPerEnd }, (_, i) => (
-                    <th key={i} className="py-3 px-1 text-center">F{i + 1}</th>
-                  ))}
-                  <th className="py-3 px-2 text-center text-primary">Total</th>
-                  <th className="py-3 px-2 text-center text-primary">Acum.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ends.map((end, endIdx) => (
-                  <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
-                    <td className="py-3 px-2 font-bold text-foreground/70">#{endIdx + 1}</td>
-                    {end.map((arrow, arrowIdx) => (
-                      <td key={arrowIdx} className="py-1.5 px-1">
-                        <Input
-                          className="w-12 h-10 text-center font-bold text-base p-0 glass focus:ring-primary/50"
-                          value={arrow}
-                          onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
-                          placeholder="—"
-                          maxLength={2}
-                        />
-                      </td>
-                    ))}
-                    <td className="py-3 px-2 text-center font-bold text-foreground bg-primary/5">{endTotal(end)}</td>
-                    <td className="py-3 px-2 text-center font-black text-primary bg-primary/10">{runningTotal(endIdx)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {ifaaRound ? (
+            <div className="space-y-6">
+              {/* Quick Target Selector Grid */}
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Navegar Blancos / Targets</Label>
+                <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1.5 glass rounded-xl">
+                  {ends.map((end, idx) => {
+                    const total = endTotal(end);
+                    const isCompleted = end.every(a => a !== "");
+                    const isActive = idx === activeEndIdx;
 
-          {/* Mobile Grid View */}
-          <div className="md:hidden space-y-4">
-            {ends.map((end, endIdx) => (
-              <div key={endIdx} className="p-4 rounded-2xl bg-muted/20 border border-border/50 shadow-inner">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center">
-                      <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
-                      <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
-                      <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {end.map((arrow, arrowIdx) => (
-                    <div key={arrowIdx} className="flex-1 min-w-[54px]">
-                      <Input
-                        className="w-full h-12 text-center font-black text-xl p-0 glass border-primary/20 focus:border-primary shadow-sm"
-                        value={arrow}
-                        onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
-                        placeholder="—"
-                        maxLength={2}
-                        inputMode="text"
-                      />
-                    </div>
-                  ))}
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setActiveEndIdx(idx);
+                          setActiveArrowIdx(0);
+                        }}
+                        className={cn(
+                          "w-11 h-11 rounded-lg flex flex-col items-center justify-center text-xs font-black transition-all relative",
+                          isActive
+                            ? "bg-primary text-black border-2 border-yellow-500 shadow-md shadow-primary/30 scale-105"
+                            : isCompleted
+                            ? "bg-green-950/40 border border-green-500/40 text-green-400"
+                            : "bg-white/5 border border-border/30 text-muted-foreground hover:bg-white/10"
+                        )}
+                      >
+                        <span className="text-[9px] opacity-75">#{idx + 1}</span>
+                        <span className="text-sm tracking-tighter">{total}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Active Target Card */}
+              <div className="glass border border-primary/20 rounded-2xl p-5 space-y-4 bg-gradient-to-b from-primary/5 to-transparent">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl font-display font-black text-primary">BLANCO #{activeEndIdx + 1}</span>
+                    <Badge variant="outline" className="text-xs border-primary/20 font-bold bg-primary/5 text-primary">
+                      Total Target: {endTotal(ends[activeEndIdx] || [])} pts
+                    </Badge>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 text-xs font-bold px-3 py-1 rounded-xl h-8"
+                    onClick={() => resetTarget(activeEndIdx)}
+                  >
+                    🗑️ Limpiar Blanco
+                  </Button>
+                </div>
+
+                {/* Arrow Slot Displays */}
+                <div className="flex gap-3 items-center py-2">
+                  {Array.from({ length: arrowsPerEnd }).map((_, aIdx) => {
+                    const val = (ends[activeEndIdx] || [])[aIdx];
+                    const isActiveSlot = aIdx === activeArrowIdx;
+
+                    return (
+                      <button
+                        key={aIdx}
+                        type="button"
+                        onClick={() => setActiveArrowIdx(aIdx)}
+                        className={cn(
+                          "w-14 h-14 rounded-full font-black text-xl flex items-center justify-center transition-all border-2",
+                          isActiveSlot
+                            ? "bg-primary text-black border-yellow-500 shadow-md shadow-primary/30 scale-110"
+                            : val !== ""
+                            ? "bg-black/35 text-foreground border-primary/40"
+                            : "bg-black/20 text-muted-foreground/40 border-dashed border-border/30"
+                        )}
+                      >
+                        {val === "" ? "—" : val}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Polymorphic Input Mechanics */}
+                <div className="pt-2">
+                  {/* 1. Field / Hunter Layout */}
+                  {(ifaaRound === "field" || ifaaRound === "hunter" || ifaaRound === "field_expert" || ifaaRound === "indoor_standard" || ifaaRound === "flint_indoor") && (
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                        Toca el valor de la flecha {activeArrowIdx + 1}:
+                      </Label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {["5", "4", "3", "M"].map(val => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => handleIfaaArrowInput(val)}
+                            className={cn(
+                              "h-16 rounded-2xl text-2xl font-black transition-all active:scale-95 shadow-lg border-2",
+                              val === "M"
+                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
+                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                            )}
+                          >
+                            {val}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2. Animal 2D / 3D Layout (Sequential Decision Flow) */}
+                  {(ifaaRound === "animal_2d" || ifaaRound === "animal_3d") && (
+                    <div className="space-y-4">
+                      {/* Arrow 1 Decision Block */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-muted-foreground block">Flecha 1:</Label>
+                        {((ends[activeEndIdx] || [])[0] === "" || (ends[activeEndIdx] || [])[0] === undefined) ? (
+                          <div className="grid grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleAnimalArrowInput(0, "KILL")}
+                              className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                            >
+                              🎯 KILL (+20)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAnimalArrowInput(0, "WOUND")}
+                              className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                            >
+                              WOUND (+18)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAnimalArrowInput(0, "MISS")}
+                              className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                            >
+                              ❌ MISS
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
+                            <span>Flecha 1 registrada: <strong>{ends[activeEndIdx][0] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][0]})`}</strong></span>
+                            {ends[activeEndIdx][0] === "M" ? "⬇️ Siguiente" : "🔒 Blanco Completado"}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Arrow 2 Decision Block (Conditional) */}
+                      {(ends[activeEndIdx] || [])[0] === "M" && (
+                        <div className="space-y-2 pt-2 border-t border-border/20">
+                          <Label className="text-xs font-bold text-muted-foreground block">Flecha 2:</Label>
+                          {((ends[activeEndIdx] || [])[1] === "" || (ends[activeEndIdx] || [])[1] === undefined) ? (
+                            <div className="grid grid-cols-3 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(1, "KILL")}
+                                className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                🎯 KILL (+16)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(1, "WOUND")}
+                                className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                WOUND (+14)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(1, "MISS")}
+                                className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                ❌ MISS
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
+                              <span>Flecha 2 registrada: <strong>{ends[activeEndIdx][1] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][1]})`}</strong></span>
+                              {ends[activeEndIdx][1] === "M" ? "⬇️ Siguiente" : "🔒 Blanco Completado"}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Arrow 3 Decision Block (Conditional) */}
+                      {(ends[activeEndIdx] || [])[0] === "M" && (ends[activeEndIdx] || [])[1] === "M" && (
+                        <div className="space-y-2 pt-2 border-t border-border/20">
+                          <Label className="text-xs font-bold text-muted-foreground block">Flecha 3:</Label>
+                          {((ends[activeEndIdx] || [])[2] === "" || (ends[activeEndIdx] || [])[2] === undefined) ? (
+                            <div className="grid grid-cols-3 gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(2, "KILL")}
+                                className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                🎯 KILL (+12)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(2, "WOUND")}
+                                className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                WOUND (+10)
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAnimalArrowInput(2, "MISS")}
+                                className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                              >
+                                ❌ MISS
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
+                              <span>Flecha 3 registrada: <strong>{ends[activeEndIdx][2] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][2]})`}</strong></span>
+                              <span>🔒 Blanco Completado</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. 3D Hunting Layout */}
+                  {ifaaRound === "3d_hunting" && (
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                        Resultado del Blanco (1 flecha):
+                      </Label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {[
+                          { label: "KILL", score: "20" },
+                          { label: "VITAL", score: "16" },
+                          { label: "WOUND", score: "10" },
+                          { label: "MISS", score: "M" },
+                        ].map(item => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => handle3dHuntingInput(item.score)}
+                            className={cn(
+                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border-2",
+                              item.score === "M"
+                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
+                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                            )}
+                          >
+                            <span className="text-base font-black tracking-tight">{item.label}</span>
+                            <span className="text-xs font-bold opacity-75">{item.score === "M" ? "0" : `+${item.score}`}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. 3D Standard Layout */}
+                  {ifaaRound === "3d_standard" && (
+                    <div className="space-y-3">
+                      <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                        Toca el resultado para la flecha {activeArrowIdx + 1}:
+                      </Label>
+                      <div className="grid grid-cols-4 gap-3">
+                        {[
+                          { label: "KILL", score: "10" },
+                          { label: "VITAL", score: "8" },
+                          { label: "WOUND", score: "5" },
+                          { label: "MISS", score: "M" },
+                        ].map(item => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => handle3dStandardInput(item.score)}
+                            className={cn(
+                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border-2",
+                              item.score === "M"
+                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
+                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                            )}
+                          >
+                            <span className="text-base font-black tracking-tight">{item.label}</span>
+                            <span className="text-xs font-bold opacity-75">{item.score === "M" ? "0" : `+${item.score}`}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto pb-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border uppercase tracking-widest text-[10px] text-muted-foreground font-bold">
+                      <th className="py-3 px-2 text-left">Round</th>
+                      {Array.from({ length: arrowsPerEnd }, (_, i) => (
+                        <th key={i} className="py-3 px-1 text-center">F{i + 1}</th>
+                      ))}
+                      <th className="py-3 px-2 text-center text-primary">Total</th>
+                      <th className="py-3 px-2 text-center text-primary">Acum.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ends.map((end, endIdx) => (
+                      <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
+                        <td className="py-3 px-2 font-bold text-foreground/70">#{endIdx + 1}</td>
+                        {end.map((arrow, arrowIdx) => (
+                          <td key={arrowIdx} className="py-1.5 px-1">
+                            <Input
+                              className="w-12 h-10 text-center font-bold text-base p-0 glass focus:ring-primary/50"
+                              value={arrow}
+                              onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                              placeholder="—"
+                              maxLength={2}
+                            />
+                          </td>
+                        ))}
+                        <td className="py-3 px-2 text-center font-bold text-foreground bg-primary/5">{endTotal(end)}</td>
+                        <td className="py-3 px-2 text-center font-black text-primary bg-primary/10">{runningTotal(endIdx)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Grid View */}
+              <div className="md:hidden space-y-4">
+                {ends.map((end, endIdx) => (
+                  <div key={endIdx} className="p-4 rounded-2xl bg-muted/20 border border-border/50 shadow-inner">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
+                          <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
+                          <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {end.map((arrow, arrowIdx) => (
+                        <div key={arrowIdx} className="flex-1 min-w-[54px]">
+                          <Input
+                            className="w-full h-12 text-center font-black text-xl p-0 glass border-primary/20 focus:border-primary shadow-sm"
+                            value={arrow}
+                            onChange={(e) => updateArrow(endIdx, arrowIdx, e.target.value)}
+                            placeholder="—"
+                            maxLength={2}
+                            inputMode="text"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="mt-8 flex justify-end">
             <div className="glass rounded-3xl px-8 py-5 text-center border-primary/20 shadow-2xl shadow-primary/10 relative overflow-hidden group">
@@ -466,7 +997,7 @@ export default function NewScorePage() {
             Cancelar
           </Button>
           <Button type="submit" disabled={loading || isReadOnlyMode(member)} className="h-12 w-full sm:w-80 font-bold rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-all">
-            {loading ? "Sincronizando..." : isReadOnlyMode(member) ? "Modo Lectura (Suscripción Vencida)" : "Guardar Puntaje en la Nube"}
+            {loading ? "Sincronizando..." : isReadOnlyMode(member) ? "Modo Lectura (Suscripción Vencida)" : searchParams.get("editId") ? "Guardar Cambios" : "Guardar Puntaje en la Nube"}
           </Button>
         </div>
       </form>

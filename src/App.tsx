@@ -64,11 +64,11 @@ const App = () => (
             />
             <Route
               path="/scores/new"
-              element={<ProtectedRoute><AppLayout><NewScorePage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireArquero><AppLayout><NewScorePage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/scores"
-              element={<ProtectedRoute><AppLayout><ScoresPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireArquero><AppLayout><ScoresPage /></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/training"
