@@ -24,7 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .from("members")
                 .select(`
           id, user_id, club_id, full_name, email, status, is_super_admin, avatar_url,
-          clubs (name, subscription_status, subscription_end_date, block_type)
+          clubs (name, subscription_status, subscription_end_date, block_type),
+          member_roles (role)
         `)
                 .eq("user_id", userId);
 
@@ -35,30 +36,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             logger.log("Datos de membresía recibidos: " + JSON.stringify(membersData));
 
             if (membersData && membersData.length > 0) {
-                const allMemberships: MemberInfo[] = await Promise.all(
-                    membersData.map(async (m) => {
-                        const { data: rolesData } = await supabase
-                            .from("member_roles")
-                            .select("role")
-                            .eq("member_id", m.id);
-
-                        return {
-                            id: m.id,
-                            user_id: m.user_id,
-                            club_id: m.club_id,
-                            full_name: m.full_name,
-                            email: m.email,
-                            status: m.status,
-                            roles: rolesData?.map((r) => r.role) || [],
-                            is_super_admin: m.is_super_admin ?? false,
-                            club_status: m.clubs?.subscription_status || 'activo',
-                            subscription_end_date: m.clubs?.subscription_end_date,
-                            block_type: m.clubs?.block_type as 'total' | 'partial' | null,
-                            club_name: m.clubs?.name,
-                            avatar_url: m.avatar_url
-                        };
-                    })
-                );
+                const allMemberships: MemberInfo[] = membersData.map((m) => ({
+                    id: m.id,
+                    user_id: m.user_id,
+                    club_id: m.club_id,
+                    full_name: m.full_name,
+                    email: m.email,
+                    status: m.status,
+                    roles: (m.member_roles as { role: string }[])?.map((r) => r.role) || [],
+                    is_super_admin: m.is_super_admin ?? false,
+                    club_status: (m.clubs as { subscription_status?: string })?.subscription_status || 'activo',
+                    subscription_end_date: (m.clubs as { subscription_end_date?: string })?.subscription_end_date,
+                    block_type: (m.clubs as { block_type?: string })?.block_type as 'total' | 'partial' | null,
+                    club_name: (m.clubs as { name?: string })?.name,
+                    avatar_url: m.avatar_url
+                }));
 
                 setMemberships(allMemberships);
 

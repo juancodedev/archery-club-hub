@@ -1,42 +1,62 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useAuth } from "@/contexts/AuthContextCore";
 import ProtectedRoute from "@/components/ProtectedRoute";
-
 import AppLayout from "@/components/AppLayout";
+
+// Public routes — always loaded
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import RegisterClubPage from "./pages/RegisterClubPage";
-import DashboardPage from "./pages/DashboardPage";
-import ProfilePage from "./pages/ProfilePage";
-import NewScorePage from "./pages/NewScorePage";
-import ScoresPage from "./pages/ScoresPage";
-import AdminPage from "./pages/AdminPage";
-import DivisionsAdminPage from "./pages/DivisionsAdminPage";
-import TournamentTypesAdminPage from "./pages/TournamentTypesAdminPage";
-import ReportsPage from "./pages/ReportsPage";
-import TrainingSessionsPage from "./pages/TrainingSessionsPage";
-import ClubSettingsPage from "./pages/ClubSettingsPage";
 import InvitationRegisterPage from "./pages/InvitationRegisterPage";
-import SuperAdminPage from "./pages/SuperAdminPage";
-import TournamentsPage from "./pages/TournamentsPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
 
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import AttendanceCheckinPage from "./pages/AttendanceCheckinPage";
-import AttendanceMarkPage from "./pages/AttendanceMarkPage";
-import BillingPage from "./pages/BillingPage";
-import FinancePage from "./pages/FinancePage";
-import MembershipsPage from "./pages/MembershipsPage";
-import BirthdaysPage from "./pages/BirthdaysPage";
+// Lazy-loaded protected routes — split by access level
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const NewScorePage = lazy(() => import("./pages/NewScorePage"));
+const ScoresPage = lazy(() => import("./pages/ScoresPage"));
+const TrainingSessionsPage = lazy(() => import("./pages/TrainingSessionsPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const DivisionsAdminPage = lazy(() => import("./pages/DivisionsAdminPage"));
+const TournamentTypesAdminPage = lazy(() => import("./pages/TournamentTypesAdminPage"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage"));
+const ClubSettingsPage = lazy(() => import("./pages/ClubSettingsPage"));
+const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
+const TournamentsPage = lazy(() => import("./pages/TournamentsPage"));
+const AttendanceCheckinPage = lazy(() => import("./pages/AttendanceCheckinPage"));
+const AttendanceMarkPage = lazy(() => import("./pages/AttendanceMarkPage"));
+const BillingPage = lazy(() => import("./pages/BillingPage"));
+const FinancePage = lazy(() => import("./pages/FinancePage"));
+const MembershipsPage = lazy(() => import("./pages/MembershipsPage"));
+const BirthdaysPage = lazy(() => import("./pages/BirthdaysPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Cargando...</p>
+      </div>
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -45,6 +65,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
@@ -120,6 +141,7 @@ const App = () => (
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

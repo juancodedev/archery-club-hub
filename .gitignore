@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 .env
 .env.local
+.env_copy
 supabase/.temp/
 .env*.local
 .env*
