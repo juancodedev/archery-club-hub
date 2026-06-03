@@ -18,4 +18,24 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/") || id.includes("node_modules/react-router")) {
+            return "vendor-react";
+          }
+          if (id.includes("node_modules/@supabase")) {
+            return "vendor-supabase";
+          }
+          if (id.includes("node_modules/@tanstack/react-query")) {
+            return "vendor-query";
+          }
+          if (id.includes("node_modules/framer-motion") || id.includes("node_modules/recharts")) {
+            return "vendor-ui";
+          }
+        },
+      },
+    },
+  },
 }));
