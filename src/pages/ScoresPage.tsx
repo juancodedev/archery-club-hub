@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Club, MemberBasic } from "@/types/archery";
+import type { MemberBasic } from "@/types/archery";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
@@ -50,7 +51,7 @@ export default function ScoresPage() {
   const [modality, setModality] = useState("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const { data: clubs } = useClubs();
   const [membersList, setMembersList] = useState<MemberBasic[]>([]);
   const [activeExportScore, setActiveExportScore] = useState<Score | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -146,9 +147,7 @@ export default function ScoresPage() {
 
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      fetchClubs();
-    } else if (member?.club_id && !selectedClubId) {
+    if (!isSuperAdmin && member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
   }, [member, isSuperAdmin, selectedClubId]);
@@ -158,11 +157,6 @@ export default function ScoresPage() {
       fetchMembers(selectedClubId);
     }
   }, [selectedClubId, isAdmin, isSuperAdmin]);
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data as unknown as Club[]);
-  };
 
   const fetchMembers = async (clubId: string) => {
     const { data } = await supabase
@@ -216,7 +210,7 @@ export default function ScoresPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-5xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <History className="h-7 w-7 text-primary" />
@@ -230,10 +224,10 @@ export default function ScoresPage() {
             Registrar Puntaje
           </Button>
         </Link>
-      </motion.div>
+      </div>
 
       {/* FILTERS PANEL */}
-      <motion.div
+      <div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -250,7 +244,7 @@ export default function ScoresPage() {
         </button>
 
         {isFiltersOpen && (
-          <motion.div
+          <div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             className="p-5 space-y-6 border-t border-white/5"
@@ -317,9 +311,9 @@ export default function ScoresPage() {
                 Limpiar Búsqueda
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
       {isLoading ? (
         <div className="space-y-4">
@@ -330,7 +324,7 @@ export default function ScoresPage() {
       ) : scores && scores.length > 0 ? (
         <div className="space-y-4">
           {scores.map((score, i) => (
-            <motion.div
+            <div
               key={score.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -468,7 +462,7 @@ export default function ScoresPage() {
                   </div>
                 </div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
       ) : (

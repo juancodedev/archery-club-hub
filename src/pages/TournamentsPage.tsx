@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { div } from "framer-motion/m";
+import { AnimatePresence } from "framer-motion";
 import {
     Trophy,
     Calendar as CalendarIcon,
@@ -105,18 +107,7 @@ export default function TournamentsPage() {
     const isManager = isSuperAdmin || roles.some(r => ["gestor_torneos", "administrador", "presidente"].includes(r));
 
     // --- Clubs list (superadmin only) ---
-    const { data: allClubs } = useQuery<{ id: string; name: string }[]>({
-        queryKey: ["all-clubs-for-superadmin"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("clubs")
-                .select("id, name")
-                .order("name");
-            if (error) throw error;
-            return data as { id: string; name: string }[];
-        },
-        enabled: isSuperAdmin,
-    });
+    const { data: allClubs } = useClubs();
 
     // --- Tournaments ---
     const { data: tournaments, isLoading } = useQuery<Tournament[]>({
@@ -254,7 +245,7 @@ export default function TournamentsPage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-20">
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+            <div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-3">
@@ -302,11 +293,11 @@ export default function TournamentsPage() {
                         </DialogContent>
                     </Dialog>
                 )}
-            </motion.div>
+            </div>
 
             {/* SuperAdmin: club selector */}
             {isSuperAdmin && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+                <div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                     className="glass border border-yellow-500/20 rounded-[1.5rem] p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     <div className="flex items-center gap-2 text-yellow-500 shrink-0">
                         <Building2 className="h-5 w-5" />
@@ -325,7 +316,7 @@ export default function TournamentsPage() {
                     {!selectedClubId && (
                         <p className="text-xs text-muted-foreground italic">Selecciona un club para ver y gestionar sus torneos.</p>
                     )}
-                </motion.div>
+                </div>
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -364,7 +355,7 @@ export default function TournamentsPage() {
                             {tournamentsOnSelectedDate && tournamentsOnSelectedDate.length > 0 ? tournamentsOnSelectedDate.map(t => {
                                 const confirmed = confirmedRegs(t.id);
                                 return (
-                                    <motion.div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                                    <div key={t.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                                         className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3">
                                         <h4 className="font-bold text-foreground leading-tight">{t.name}</h4>
                                         <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
@@ -388,7 +379,7 @@ export default function TournamentsPage() {
                                                 </div>
                                             </div>
                                         )}
-                                    </motion.div>
+                                    </div>
                                 );
                             }) : (
                                 <p className="text-sm text-muted-foreground italic text-center py-6">No hay torneos programados para este día.</p>
@@ -428,7 +419,7 @@ export default function TournamentsPage() {
                             const isExpanded = expandedManager === t.id;
 
                             return (
-                                <motion.div key={t.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}>
+                                <div key={t.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}>
                                     <Card className="glass border-primary/5 hover:border-primary/20 transition-all rounded-[2rem] flex flex-col">
                                         <CardHeader className="pb-2">
                                             <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
@@ -505,7 +496,7 @@ export default function TournamentsPage() {
                                                     </button>
                                                     <AnimatePresence>
                                                         {isExpanded && (
-                                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                                            <div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                                                                 <div className="space-y-2 mt-3">
                                                                     {pending.map(r => r.members && (
                                                                         <div key={r.id} className="flex items-center gap-2 p-2 rounded-xl bg-muted/40">
@@ -522,14 +513,14 @@ export default function TournamentsPage() {
                                                                         </div>
                                                                     ))}
                                                                 </div>
-                                                            </motion.div>
+                                                            </div>
                                                         )}
                                                     </AnimatePresence>
                                                 </div>
                                             )}
                                         </CardContent>
                                     </Card>
-                                </motion.div>
+                                </div>
                             );
                         })}
                     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import {
     DollarSign,
     TrendingUp,
@@ -187,7 +187,7 @@ export default function FinancePage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-20">
-            <motion.div
+            <div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -231,11 +231,11 @@ export default function FinancePage() {
                         <Plus className="h-4 w-4" /> <span className="hidden xs:inline">{isReadOnlyMode(member) ? "Bloqueado" : "Gasto"}</span>
                     </Button>
                 </div>
-            </motion.div>
+            </div>
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                <div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                     <Card className="glass overflow-hidden border-emerald-500/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Ingresos</CardTitle>
@@ -245,9 +245,9 @@ export default function FinancePage() {
                             <div className="text-xl sm:text-2xl font-black text-emerald-600 tabular-nums">{formatCurrency(totals.income)}</div>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+                <div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
                     <Card className="glass overflow-hidden border-destructive/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Gastos</CardTitle>
@@ -257,9 +257,9 @@ export default function FinancePage() {
                             <div className="text-xl sm:text-2xl font-black text-destructive tabular-nums">{formatCurrency(totals.expense)}</div>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
 
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+                <div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
                     <Card className="glass overflow-hidden border-primary/20 shadow-lg relative group">
                         <div className={cn(
                             "absolute inset-0 opacity-5 transition-opacity group-hover:opacity-10",
@@ -278,11 +278,11 @@ export default function FinancePage() {
                             </div>
                         </CardContent>
                     </Card>
-                </motion.div>
+                </div>
             </div>
 
             {/* Transactions Section */}
-            <motion.div
+            <div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
@@ -392,7 +392,7 @@ export default function FinancePage() {
                     ) : entries?.length === 0 ? (
                         <div className="text-center py-20 text-muted-foreground italic">No hay registros.</div>
                     ) : entries?.map((entry) => (
-                        <motion.div
+                        <div
                             key={entry.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -453,10 +453,10 @@ export default function FinancePage() {
                                     </Button>
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
-            </motion.div>
+            </div>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                 <DialogContent className="sm:max-w-[500px] glass p-0 border-none overflow-hidden rounded-[2rem]">

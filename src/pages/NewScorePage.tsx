@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +16,7 @@ import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
 import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
-import type { TournamentType, Club, MemberBasic } from "@/types/archery";
+import type { TournamentType, MemberBasic } from "@/types/archery";
 import { TRAINING_PRESETS } from "@/lib/archeryConstants";
 import { isReadOnlyMode } from "@/lib/permissions";
 
@@ -59,14 +60,12 @@ export default function NewScorePage() {
   // For SuperAdmin/Admin
   const [selectedClubId, setSelectedClubId] = useState<string>("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-  const [clubs, setClubs] = useState<Club[]>([]);
+  const { data: clubs } = useClubs();
   const [members, setMembers] = useState<MemberBasic[]>([]);
 
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      fetchClubs();
-    } else if (member?.club_id) {
+    if (!isSuperAdmin && member?.club_id) {
       setSelectedClubId(member.club_id);
       fetchMembers(member.club_id);
     }
@@ -211,11 +210,6 @@ export default function NewScorePage() {
         });
       }
     }
-  };
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
   };
 
   const fetchMembers = async (clubId: string) => {
@@ -454,7 +448,7 @@ export default function NewScorePage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <Crosshair className="h-7 w-7 text-primary" />
@@ -464,12 +458,12 @@ export default function NewScorePage() {
             {searchParams.get("editId") ? "Modifica los datos de tu tarjeta" : '"Ingresa tu tarjeta de rendimiento"'}
           </p>
         </div>
-      </motion.div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Scorecard selection (for owners/trainers) */}
         {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
+          <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-4">
               <UserIcon className="h-4 w-4 text-primary" /> Selección de Arquero
             </h3>
@@ -499,11 +493,11 @@ export default function NewScorePage() {
                 </Select>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Event info */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
+        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-border/50 pb-3">
             <Info className="h-5 w-5 text-primary" />
             <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
@@ -597,10 +591,10 @@ export default function NewScorePage() {
               <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." className="h-11 glass border-primary/10" />
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Scorecard */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
+        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" /> {ifaaRound ? `Tarjeta IFAA (${ifaaRound.toUpperCase().replace('_', ' ')})` : "Tarjeta de Puntuación"}
@@ -990,7 +984,7 @@ export default function NewScorePage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-4">
           <Button type="button" variant="ghost" onClick={() => navigate("/scores")} className="h-12 w-full sm:w-auto font-bold rounded-xl">
