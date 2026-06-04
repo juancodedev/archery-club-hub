@@ -23,7 +23,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import QRCode from "qrcode";
+
+// Leaflet CSS — imported at build time instead of injected from CDN
+import "leaflet/dist/leaflet.css";
+import {
+  DISCIPLINES, STANDARD_DISTANCES, formatYards,
+  TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
+  NFAA_DISCIPLINES, NFAA_BOW_STYLES, NFAA_AGE_CATEGORIES, NFAA_GENDERS,
+  INDOOR_TARGET_TYPES, SESSION_MODES, NFAA_ALL_DIVISIONS,
+  type DisciplineValue
+} from "@/lib/archeryConstants";
+import { buildDivisionCode } from "@/lib/divisionUtils";
 import { logger } from "@/lib/logger";
 import {
   Calendar,
@@ -148,24 +158,25 @@ export default function TrainingSessionsPage() {
 
   // Dynamically load Leaflet for the Interactive Map Picker
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).L) {
-      setLeafletLoaded(true);
-      return;
-    }
-
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-    document.head.appendChild(link);
-
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.async = true;
-    script.onload = () => {
-      setLeafletLoaded(true);
-    };
-    document.body.appendChild(script);
+    let cancelled = false;
+    (async () => {
+      try {
+        const L = await import("leaflet");
+        if (cancelled) return;
+        // Fix Leaflet default icon paths (broken with bundlers)
+        delete (L as any).Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+          shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+        });
+        (window as any).__leaflet = L;
+        if (!cancelled) setLeafletLoaded(true);
+      } catch {
+        if (!cancelled) setLeafletLoaded(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Auto-trigger geolocation fetch when the dialog is opened
@@ -190,7 +201,7 @@ export default function TrainingSessionsPage() {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const L = (window as any).L;
+    const L = (window as any).__leaflet;
     if (!L || !leafletLoaded) return;
 
     const latNum = parseFloat(gpsLat) || -33.45678;

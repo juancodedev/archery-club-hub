@@ -73,30 +73,16 @@ export default function ScoresPage() {
 
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
-  const handleDownloadPDF = () => {
-    const html2pdf = (window as any).html2pdf;
-    if (html2pdf) {
-      generatePDF(html2pdf);
-      return;
-    }
-
+  const handleDownloadPDF = async () => {
     setDownloadingPDF(true);
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-    script.onload = () => {
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      generatePDF(html2pdf);
+    } catch (err) {
+      toast.error("Error al cargar la librería de PDF");
+    } finally {
       setDownloadingPDF(false);
-      const loadedHtml2pdf = (window as any).html2pdf;
-      if (loadedHtml2pdf) {
-        generatePDF(loadedHtml2pdf);
-      } else {
-        toast.error("Error al iniciar el motor de PDF");
-      }
-    };
-    script.onerror = () => {
-      setDownloadingPDF(false);
-      toast.error("Fallo al descargar la librería de PDF. Por favor verifica tu conexión a internet.");
-    };
-    document.body.appendChild(script);
+    }
   };
 
   const generatePDF = (html2pdf: any) => {

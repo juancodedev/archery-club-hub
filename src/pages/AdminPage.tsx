@@ -90,14 +90,22 @@ export default function AdminPage() {
 
       if (error) throw error;
 
-      const { data: allPayments } = await supabase
+      // Only fetch membership-related payments for computing financial status
+      // instead of downloading ALL financial entries for the club
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+
+      const { data: relevantPayments } = await supabase
         .from("financial_entries")
-        .select("*")
-        .eq("club_id", selectedClubId);
+        .select("member_id, category, payment_month, payment_year")
+        .eq("club_id", selectedClubId)
+        .in("category", ["membresía", "membresia", "cuota mensual", "inscripción", "inscripcion", "membresía inicial"])
+        .gte("payment_year", currentYear - 1);
 
       return data.map(m => {
-        const memberPayments = allPayments?.filter(p => p.member_id === m.id) || [];
-        const financialStatus = calculateFinancialStatus(m, memberPayments);
+        const memberPayments = relevantPayments?.filter(p => p.member_id === m.id) || [];
+        const financialStatus = calculateFinancialStatus(m, memberPayments as any);
         return { ...m, financialStatus };
       });
     },
