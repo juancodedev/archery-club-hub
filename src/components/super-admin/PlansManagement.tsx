@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 interface Plan {
     id: string;
@@ -33,6 +34,7 @@ export default function PlansManagement() {
     const [loading, setLoading] = useState(true);
     const [editingPlan, setEditingPlan] = useState<Partial<Plan> | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [deletePlanId, setDeletePlanId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchPlans();
@@ -84,7 +86,6 @@ export default function PlansManagement() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("¿Estás seguro de eliminar este plan?")) return;
         const { error } = await supabase.from("plans").delete().eq("id", id);
         if (error) {
             toast.error("Error al eliminar el plan");
@@ -208,7 +209,7 @@ export default function PlansManagement() {
                                     <Button variant="ghost" size="icon" onClick={() => { setEditingPlan(plan); setIsDialogOpen(true); }}>
                                         <Pencil className="h-4 w-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(plan.id)} className="text-destructive">
+                                    <Button variant="ghost" size="icon" onClick={() => setDeletePlanId(plan.id)} className="text-destructive">
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </TableCell>
@@ -217,6 +218,20 @@ export default function PlansManagement() {
                     </TableBody>
                 </Table>
             </div>
+            <ConfirmDialog
+                open={!!deletePlanId}
+                onOpenChange={(open) => !open && setDeletePlanId(null)}
+                title="Eliminar plan"
+                description="¿Estás seguro de eliminar este plan? Esta acción no se puede deshacer."
+                confirmLabel="Eliminar"
+                variant="destructive"
+                onConfirm={() => {
+                    if (deletePlanId) {
+                        handleDelete(deletePlanId);
+                        setDeletePlanId(null);
+                    }
+                }}
+            />
         </div>
     );
 }

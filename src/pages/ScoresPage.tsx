@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Club, MemberBasic } from "@/types/archery";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 
 interface Score {
@@ -52,11 +53,9 @@ export default function ScoresPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
   const [membersList, setMembersList] = useState<MemberBasic[]>([]);
   const [activeExportScore, setActiveExportScore] = useState<Score | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const handleDeleteScore = async (scoreId: string) => {
-    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar este registro de entrenamiento/puntaje? Esta acción no se puede deshacer.");
-    if (!confirmed) return;
-
     try {
       const { error } = await supabase.from("scores").delete().eq("id", scoreId);
       if (error) throw error;
@@ -456,7 +455,7 @@ export default function ScoresPage() {
                           </Link>
                           
                           <Button
-                            onClick={() => handleDeleteScore(score.id)}
+                            onClick={() => setDeleteTargetId(score.id)}
                             variant="destructive"
                             className="gap-2 text-xs font-black uppercase tracking-widest rounded-xl h-9 px-4 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 transition-all"
                           >
@@ -761,6 +760,20 @@ export default function ScoresPage() {
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={!!deleteTargetId}
+        onOpenChange={(open) => !open && setDeleteTargetId(null)}
+        title="Eliminar registro"
+        description="¿Estás seguro de que deseas eliminar este registro de entrenamiento/puntaje? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteTargetId) {
+            handleDeleteScore(deleteTargetId);
+            setDeleteTargetId(null);
+          }
+        }}
+      />
     </div>
   );
 }
