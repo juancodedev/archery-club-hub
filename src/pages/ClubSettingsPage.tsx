@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { Settings, DollarSign, Link as LinkIcon, Plus, Trophy, Target, QrCode, Copy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -29,21 +30,14 @@ export default function ClubSettingsPage() {
   const queryClient = useQueryClient();
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const { data: clubs } = useClubs();
   const [qrToken, setQrToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      fetchClubs();
-    } else if (member?.club_id && !selectedClubId) {
+    if (!isSuperAdmin && member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
   }, [member, isSuperAdmin, selectedClubId]);
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
-  };
 
   const { data: club } = useQuery({
     queryKey: ["club-settings", selectedClubId],
@@ -158,7 +152,7 @@ export default function ClubSettingsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1 text-left">
           <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
             <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
@@ -166,10 +160,10 @@ export default function ClubSettingsPage() {
           </h1>
           <p className="text-sm text-muted-foreground">Administra montos, categorías y formatos de torneo</p>
         </div>
-      </motion.div>
+      </div>
 
       {isSuperAdmin && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
+        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5">
           <h3 className="font-display font-semibold text-foreground mb-4 text-left">Seleccionar Club para Configurar</h3>
           <Select value={selectedClubId} onValueChange={setSelectedClubId}>
             <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
@@ -177,7 +171,7 @@ export default function ClubSettingsPage() {
               {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
-        </motion.div>
+        </div>
       )}
 
       <Tabs defaultValue="general" className="w-full">

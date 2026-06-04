@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { UserPlus, Heart, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { formatRUT } from "@/lib/rut";
 
 import { useAuth } from "@/contexts/AuthContextCore";
-import { useEffect } from "react";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
@@ -45,7 +45,7 @@ export default function AddMemberDialog({ clubId: initialClubId, disabled }: Pro
   const [graceDays, setGraceDays] = useState("7");
   const [role, setRole] = useState<string>("arquero");
   const [selectedClubId, setSelectedClubId] = useState(initialClubId);
-  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const { data: clubs } = useClubs();
   const [ifaaNumber, setIfaaNumber] = useState("");
   const [shirtGender, setShirtGender] = useState("");
   const [enrollmentDate, setEnrollmentDate] = useState(new Date().toISOString().split('T')[0]);
@@ -59,17 +59,6 @@ export default function AddMemberDialog({ clubId: initialClubId, disabled }: Pro
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
     return age < 18;
   }, [dateOfBirth]);
-
-  useEffect(() => {
-    if (isSuperAdmin && open) {
-      fetchClubs();
-    }
-  }, [isSuperAdmin, open]);
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
-  };
 
   const addMember = useMutation({
     mutationFn: async () => {

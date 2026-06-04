@@ -1,7 +1,9 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { div } from "framer-motion/m";
+import { AnimatePresence } from "framer-motion";
 import { BarChart3, TrendingUp, Users, Target, Calendar, Filter, ChevronDown, ChevronUp, CheckCircle2, XCircle, PieChart as PieChartIcon } from "lucide-react";
 import {
   BarChart,
@@ -36,8 +38,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
-interface ClubItem { id: string; name: string; }
-
 interface ScoreReport {
   id: string;
   member_id: string;
@@ -66,7 +66,7 @@ export default function ReportsPage() {
   const isSuperAdmin = !!member?.is_super_admin;
 
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<ClubItem[]>([]);
+  const { data: clubs } = useClubs();
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState<string>("all");
@@ -74,17 +74,10 @@ export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("performance");
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      fetchClubs();
-    } else if (member?.club_id && !selectedClubId) {
+    if (!isSuperAdmin && member?.club_id && !selectedClubId) {
       setSelectedClubId(member.club_id);
     }
   }, [member, isSuperAdmin, selectedClubId]);
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data as ClubItem[]);
-  };
 
   // --- Performance Data (Scores) ---
   const { data: scores } = useQuery<ScoreReport[]>({
@@ -266,7 +259,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1 text-center sm:text-left">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center justify-center sm:justify-start gap-2">
             <BarChart3 className="h-7 w-7 text-primary" />
@@ -274,7 +267,7 @@ export default function ReportsPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium italic opacity-80">"Análisis de rendimiento estratégico"</p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Tabs Selector */}
       <div className="flex justify-center sm:justify-start">
@@ -291,7 +284,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters Panel */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
           className="w-full p-4 flex items-center justify-between text-sm font-bold bg-white/5 hover:bg-white/10 transition-colors"
@@ -335,11 +328,11 @@ export default function ReportsPage() {
             </div>
           </div>
         )}
-      </motion.div>
+      </div>
 
       <AnimatePresence mode="wait">
         {activeTab === "performance" ? (
-          <motion.div
+          <div
             key="perf"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -444,9 +437,9 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
+          <div
             key="attendance"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -547,7 +540,7 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

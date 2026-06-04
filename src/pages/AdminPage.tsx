@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ export default function AdminPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedClubId, setSelectedClubId] = useState<string>("");
-  const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+  const { data: clubs } = useClubs();
 
   // Edit/Role/Delete dialogs
   const [editMember, setEditMember] = useState<AdminMember | null>(null);
@@ -72,17 +73,10 @@ export default function AdminPage() {
   const [passwordResetTarget, setPasswordResetTarget] = useState<AdminMember | null>(null);
 
   useEffect(() => {
-    if (isSuperAdmin) {
-      fetchClubs();
-    } else if (member?.club_id) {
+    if (!isSuperAdmin && member?.club_id) {
       setSelectedClubId(member.club_id);
     }
   }, [member, isSuperAdmin]);
-
-  const fetchClubs = async () => {
-    const { data } = await supabase.from("clubs").select("id, name").order("name");
-    if (data) setClubs(data);
-  };
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["club-members", selectedClubId],
@@ -162,7 +156,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
@@ -188,7 +182,7 @@ export default function AdminPage() {
             </Select>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -312,7 +306,7 @@ export default function AdminPage() {
             {filtered?.map((m) => {
               const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
               return (
-                <motion.div
+                <div
                   key={m.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -389,7 +383,7 @@ export default function AdminPage() {
                       <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>

@@ -1,7 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { div } from "framer-motion/m";
+import { AnimatePresence } from "framer-motion";
 import { Target, TrendingUp, Calendar, Award, BarChart3, Shield, Cake } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
         <div className="flex-1">
           <h1 className="text-3xl sm:text-4xl font-display font-black text-foreground tracking-tight leading-tight">
             Hola, <span className="text-primary">{member?.full_name?.split(" ")[0]}</span>! 🏹
@@ -108,12 +109,12 @@ export default function DashboardPage() {
             </Select>
           </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map(({ icon: Icon, label, value, color, to }, i) => (
-          <motion.div
+          <div
             key={label}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -125,14 +126,14 @@ export default function DashboardPage() {
               <p className="text-2xl sm:text-3xl font-display font-black text-foreground truncate tabular-nums">{value}</p>
               <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-wider truncate">{label}</p>
             </Link>
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Today's Birthdays Widget */}
       <AnimatePresence>
         {todaysBirthdays && todaysBirthdays.length > 0 && (
-          <motion.div
+          <div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -157,7 +158,7 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -206,7 +207,7 @@ export default function DashboardPage() {
         {scores && scores.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             {scores.map((score, i) => (
-              <motion.div
+              <div
                 key={score.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -231,7 +232,7 @@ export default function DashboardPage() {
                   <p className="text-2xl font-display font-black text-primary tabular-nums tracking-tighter">{score.total_score}</p>
                   <p className="text-[8px] uppercase text-muted-foreground font-black tracking-widest -mt-1">Puntos</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (

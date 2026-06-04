@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { Wallet, Search, Filter, CheckCircle2, XCircle, AlertCircle, CalendarDays } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
@@ -115,13 +115,13 @@ export default function MembershipsPage() {
 
     return (
         <div className="space-y-6 pb-10">
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-3">
                     <Wallet className="h-8 w-8 text-primary" />
                     Estado de Membresías
                 </h1>
                 <p className="text-muted-foreground mt-1 text-sm sm:text-base">Seguimiento global de cuotas mensuales del club.</p>
-            </motion.div>
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
@@ -158,7 +158,7 @@ export default function MembershipsPage() {
                     </div>
                 ) : (
                     filteredMembers?.map((m) => (
-                        <motion.div
+                        <div
                             key={m.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -207,7 +207,7 @@ export default function MembershipsPage() {
                                     ))}
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
                     ))
                 )}
             </div>

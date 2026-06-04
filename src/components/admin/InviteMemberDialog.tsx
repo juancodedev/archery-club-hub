@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import { Link, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,18 +25,7 @@ export default function InviteMemberDialog({ clubId: initialClubId, disabled }: 
     const [invitationLink, setInvitationLink] = useState("");
     const [copied, setCopied] = useState(false);
     const [selectedClubId, setSelectedClubId] = useState(initialClubId || "");
-    const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
-
-    useEffect(() => {
-        if (isSuperAdmin && open) {
-            fetchClubs();
-        }
-    }, [isSuperAdmin, open]);
-
-    const fetchClubs = async () => {
-        const { data } = await supabase.from("clubs").select("id, name").order("name");
-        if (data) setClubs(data);
-    };
+    const { data: clubs } = useClubs();
 
     const generateInvite = async () => {
         const targetClubId = isSuperAdmin ? selectedClubId : initialClubId;

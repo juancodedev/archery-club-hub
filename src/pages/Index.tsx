@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { div } from "framer-motion/m";
 import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useState, useEffect } from "react";
@@ -25,7 +25,7 @@ function PricingPlans() {
   return (
     <>
       {plans.map((plan) => (
-        <motion.div
+        <div
           key={plan.id}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -55,7 +55,7 @@ function PricingPlans() {
               Empezar ahora
             </Button>
           </Link>
-        </motion.div>
+        </div>
       ))}
     </>
   );
@@ -109,7 +109,7 @@ export default function Index() {
         </div>
 
         <div className="relative container mx-auto px-4 pt-20 pb-28 text-center">
-          <motion.div
+          <div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
@@ -146,13 +146,13 @@ export default function Index() {
                 </>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </header>
 
       {/* Features */}
       <section className="container mx-auto px-4 py-20">
-        <motion.div
+        <div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -164,11 +164,11 @@ export default function Index() {
           <p className="text-muted-foreground max-w-lg mx-auto">
             Herramientas simples y potentes para gestionar tu club de arquería
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map(({ icon: Icon, title, desc }, i) => (
-            <motion.div
+            <div
               key={title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -181,14 +181,14 @@ export default function Index() {
               </div>
               <h3 className="font-display font-semibold text-foreground mb-2">{title}</h3>
               <p className="text-sm text-muted-foreground">{desc}</p>
-            </motion.div>
+            </div>
           ))}
         </div>
       </section>
 
       {/* Pricing Section */}
       <section className="container mx-auto px-4 py-20 bg-muted/30">
-        <motion.div
+        <div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -200,7 +200,7 @@ export default function Index() {
           <p className="text-muted-foreground max-w-lg mx-auto">
             Elige el plan que mejor se adapte a las necesidades de tu club
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid gap-8 md:grid-cols-3">
           <PricingPlans />
@@ -209,7 +209,7 @@ export default function Index() {
 
       {/* CTA */}
       <section className="container mx-auto px-4 py-16">
-        <motion.div
+        <div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -228,7 +228,7 @@ export default function Index() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
-        </motion.div>
+        </div>
       </section>
 
       {/* Footer */}
