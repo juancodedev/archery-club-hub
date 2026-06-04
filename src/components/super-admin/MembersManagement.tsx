@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useClubs } from "@/hooks/useClubs";
 import {
     Table,
     TableBody,
@@ -64,7 +65,7 @@ interface Member {
 export default function MembersManagement() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedClubId, setSelectedClubId] = useState<string>("all");
-    const [clubs, setClubs] = useState<{ id: string; name: string }[]>([]);
+    const { data: clubs } = useClubs();
     const queryClient = useQueryClient();
 
     // Dialog states
@@ -72,15 +73,6 @@ export default function MembersManagement() {
     const [rolesMember, setRolesMember] = useState<(Member & { roles: string[] }) | null>(null);
     const [passwordResetTarget, setPasswordResetTarget] = useState<Member | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-
-    useEffect(() => {
-        fetchClubs();
-    }, []);
-
-    const fetchClubs = async () => {
-        const { data } = await supabase.from("clubs").select("id, name").order("name");
-        if (data) setClubs(data);
-    };
 
     const { data: members, isLoading } = useQuery({
         queryKey: ["all-members", selectedClubId],
