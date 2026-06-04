@@ -50,7 +50,14 @@
 
 ---
 
-## P3 — Split de componentes grandes (🔥 Alto / Medio)
+## ✅ P3 — Split de componentes grandes (🔥 Alto / Medio) — COMPLETADO
+
+- TrainingSessionsPage: 1.816L → 1.112L (-699L, -39%)
+- 4 componentes extraídos: TrainingSessionDialog, TrainingSessionList, TrainingEnrollmentPanel, TrainingQRDialog
+
+---
+
+## P3b — Split de componentes grandes (pendiente)
 
 ### TrainingSessionsPage (1816 líneas)
 
@@ -94,22 +101,12 @@
 
 ---
 
-## P4 — Google Fonts: eliminar render blocking (🔥 Alto / Bajo)
+## ✅ P4 — Google Fonts: eliminar render blocking (🔥 Alto / Bajo) — COMPLETADO
 
-**Problema:** En `src/index.css` línea 1:
-```css
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:...');
-```
-Esto bloquea el renderizado hasta que descargue las fuentes.
-
-**Solución:** Mover a `<link>` en `index.html` con `preconnect` y `font-display: swap`:
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="..." rel="stylesheet" />
-```
-
-Y en CSS agregar `font-display: swap` via `@supports` o directamente en `@import` con `&display=swap`.
+**Solución:** Moví Google Fonts de CSS `@import` a `<link>` en `<head>` con `preconnect`:
+- `<link rel="preconnect" href="https://fonts.googleapis.com" />`
+- `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />`
+- `<link href="..." rel="stylesheet" />` (con `&display=swap` incluido)
 
 ---
 
