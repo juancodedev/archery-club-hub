@@ -62,19 +62,10 @@ export default function DashboardPage() {
     queryKey: ["todays-birthdays", member?.club_id],
     queryFn: async () => {
       if (!member?.club_id) return [];
-      const { data } = await supabase
-        .from("members")
-        .select("id, full_name, date_of_birth, avatar_url")
-        .eq("club_id", member.club_id)
-        .not("date_of_birth", "is", null);
-
-      if (!data) return [];
-
-      const today = new Date();
-      return data.filter(m => {
-        const dob = new Date(m.date_of_birth);
-        return dob.getUTCDate() === today.getDate() && dob.getUTCMonth() === today.getMonth();
+      const { data } = await supabase.rpc("get_todays_birthdays", {
+        p_club_id: member.club_id,
       });
+      return data || [];
     },
     enabled: !!member?.club_id,
   });

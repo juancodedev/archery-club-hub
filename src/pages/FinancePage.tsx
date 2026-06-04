@@ -43,6 +43,7 @@ import { useToast } from "@/hooks/use-toast";
 import FinanceForm from "@/components/admin/FinanceForm";
 import { logger } from "@/lib/logger";
 import { isReadOnlyMode } from "@/lib/permissions";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 interface Club { id: string; name: string; allow_superadmin_finances: boolean; financial_support_expires_at?: string | null; }
 interface FinancialEntry {
@@ -67,6 +68,7 @@ export default function FinancePage() {
     const [selectedClubId, setSelectedClubId] = useState<string>(member?.club_id || "");
     const [clubs, setClubs] = useState<Club[]>([]);
     const [editingEntry, setEditingEntry] = useState<FinancialEntry | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
     useEffect(() => {
@@ -372,7 +374,7 @@ export default function FinancePage() {
                                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }} disabled={isReadOnlyMode(member)}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
@@ -445,7 +447,7 @@ export default function FinancePage() {
                                         size="sm"
                                         className="h-8 gap-1.5 text-destructive text-[10px] font-bold hover:bg-destructive/5"
                                         disabled={isReadOnlyMode(member)}
-                                        onClick={() => { if (confirm("¿Eliminar?")) deleteMutation.mutate(entry.id); }}
+                                        onClick={() => setDeleteTargetId(entry.id)}
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </Button>
@@ -480,6 +482,20 @@ export default function FinancePage() {
                     )}
                 </DialogContent>
             </Dialog>
+            <ConfirmDialog
+                open={!!deleteTargetId}
+                onOpenChange={(open) => !open && setDeleteTargetId(null)}
+                title="Eliminar registro"
+                description="¿Estás seguro de que deseas eliminar este registro financiero? Esta acción no se puede deshacer."
+                confirmLabel="Eliminar"
+                variant="destructive"
+                onConfirm={() => {
+                    if (deleteTargetId) {
+                        deleteMutation.mutate(deleteTargetId);
+                        setDeleteTargetId(null);
+                    }
+                }}
+            />
         </div>
     );
 }

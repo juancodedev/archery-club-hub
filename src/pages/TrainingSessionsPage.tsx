@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import QRCode from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import {
   DISCIPLINES, STANDARD_DISTANCES, formatYards,
   TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
@@ -199,6 +200,7 @@ export default function TrainingSessionsPage() {
   const [selectedGpsTraining, setSelectedGpsTraining] = useState<GpsTrainingRecord | null>(null);
   const [activeMapId, setActiveMapId] = useState<string | null>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [deleteGpsTarget, setDeleteGpsTarget] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1506,11 +1508,7 @@ export default function TrainingSessionsPage() {
                             variant="ghost"
                             size="icon"
                             className="rounded-xl h-9 w-9 text-destructive hover:bg-destructive/10"
-                            onClick={() => {
-                              if (confirm("¿Estás seguro de que deseas eliminar este entrenamiento GPS y todo su historial de asistencia?")) {
-                                deleteGpsTraining.mutate(t.id);
-                              }
-                            }}
+                            onClick={() => setDeleteGpsTarget(t.id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1799,6 +1797,20 @@ export default function TrainingSessionsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={!!deleteGpsTarget}
+        onOpenChange={(open) => !open && setDeleteGpsTarget(null)}
+        title="Eliminar entrenamiento GPS"
+        description="¿Estás seguro de que deseas eliminar este entrenamiento GPS y todo su historial de asistencia? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        variant="destructive"
+        onConfirm={() => {
+          if (deleteGpsTarget) {
+            deleteGpsTraining.mutate(deleteGpsTarget);
+            setDeleteGpsTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -3,11 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -66,6 +67,9 @@ export default function AdminPage() {
   const [historyMember, setHistoryMember] = useState<AdminMember | null>(null);
   const [paymentsMember, setPaymentsMember] = useState<AdminMember | null>(null);
   const [divisionsMember, setDivisionsMember] = useState<AdminMember | null>(null);
+
+  // Confirm dialog for password reset
+  const [passwordResetTarget, setPasswordResetTarget] = useState<AdminMember | null>(null);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -272,11 +276,7 @@ export default function AdminPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={m.user_id === member?.user_id}
-                                  onClick={() => {
-                                    if (confirm(`¿Enviar correo de recuperación de contraseña a ${m.full_name}?`)) {
-                                      resetPassword.mutate(m);
-                                    }
-                                  }}>
+                                  onClick={() => setPasswordResetTarget(m)}>
                                   <Key className="h-4 w-4 mr-2" />Enviar recuperación por correo
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -340,11 +340,7 @@ export default function AdminPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={m.user_id === member?.user_id}
-                          onClick={() => {
-                            if (confirm(`¿Enviar correo de recuperación de contraseña a ${m.full_name}?`)) {
-                              resetPassword.mutate(m);
-                            }
-                          }}>
+                          onClick={() => setPasswordResetTarget(m)}>
                           <Key className="h-4 w-4 mr-2" />Enviar recuperación por correo
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -441,6 +437,19 @@ export default function AdminPage() {
         member={divisionsMember}
         open={!!divisionsMember}
         onOpenChange={(open) => !open && setDivisionsMember(null)}
+      />
+      <ConfirmDialog
+        open={!!passwordResetTarget}
+        onOpenChange={(open) => !open && setPasswordResetTarget(null)}
+        title="Enviar recuperación de contraseña"
+        description={`¿Enviar correo de recuperación de contraseña a ${passwordResetTarget?.full_name}?`}
+        confirmLabel="Enviar"
+        onConfirm={() => {
+          if (passwordResetTarget) {
+            resetPassword.mutate(passwordResetTarget);
+            setPasswordResetTarget(null);
+          }
+        }}
       />
     </div>
   );

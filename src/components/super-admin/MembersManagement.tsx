@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 // Ensure the correct path to AddMemberDialog is used
 import AddMemberDialog from "@/components/admin/AddMemberDialog"; // Update the path if necessary
 import EditMemberDialog from "@/components/admin/EditMemberDialog";
@@ -69,6 +70,8 @@ export default function MembersManagement() {
     // Dialog states
     const [editingMember, setEditingMember] = useState<Member | null>(null);
     const [rolesMember, setRolesMember] = useState<(Member & { roles: string[] }) | null>(null);
+    const [passwordResetTarget, setPasswordResetTarget] = useState<Member | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
     useEffect(() => {
         fetchClubs();
@@ -241,21 +244,13 @@ export default function MembersManagement() {
                                                 <DropdownMenuItem onClick={() => setRolesMember({ ...m, roles: m.member_roles.map(r => r.role) })}>
                                                     <ShieldCheck className="h-4 w-4 mr-2" />Gestionar roles
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => {
-                                                    if (confirm(`¿Enviar correo de recuperación de contraseña a ${m.full_name}?`)) {
-                                                        resetPassword.mutate(m);
-                                                    }
-                                                }}>
+                                                <DropdownMenuItem onClick={() => setPasswordResetTarget(m)}>
                                                     <Key className="h-4 w-4 mr-2" />Enviar recuperación por correo
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem
                                                     className="text-destructive"
-                                                    onClick={() => {
-                                                        if (confirm(`¿Estás seguro de eliminar a ${m.full_name}?`)) {
-                                                            deleteMember.mutate(m.id);
-                                                        }
-                                                    }}
+                                                    onClick={() => setDeleteTarget({ id: m.id, name: m.full_name })}
                                                 >
                                                     <Trash2 className="h-4 w-4 mr-2" />Eliminar miembro
                                                 </DropdownMenuItem>
@@ -286,6 +281,33 @@ export default function MembersManagement() {
                     onOpenChange={(open) => !open && setRolesMember(null)}
                 />
             )}
+            <ConfirmDialog
+                open={!!passwordResetTarget}
+                onOpenChange={(open) => !open && setPasswordResetTarget(null)}
+                title="Enviar recuperación de contraseña"
+                description={`¿Enviar correo de recuperación de contraseña a ${passwordResetTarget?.full_name}?`}
+                confirmLabel="Enviar"
+                onConfirm={() => {
+                    if (passwordResetTarget) {
+                        resetPassword.mutate(passwordResetTarget);
+                        setPasswordResetTarget(null);
+                    }
+                }}
+            />
+            <ConfirmDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => !open && setDeleteTarget(null)}
+                title="Eliminar miembro"
+                description={`¿Estás seguro de eliminar a ${deleteTarget?.name}? Esta acción no se puede deshacer.`}
+                confirmLabel="Eliminar"
+                variant="destructive"
+                onConfirm={() => {
+                    if (deleteTarget) {
+                        deleteMember.mutate(deleteTarget.id);
+                        setDeleteTarget(null);
+                    }
+                }}
+            />
         </div>
     );
 }
