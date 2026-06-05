@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Public routes — always loaded
 import Index from "./pages/Index";
@@ -71,73 +72,73 @@ const App = () => (
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register-club" element={<RegisterClubPage />} />
             <Route path="/join" element={<InvitationRegisterPage />} />
-            <Route path="/attendance/checkin" element={<AttendanceCheckinPage />} />
-            <Route path="/attendance/:sessionId" element={<AttendanceMarkPage />} />
+            <Route path="/attendance/checkin" element={<ErrorBoundary><AttendanceCheckinPage /></ErrorBoundary>} />
+            <Route path="/attendance/:sessionId" element={<ErrorBoundary><AttendanceMarkPage /></ErrorBoundary>} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route
               path="/dashboard"
-              element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><DashboardPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/profile"
-              element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><ProfilePage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/scores/new"
-              element={<ProtectedRoute requireArquero><AppLayout><NewScorePage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireArquero><AppLayout><ErrorBoundary><NewScorePage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/scores"
-              element={<ProtectedRoute requireArquero><AppLayout><ScoresPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireArquero><AppLayout><ErrorBoundary><ScoresPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/training"
-              element={<ProtectedRoute><AppLayout><TrainingSessionsPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><TrainingSessionsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin"
-              element={<ProtectedRoute><AppLayout><AdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><AdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/reports"
-              element={<ProtectedRoute><AppLayout><ReportsPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><ReportsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/divisions"
-              element={<ProtectedRoute><AppLayout><DivisionsAdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><DivisionsAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/tournament-types"
-              element={<ProtectedRoute><AppLayout><TournamentTypesAdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><TournamentTypesAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/settings"
-              element={<ProtectedRoute><AppLayout><ClubSettingsPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><ClubSettingsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/billing"
-              element={<ProtectedRoute><AppLayout><BillingPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><BillingPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/finances"
-              element={<ProtectedRoute><AppLayout><FinancePage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><FinancePage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/memberships"
-              element={<ProtectedRoute><AppLayout><MembershipsPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><MembershipsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/tournaments"
-              element={<ProtectedRoute><AppLayout><TournamentsPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><TournamentsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/birthdays"
-              element={<ProtectedRoute><AppLayout><BirthdaysPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute><AppLayout><ErrorBoundary><BirthdaysPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/super-admin/*"
-              element={<ProtectedRoute requireSuperAdmin><AppLayout><SuperAdminPage /></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute requireSuperAdmin><AppLayout><ErrorBoundary><SuperAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
