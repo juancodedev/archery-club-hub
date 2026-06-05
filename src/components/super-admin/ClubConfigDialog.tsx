@@ -245,7 +245,7 @@ interface InvitationRecord {
                             ) : (
                                 <div className="space-y-3">
                                     {invitations?.map((inv) => {
-                                        const status = getInvitationStatus(inv);
+                                        const status = getInvitationStatus(inv as { expires_at: string; used_at?: string | null; invitation_type: string });
                                         const regs = getRegistrationsForInv(inv.id);
                                         const isExpired = new Date(inv.expires_at) < new Date();
 
@@ -317,7 +317,7 @@ interface InvitationRecord {
                                                                         {regs.map(r => (
                                                                             <div key={r.id} className="flex justify-between items-center text-[10px]">
                                                                                 <span className="font-medium">{r.full_name}</span>
-                                                                                <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                                                                                <span className="text-muted-foreground">{new Date(r.created_at ?? '').toLocaleDateString()}</span>
                                                                             </div>
                                                                         ))}
                                                                     </div>

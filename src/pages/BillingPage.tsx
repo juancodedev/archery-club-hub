@@ -1,4 +1,4 @@
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { Check, Info, Zap, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -40,7 +40,7 @@ interface Plan {
     description: string | null;
     price: number;
     price_annual: number | null;
-    student_limit: number;
+    student_limit: number | null;
     features: string[];
     monthlyPrice?: number;
     annualPrice?: number;
@@ -52,7 +52,7 @@ interface Plan {
 
 interface ClubDetails {
     id: string;
-    plans?: { name: string; student_limit: number } | null;
+    plans?: { name: string; student_limit: number | null } | null;
     subscription_status?: string;
 }
 
@@ -77,7 +77,7 @@ export default function BillingPage() {
         const { data: clubData } = await supabase
             .from("clubs")
             .select("*, plans(*)")
-            .eq("id", member?.club_id)
+            .eq("id", member?.club_id ?? "")
             .single();
 
         if (clubData) setClubDetails(clubData);
@@ -86,7 +86,7 @@ export default function BillingPage() {
         const { count } = await supabase
             .from("members")
             .select("*", { count: 'exact', head: true })
-            .eq("club_id", member?.club_id)
+            .eq("club_id", member?.club_id ?? "")
             .eq("status", "activo");
 
         if (count !== null) setStudentCount(count);
@@ -183,7 +183,7 @@ export default function BillingPage() {
     };
     return (
         <div className="max-w-7xl mx-auto space-y-10 pb-20">
-            <div
+            <MotionDiv
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between"
@@ -196,11 +196,11 @@ export default function BillingPage() {
                     <HelpCircle className="h-4 w-4" />
                     <span className="text-xs font-semibold uppercase tracking-wider">Docs</span>
                 </Button>
-            </div>
+            </MotionDiv>
 
             {/* Usage Overview Section */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-12">
-                <div
+                <MotionDiv
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="md:col-span-12 lg:col-span-5 glass rounded-[2.5rem] p-8 flex flex-col justify-between group h-full"
@@ -220,9 +220,9 @@ export default function BillingPage() {
                             Gestionar
                         </Button>
                     </div>
-                </div>
+                </MotionDiv>
 
-                <div
+                <MotionDiv
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="md:col-span-12 lg:col-span-7 glass rounded-2xl p-7 flex flex-col justify-between h-full"
@@ -235,7 +235,7 @@ export default function BillingPage() {
                             </span>
                         </div>
                         <div className="relative h-2.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                            <div
+                            <MotionDiv
                                 initial={{ width: 0 }}
                                 animate={{ width: `${Math.min((studentCount / (clubDetails?.plans?.student_limit || 10)) * 100, 100)}%` }}
                                 className={cn(
@@ -267,14 +267,14 @@ export default function BillingPage() {
                             )}
                         </div>
                     </div>
-                </div>
+                </MotionDiv>
             </div>
 
             {/* Pricing Grid */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-4 sm:pt-6">
                 {
                     availablePlans.map((plan, index) => (
-                        <div
+                        <MotionDiv
                             key={plan.name}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -343,9 +343,8 @@ export default function BillingPage() {
                                     <ExternalLink className="h-3 w-3" />
                                 </div>
                             </div>
-                        </div>
-                    ))
-                }
+                        </MotionDiv>
+                    ))}
             </div>
 
             {/* Comparison Table Dialog */}
@@ -412,7 +411,7 @@ export default function BillingPage() {
                         <div className="p-4 bg-muted/40 rounded-2xl border border-border/50">
                             <p className="text-sm font-medium mb-1">Monto a pagar</p>
                             <p className="text-3xl font-display font-bold text-primary">
-                                ${selectedPlan?.isAnnual ? selectedPlan.annualPrice * 12 : selectedPlan?.monthlyPrice}
+                                ${selectedPlan?.isAnnual ? (selectedPlan.annualPrice ?? 0) * 12 : selectedPlan?.monthlyPrice}
                                 <span className="text-sm text-muted-foreground font-semibold"> / {selectedPlan?.isAnnual ? 'año' : 'mes'}</span>
                             </p>
                         </div>

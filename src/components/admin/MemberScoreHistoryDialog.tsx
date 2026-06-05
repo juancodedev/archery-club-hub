@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 
 interface MemberScoreHistoryDialogProps {
   memberId: string | null;
@@ -62,7 +62,7 @@ export default function MemberScoreHistoryDialog({
           ) : scores && scores.length > 0 ? (
             <div className="space-y-3">
               {scores.map((score, i) => (
-                <div
+                <MotionDiv
                   key={score.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -127,7 +127,7 @@ export default function MemberScoreHistoryDialog({
                       )}
                     </div>
                   )}
-                </div>
+                </MotionDiv>
               ))}
             </div>
           ) : (

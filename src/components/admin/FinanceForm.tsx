@@ -42,7 +42,7 @@ interface InitialData {
     id?: string;
     amount?: number;
     category?: string;
-    description?: string;
+    description?: string | null | undefined;
     entry_date?: string;
     receipt_url?: string | null;
     receipt_urls?: string[] | null;
@@ -103,14 +103,14 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
         queryFn: async () => {
             if (!clubId) return [];
             const { data, error } = await supabase
-                .from("financial_categories")
+                .from("financial_categories" as never)
                 .select("name")
                 .eq("club_id", clubId)
                 .eq("type", type)
                 .order("name", { ascending: true })
                 .limit(10);
             if (error) throw error;
-            return data.map(c => c.name);
+            return (data as { name: string }[]).map(c => c.name);
         },
         enabled: !!clubId,
     });
@@ -185,7 +185,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
                 // Check if it already exists to avoid redundant inserts
                 const { data: existing } = await supabase
-                    .from("financial_categories")
+                    .from("financial_categories" as never)
                     .select("name")
                     .eq("club_id", clubId)
                     .eq("type", type)
@@ -194,12 +194,12 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
 
                 if (!existing) {
                     const { error: catError } = await supabase
-                        .from("financial_categories")
+                        .from("financial_categories" as never)
                         .insert({
                             club_id: clubId,
                             name: categoryName,
                             type: type
-                        });
+                        } as never);
 
                     if (catError) throw catError;
                 }
@@ -328,10 +328,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                 required
                             />
                         </div>
-                        {type === "income" && category === "Membresía" && club?.monthly_fee > 0 && (
+                        {type === "income" && category === "Membresía" && (club?.monthly_fee ?? 0) > 0 && (
                             <p className="text-[10px] text-emerald-600 font-medium">Cargando monto por defecto del club</p>
                         )}
-                        {type === "income" && category === "Inscripción" && club?.inscription_fee > 0 && (
+                        {type === "income" && category === "Inscripción" && (club?.inscription_fee ?? 0) > 0 && (
                             <p className="text-[10px] text-emerald-600 font-medium">Cargando monto por defecto del club</p>
                         )}
                     </div>

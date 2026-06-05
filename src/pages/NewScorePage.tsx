@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -124,10 +124,11 @@ export default function NewScorePage() {
         }
 
         if (data.ends) {
-          setEnds(data.ends as string[][]);
-          if (data.ends.length > 0) {
-            setEndsCount(data.ends.length);
-            setArrowsPerEnd(data.ends[0].length);
+          const parsedEnds = data.ends as string[][];
+          setEnds(parsedEnds);
+          if (parsedEnds.length > 0) {
+            setEndsCount(parsedEnds.length);
+            setArrowsPerEnd(parsedEnds[0].length);
           }
         }
       }
@@ -448,7 +449,7 @@ export default function NewScorePage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-4xl mx-auto">
-      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <Crosshair className="h-7 w-7 text-primary" />
@@ -458,12 +459,12 @@ export default function NewScorePage() {
             {searchParams.get("editId") ? "Modifica los datos de tu tarjeta" : '"Ingresa tu tarjeta de rendimiento"'}
           </p>
         </div>
-      </div>
+      </MotionDiv>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Scorecard selection (for owners/trainers) */}
         {(isSuperAdmin || member?.roles?.includes('administrador') || member?.roles?.includes('presidente')) && (
-          <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
+          <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-2xl p-5 border-l-4 border-l-primary">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2 mb-4">
               <UserIcon className="h-4 w-4 text-primary" /> Selección de Arquero
             </h3>
@@ -478,7 +479,7 @@ export default function NewScorePage() {
                   }}>
                     <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
                     <SelectContent>
-                      {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -493,11 +494,11 @@ export default function NewScorePage() {
                 </Select>
               </div>
             </div>
-          </div>
+          </MotionDiv>
         )}
 
         {/* Event info */}
-        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
+        <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2 border-b border-border/50 pb-3">
             <Info className="h-5 w-5 text-primary" />
             <h3 className="font-display font-bold text-foreground">Información del Evento</h3>
@@ -591,10 +592,10 @@ export default function NewScorePage() {
               <Input value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Notas adicionales..." className="h-11 glass border-primary/10" />
             </div>
           </div>
-        </div>
+        </MotionDiv>
 
         {/* Scorecard */}
-        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
+        <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-2xl p-5 sm:p-6 overflow-hidden border-border/50">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-display font-bold text-foreground flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" /> {ifaaRound ? `Tarjeta IFAA (${ifaaRound.toUpperCase().replace('_', ' ')})` : "Tarjeta de Puntuación"}
@@ -984,7 +985,7 @@ export default function NewScorePage() {
               </div>
             </div>
           </div>
-        </div>
+        </MotionDiv>
 
         <div className="flex flex-col-reverse sm:flex-row gap-3 justify-end pt-4">
           <Button type="button" variant="ghost" onClick={() => navigate("/scores")} className="h-12 w-full sm:w-auto font-bold rounded-xl">

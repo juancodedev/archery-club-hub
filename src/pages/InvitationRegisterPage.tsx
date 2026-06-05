@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, Calendar, Heart, GraduationCap, Info } from "lucide-react";
 import { formatRUT } from "@/lib/rut";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -199,7 +199,7 @@ export default function InvitationRegisterPage() {
   if (expired) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
+        <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
             <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
@@ -210,14 +210,14 @@ export default function InvitationRegisterPage() {
           <p className="text-muted-foreground">
             Este enlace de invitación ha expirado o ya fue utilizado. Contacta al administrador de tu club para solicitar uno nuevo.
           </p>
-        </div>
+        </MotionDiv>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background p-4 py-8">
-      <div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-2xl">
+      <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-2xl">
         <div className="mb-8 text-center">
           <div className="mb-4 flex justify-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
@@ -367,7 +367,7 @@ export default function InvitationRegisterPage() {
 
           {/* Guardian (if minor) */}
           {isMinor && (
-            <div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass rounded-xl p-5 space-y-4 border-l-4 border-accent">
+            <MotionDiv initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass rounded-xl p-5 space-y-4 border-l-4 border-accent">
               <h3 className="font-display font-semibold text-foreground">Datos del Tutor (menor de 18 años)</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 sm:col-span-2">
@@ -383,7 +383,7 @@ export default function InvitationRegisterPage() {
                   <Input id="guardianEmail" type="email" value={guardianEmail} onChange={(e) => setGuardianEmail(e.target.value)} required />
                 </div>
               </div>
-            </div>
+            </MotionDiv>
           )}
 
           {/* Contract */}
@@ -435,7 +435,7 @@ export default function InvitationRegisterPage() {
             {loading ? "Registrando..." : "Aceptar e Inscribirme"}
           </Button>
         </form>
-      </div>
+      </MotionDiv>
     </div>
   );
 }

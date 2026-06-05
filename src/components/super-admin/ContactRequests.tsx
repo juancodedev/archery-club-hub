@@ -17,13 +17,13 @@ import { useNavigate } from "react-router-dom";
 
 interface ContactRequest {
     id: string;
-    created_at: string;
-    status: string;
+    created_at: string | null;
+    status: string | null;
     type: string;
     message: string;
-    club_id: string;
-    clubs?: { name: string };
-    members?: { full_name: string };
+    club_id: string | null;
+    clubs?: { name: string } | null;
+    members?: { full_name: string } | null;
 }
 
 export default function ContactRequests() {
@@ -97,7 +97,7 @@ export default function ContactRequests() {
                         ) : (
                             requests.map((req) => (
                                 <TableRow key={req.id}>
-                                    <TableCell className="text-xs">{new Date(req.created_at).toLocaleDateString()}</TableCell>
+                                    <TableCell className="text-xs">{new Date(req.created_at ?? "").toLocaleDateString()}</TableCell>
                                     <TableCell className="font-semibold">{req.clubs?.name}</TableCell>
                                     <TableCell className="text-xs">{req.members?.full_name}</TableCell>
                                     <TableCell>

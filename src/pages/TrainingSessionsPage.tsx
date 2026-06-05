@@ -26,6 +26,7 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 // Leaflet CSS — imported at build time instead of injected from CDN
 import "leaflet/dist/leaflet.css";
+import QRCode from "qrcode";
 import {
   DISCIPLINES, STANDARD_DISTANCES, formatYards,
   TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
@@ -91,7 +92,7 @@ function QRCodeCanvas({ value, size = 200 }: { value: string; size?: number }) {
           margin: 2,
           color: { dark: "#0F172A", light: "#FFFFFF" },
         },
-        (error) => {
+        (error: Error | null) => {
           if (error) logger.error("QR Error:", error);
         }
       );
@@ -322,7 +323,7 @@ export default function TrainingSessionsPage() {
         location_lat: parseFloat(gpsLat),
         location_lng: parseFloat(gpsLng),
         allowed_radius_meters: gpsRadius,
-      });
+      } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -1037,7 +1038,7 @@ export default function TrainingSessionsPage() {
                           </span>
                           <span
                             className="truncate max-w-[150px] mt-0.5"
-                            title={att.user_agent}
+                            title={att.user_agent ?? ""}
                           >
                             📱{" "}
                             {att.user_agent?.includes("Mobi")

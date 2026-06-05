@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Target, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 
 export default function ForgotPasswordPage() {
     const { toast } = useToast();
@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div
+            <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-md"
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="glass rounded-[2rem] p-8 border border-primary/10 shadow-2xl shadow-primary/5">
                     {done ? (
-                        <div
+                        <MotionDiv
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center space-y-4 py-4"
@@ -72,8 +72,8 @@ export default function ForgotPasswordPage() {
                                 className="w-full h-12 rounded-xl"
                             >
                                 VOLVER AL INICIO
-                            </Button>
-                        </div>
+                                </Button>
+                        </MotionDiv>
                     ) : (
                         <>
                             <div className="mb-6">
@@ -117,7 +117,7 @@ export default function ForgotPasswordPage() {
                         </>
                     )}
                 </div>
-            </div>
+            </MotionDiv>
         </div>
     );
 }

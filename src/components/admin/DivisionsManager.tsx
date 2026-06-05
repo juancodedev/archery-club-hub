@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { Trophy, Plus, Search, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

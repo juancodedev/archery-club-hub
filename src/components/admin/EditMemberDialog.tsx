@@ -14,7 +14,7 @@ import { getSafeErrorMessage } from "@/lib/errorUtils";
 interface MemberData {
   id: string;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   address: string | null;
   identification: string | null;

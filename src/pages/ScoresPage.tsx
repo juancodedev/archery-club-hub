@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -196,7 +196,7 @@ export default function ScoresPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-5xl mx-auto">
-      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <History className="h-7 w-7 text-primary" />
@@ -210,10 +210,10 @@ export default function ScoresPage() {
             Registrar Puntaje
           </Button>
         </Link>
-      </div>
+      </MotionDiv>
 
       {/* FILTERS PANEL */}
-      <div
+      <MotionDiv
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -230,7 +230,7 @@ export default function ScoresPage() {
         </button>
 
         {isFiltersOpen && (
-          <div
+          <MotionDiv
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             className="p-5 space-y-6 border-t border-white/5"
@@ -243,7 +243,7 @@ export default function ScoresPage() {
                     <SelectTrigger className="glass h-10"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent className="glass">
                       <SelectItem value="all">Todos los Clubes</SelectItem>
-                      {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -297,9 +297,9 @@ export default function ScoresPage() {
                 Limpiar Búsqueda
               </Button>
             </div>
-          </div>
+          </MotionDiv>
         )}
-      </div>
+      </MotionDiv>
 
       {isLoading ? (
         <div className="space-y-4">
@@ -310,7 +310,7 @@ export default function ScoresPage() {
       ) : scores && scores.length > 0 ? (
         <div className="space-y-4">
           {scores.map((score, i) => (
-            <div
+            <MotionDiv
               key={score.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -447,9 +447,9 @@ export default function ScoresPage() {
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+                )}
+              </MotionDiv>
+            ))}
         </div>
       ) : (
         <div className="glass rounded-3xl p-16 text-center space-y-6 border-dashed border-2 border-white/5">

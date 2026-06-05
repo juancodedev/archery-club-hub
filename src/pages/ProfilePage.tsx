@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,7 +16,7 @@ import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { formatRUT } from "@/lib/rut";
 import { formatCurrency, cn, getAvatarUrl } from "@/lib/utils";
 import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
-import { calculateFinancialStatus, isMembershipCategory, MemberForStatus } from "@/lib/membershipUtils";
+import { calculateFinancialStatus, isMembershipCategory, MemberForStatus, PaymentForStatus } from "@/lib/membershipUtils";
 
 interface MemberItem { id: string; full_name: string; }
 
@@ -24,16 +24,14 @@ interface FullMember extends MemberForStatus {
   id: string;
   club_id: string;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   identification: string | null;
   address: string | null;
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
-  status: string;
   observations: string | null;
   medical_history: string | null;
-  enrollment_date: string;
   is_super_admin: boolean;
   member_roles: { role: string }[];
   guardian_name: string | null;
@@ -42,8 +40,6 @@ interface FullMember extends MemberForStatus {
   windbreaker_size: string | null;
   display_name: string | null;
   avatar_url: string | null;
-  billing_day: number | null;
-  grace_days: number | null;
   membership_category: string | null;
   membership_fee: number | null;
   ifaa_number: string | null;
@@ -91,7 +87,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isSuperAdmin && member?.id && (!selectedMemberId || !selectedClubId)) {
       setSelectedMemberId(member.id);
-      setSelectedClubId(member.club_id);
+      if (member.club_id) setSelectedClubId(member.club_id);
     }
   }, [member, isSuperAdmin, selectedMemberId, selectedClubId]);
 
@@ -158,7 +154,7 @@ export default function ProfilePage() {
   });
 
   const financialStatus = useMemo(() => {
-    return calculateFinancialStatus(fullMember, payments || []);
+    return calculateFinancialStatus(fullMember, (payments || []) as unknown as PaymentForStatus[]);
   }, [fullMember, payments]);
 
   const changePassword = useMutation({
@@ -276,7 +272,7 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-4xl pb-20">
-      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end">
+      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">Mi Perfil</h1>
           <p className="text-muted-foreground">{isEditing ? "Editando información" : "Información personal y gestión de cuenta"}</p>
@@ -293,10 +289,10 @@ export default function ProfilePage() {
             </Button>
           )}
         </div>
-      </div>
+      </MotionDiv>
 
       {isSuperAdmin && !isEditing && (
-        <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
+        <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-4 sm:p-5 space-y-4">
           <Label>Ver perfil de otro miembro (Super Admin)</Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <Select value={selectedClubId} onValueChange={(val) => {
@@ -306,7 +302,7 @@ export default function ProfilePage() {
             }}>
               <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
               <SelectContent>
-                {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
@@ -316,11 +312,11 @@ export default function ProfilePage() {
               </SelectContent>
             </Select>
           </div>
-        </div>
+        </MotionDiv>
       )}
 
       {isChangingPassword && (
-        <div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass rounded-xl p-6 border-primary/20 space-y-4 overflow-hidden">
+        <MotionDiv initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass rounded-xl p-6 border-primary/20 space-y-4 overflow-hidden">
           <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
             <Key className="h-5 w-5 text-primary" /> Actualizar Contraseña
           </h3>
@@ -349,13 +345,13 @@ export default function ProfilePage() {
               <Button onClick={() => changePassword.mutate()} disabled={changePassword.isPending}>Guardar</Button>
             </div>
           </div>
-        </div>
+        </MotionDiv>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-6">
           {/* Avatar Section */}
-          <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4 text-center">
+          <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-5 sm:p-6 flex flex-col items-center gap-4 text-center">
             <div className="relative group">
               <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full bg-muted overflow-hidden border-2 border-primary/20 shadow-lg">
                 <img src={getAvatarUrl(formData.avatar_url)} alt="Profile" className="h-full w-full object-cover" />
@@ -384,22 +380,22 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
-          </div>
+          </MotionDiv>
 
           {/* Club info */}
           {club && (
-            <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 border-l-4 border-primary">
+            <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 border-l-4 border-primary">
               <p className="text-[10px] uppercase font-bold text-primary mb-1">Mi Club</p>
               <h3 className="font-display font-bold text-foreground text-lg">{club.name}</h3>
               <p className="text-xs text-muted-foreground mt-1">
                 {[club.city, club.country].filter(Boolean).join(", ")}
               </p>
-            </div>
+            </MotionDiv>
           )}
 
           {/* Status */}
           {fullMember && (
-            <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
+            <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground">Estado de membresía</span>
                 <div className="flex gap-2">
@@ -418,13 +414,13 @@ export default function ProfilePage() {
                   "{fullMember.observations}"
                 </p>
               )}
-            </div>
+            </MotionDiv>
           )}
         </div>
 
         <div className="md:col-span-2 space-y-6">
           {/* Personal info / EDIT FORM */}
-          <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-6 space-y-6 h-fit">
+          <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass rounded-xl p-6 space-y-6 h-fit">
             <div className="flex items-center justify-between">
               <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" /> Datos del Arquero
@@ -563,10 +559,10 @@ export default function ProfilePage() {
                 )}
               </div>
             )}
-          </div>
+          </MotionDiv>
 
           {/* Sección de Pagos (Visualización intuitiva) */}
-          <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-6 space-y-6">
+          <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-6 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="font-display font-semibold text-foreground flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-emerald-500" /> Control de Pagos
@@ -640,7 +636,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
-          </div>
+          </MotionDiv>
         </div>
       </div>
     </div>

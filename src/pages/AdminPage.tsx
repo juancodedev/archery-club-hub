@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
+import { div as MotionDiv } from "framer-motion/m";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,15 +21,16 @@ import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
 import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialog";
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
-import { calculateFinancialStatus } from "@/lib/membershipUtils";
+import { calculateFinancialStatus, MemberForStatus } from "@/lib/membershipUtils";
+import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { isReadOnlyMode } from "@/lib/permissions";
 
 interface AdminMember {
   id: string;
   full_name: string;
   email: string | null;
-  status: string;
-  club_id: string;
+  status: string | null;
+  club_id: string | null;
   identification: string | null;
   enrollment_date: string | null;
   member_roles: { role: string }[];
@@ -105,7 +106,7 @@ export default function AdminPage() {
 
       return data.map(m => {
         const memberPayments = relevantPayments?.filter(p => p.member_id === m.id) || [];
-        const financialStatus = calculateFinancialStatus(m, memberPayments as any);
+        const financialStatus = calculateFinancialStatus(m as MemberForStatus, memberPayments as any);
         return { ...m, financialStatus };
       });
     },
@@ -156,7 +157,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
@@ -177,12 +178,12 @@ export default function AdminPage() {
             <Select value={selectedClubId} onValueChange={setSelectedClubId}>
               <SelectTrigger className="glass h-11"><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
               <SelectContent>
-                {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         )}
-      </div>
+      </MotionDiv>
 
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -306,7 +307,7 @@ export default function AdminPage() {
             {filtered?.map((m) => {
               const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
               return (
-                <div
+                <MotionDiv
                   key={m.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -383,7 +384,7 @@ export default function AdminPage() {
                       <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
-                </div>
+                </MotionDiv>
               );
             })}
           </div>
