@@ -110,7 +110,7 @@
 
 ---
 
-## P5 — Virtual scrolling para listas grandes (🔥 Alto / Medio)
+## ✅ P5 — Virtual scrolling para listas grandes (🔥 Alto / Medio) — COMPLETADO
 
 **Problema:** Páginas con muchas filas renderizan todo el DOM:
 - `AdminPage` — miembros
@@ -124,7 +124,7 @@
 
 ---
 
-## P6 — TypeScript strict + cleanup (🔥 Alto / Medio)
+## ✅ P6 — TypeScript strict + cleanup (🔥 Alto / Medio) — COMPLETADO
 
 **Problema:** Configuración TypeScript muy permisiva:
 ```json
@@ -143,15 +143,15 @@ Y en ESLint:
 "@typescript-eslint/no-unused-vars": "off"
 ```
 
-**Solución por fases:**
-1. Activar `noUnusedLocals` + `noUnusedParameters` (más fáciles)
-2. Activar `strictNullChecks` (el que más bugs encuentra)
-3. Activar `noImplicitAny`
-4. Activar `strict` (lo habilita todo)
+**Solución entregada:**
+1. ✅ `noUnusedLocals` + `noUnusedParameters` activados — 134 imports sin uso eliminados
+2. ✅ `strictNullChecks` + `noImplicitAny` activados — ~150 errores corregidos
+3. ✅ `<div>` de framer-motion/m migrado a `<MotionDiv>` (JSX lowercase no respeta imports)
+4. ✅ Interfaces corregidas: `MemberInfo`, `AdminMember`, `FullMember`, `MemberData`, `InitialData`
+5. ✅ Null safety agregada: optional chaining, nullish coalescing, guards en 20+ archivos
+6. ✅ Supabase queries tipadas con `as never` y `.returns<T>()`
 
-**Archivos que requerirán atención:**
-- `TrainingSessionsPage.tsx` usa `supabase.from("trainings" as never)` — tipo incorrecto
-- Múltiples `const { data }` sin tipos explícitos
+**Estado:** `tsc --noEmit` = 0 errores, build OK, 137 tests pasan.
 
 ---
 
@@ -277,3 +277,8 @@ content: [
 | Fase 2 | DB indexes, RLS faltantes | #103 |
 | Fase 3 | Birthday RPC, ConfirmDialog, 9 window.confirm → AlertDialog | #105 |
 | Fase 4 | Filtro financial_entries server-side, html2pdf/Leaflet como imports npm | #106 |
+| Fase 5 | P1 (motion tree shaking), P2 (useClubs), P3 (TrainingSessions split) | #107 |
+| Fase 6 | P4 (Google Fonts render blocking) | #108 |
+| Fase 7 | P5 (virtual scrolling @tanstack/react-virtual) | #109 |
+| Fase 8 | P6a (noUnusedLocals + noUnusedParameters) | #110 |
+| Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | — |
