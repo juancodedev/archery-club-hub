@@ -185,23 +185,16 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 
 ---
 
-## P9 — Test coverage: pages críticas (⚡ Medio / Alto)
+## ✅ P9 — Test coverage: pages críticas (⚡ Medio / Alto) — COMPLETADO
 
-**Cobertura actual (23 test files):**
+**Cobertura (29 test files, 169 tests):**
 - ✅ `DashboardPage`, `ScoresPage`, `NewScorePage`, `FinancePage`
 - ✅ `MembershipsPage`, `ClubSettingsPage`, `TrainingSessionsPage`
 - ✅ `RegisterClubPage`, `InvitationRegisterPage`, `ForgotPasswordPage`
 - ✅ `NotFound`
 - ✅ `ProtectedRoute`, `NavLink`
 - ✅ Todos los lib/utils
-
-**Sin test:**
-- ❌ `AdminPage` (456L, miembros, estados)
-- ❌ `ReportsPage` (555L, gráficos recharts)
-- ❌ `SuperAdminPage` (302L)
-- ❌ `ProfilePage` (655L)
-- ❌ `TournamentsPage` (540L)
-- ❌ `BillingPage` (512L)
+- ✅ **Nuevos:** `AdminPage` (5 tests), `ReportsPage` (4), `SuperAdminPage` (3), `ProfilePage` (3), `TournamentsPage` (4), `BillingPage` (4)
 
 ---
 
@@ -290,3 +283,4 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 | Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | #111 |
 | Fase 10 | P7 (Tailwind content paths) | #112 |
 | Fase 11 | P8 (shadcn/ui unused components audit) | #113 |
+| Fase 12 | P9 (test coverage 6 pages) | #114 |
