@@ -31,7 +31,7 @@ interface DivisionSelectProps {
 export default function DivisionSelect({
     value,
     onChange,
-    memberId,
+    memberId: _memberId,
     label = "División",
     placeholder = "Seleccionar división",
 }: DivisionSelectProps) {

@@ -1,5 +1,4 @@
-import { div } from "framer-motion/m";
-import { Check, Info, Zap, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
+import { Check, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContextCore";
@@ -8,22 +7,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     Table,
@@ -57,8 +47,8 @@ interface ClubDetails {
 }
 
 export default function BillingPage() {
-    const [isAnnualPro, setIsAnnualPro] = useState(false);
-    const [isAnnualBusiness, setIsAnnualBusiness] = useState(false);
+    const [isAnnualPro] = useState(false);
+    const [isAnnualBusiness] = useState(false);
     const [isComparisonOpen, setIsComparisonOpen] = useState(false);
     const [compareIsAnnual, setCompareIsAnnual] = useState(false);
     const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -68,7 +58,7 @@ export default function BillingPage() {
     const [contactMessage, setContactMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const { member } = useAuth();
-    const [hasSavedCard, setHasSavedCard] = useState(false);
+    const [hasSavedCard] = useState(false);
     const [clubDetails, setClubDetails] = useState<ClubDetails | null>(null);
     const [studentCount, setStudentCount] = useState(0);
 

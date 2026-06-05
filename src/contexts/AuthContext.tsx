@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [loading, setLoading] = useState(true);
     const [systemMode, setSystemMode] = useState<'produccion' | 'pruebas'>('pruebas');
 
-    const fetchMember = async (userId: string, userEmail?: string) => {
+    const fetchMember = async (userId: string, _userEmail?: string) => {
         try {
             logger.log("Cargando membresías para userId: " + userId);
 

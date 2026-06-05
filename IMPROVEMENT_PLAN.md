@@ -9,7 +9,8 @@
 | P3 | 🔥 Alto | Medio | **Split de componentes grandes** |
 | P4 | 🔥 Alto | Bajo | **Google Fonts: eliminar render blocking** |
 | P5 | 🔥 Alto | Medio | **Virtual scrolling para listas grandes** |
-| P6 | 🔥 Alto | Medio | **TypeScript strict + cleanup** |
+| ✅ P6a | 🔥 Alto | Medio | **TypeScript: noUnusedLocals + noUnusedParameters** |
+| P6b | 🔥 Alto | Medio | **TypeScript: strictNullChecks + noImplicitAny** |
 | P7 | ⚡ Medio | Bajo | **Tailwind config: limpiar content paths** |
 | P8 | ⚡ Medio | Medio | **Componentes no usados: audit shadcn/ui** |
 | P9 | ⚡ Medio | Alto | **Test coverage: pages críticas** |
@@ -135,34 +136,34 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 
 ---
 
-## P6 — TypeScript strict + cleanup (🔥 Alto / Medio)
+## ✅ P6a — TypeScript: noUnusedLocals + noUnusedParameters (🔥 Alto / Medio) — COMPLETADO
 
-**Problema:** Configuración TypeScript muy permisiva:
-```json
-{
-  "strict": false,
-  "noImplicitAny": false,
-  "strictNullChecks": false,
-  "noUnusedLocals": false,
-  "noUnusedParameters": false,
-  "noFallthroughCasesInSwitch": false
-}
-```
+**Qué se hizo:** Activé `noUnusedLocals: true` y `noUnusedParameters: true` en tsconfig.app.json. Eliminé **134 unused imports/variables** en **48 archivos**.
 
-Y en ESLint:
-```js
-"@typescript-eslint/no-unused-vars": "off"
-```
+**Patrones comunes corregidos:**
+- Imports de `{ div } from "framer-motion/m"` que sobraban del P1 (~15 archivos)
+- Iconos de lucide-react importados pero no usados
+- Componentes de shadcn/ui importados y no usados
+- Hooks de React (`useEffect`, `useCallback`) no utilizados
+- Parámetros de función no usados → prefix `_`
+- Código muerto eliminado
 
-**Solución por fases:**
-1. Activar `noUnusedLocals` + `noUnusedParameters` (más fáciles)
-2. Activar `strictNullChecks` (el que más bugs encuentra)
-3. Activar `noImplicitAny`
-4. Activar `strict` (lo habilita todo)
+**Restante (87 errores para P6b):**
+- TS2322 (69): tipos no asignables — props de framer-motion en `<div>`
+- TS2339 (6): propiedad inexistente en tipo
+- TS2769 (4): overload no coincide
+- TS2589 (3): type instantiation demasiado profunda
+- TS2345 (2): argumento no asignable
+- TS2304 (2): nombre no encontrado
+
+## P6b — TypeScript: strictNullChecks + noImplicitAny (pendiente)
+
+**Solución:** Activar `strictNullChecks` y `noImplicitAny`, y corregir los ~87 errores resultantes.
 
 **Archivos que requerirán atención:**
+- Varios con `'xxx' is possibly 'null/undefined'`
 - `TrainingSessionsPage.tsx` usa `supabase.from("trainings" as never)` — tipo incorrecto
-- Múltiples `const { data }` sin tipos explícitos
+- Componentes que usan props de framer-motion en `<div>` (del P1)
 
 ---
 

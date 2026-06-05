@@ -9,12 +9,11 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { CreditCard, CheckCircle2, XCircle, Search, Building2, Settings, BarChart3, Shield, Trophy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SuperAdminCreateClubDialog from "@/components/super-admin/CreateClubDialog";
 import PlansManagement from "@/components/super-admin/PlansManagement";
 import { DollarSign, Users as UsersIcon } from "lucide-react";

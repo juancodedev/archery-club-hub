@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
 import { AnimatePresence } from "framer-motion";
 import {
     Trophy,

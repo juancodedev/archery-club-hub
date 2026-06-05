@@ -7,7 +7,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Settings, ShieldAlert, CreditCard, Lock, Unlock, Zap } from "lucide-react";
+import { MoreHorizontal, Settings, CreditCard, Lock, Unlock } from "lucide-react";
 import { useState } from "react";
 import ClubConfigDialog from "./ClubConfigDialog";
 import PlanOverrideDialog from "./PlanOverrideDialog";

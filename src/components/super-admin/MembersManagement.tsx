@@ -12,14 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, Shield, Building2, Mail, MoreHorizontal, Pencil, Key, Filter, Trash2, ShieldCheck } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Search, Building2, MoreHorizontal, Pencil, Key, Filter, Trash2, ShieldCheck } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -27,7 +20,6 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";

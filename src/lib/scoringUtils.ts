@@ -14,7 +14,7 @@ export interface ScoreResult {
  * @param isIndoor - Si es torneo indoor (afecta el conteo de X para desempates)
  * @returns El valor numérico de la flecha
  */
-export function arrowValue(value: string, isIndoor: boolean = false): number {
+export function arrowValue(value: string, _isIndoor: boolean = false): number {
     const v = value.toUpperCase().trim();
 
     if (v === "X") {

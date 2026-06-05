@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Target, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { div } from "framer-motion/m";
 
 export default function ForgotPasswordPage() {
     const { toast } = useToast();

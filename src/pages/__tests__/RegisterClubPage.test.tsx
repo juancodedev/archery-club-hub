@@ -70,7 +70,6 @@ describe("RegisterClubPage", () => {
         (supabase.auth.signUp as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockAuthData, error: null });
         (supabase.rpc as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ data: "club123", error: null });
 
-        const mockUpdate = vi.fn().mockResolvedValue({ error: null });
         (supabase.from as unknown as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
             if (table === "plans") {
                 return {

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
-import { div } from "framer-motion/m";
 import { logger } from "@/lib/logger";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +61,7 @@ export default function AttendanceMarkPage() {
                 }
 
                 // 2. Check if already enrolled, if not, enroll them automatically
-                const { data: enrollment, error: enrollCheckError } = await supabase
+                const { data: enrollment } = await supabase
                     .from("training_enrollments")
                     .select("id")
                     .eq("training_session_id", sessionId)
