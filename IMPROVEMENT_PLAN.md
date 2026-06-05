@@ -164,27 +164,24 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 
 ---
 
-## P7 — Tailwind config: limpiar content paths (⚡ Medio / Bajo)
+## ✅ P7 — Tailwind config: limpiar content paths (⚡ Medio / Bajo) — COMPLETADO
 
-**Problema:** `content` incluye rutas que no existen:
-```ts
-content: [
-  "./pages/**/*.{ts,tsx}",     // no existe en raíz
-  "./components/**/*.{ts,tsx}", // no existe en raíz
-  "./app/**/*.{ts,tsx}",       // no existe
-  "./src/**/*.{ts,tsx}"        // única válida
-]
-```
-
-**Solución:** Dejar solo `"./src/**/*.{ts,tsx}"`.
+**Solución:** Dejar solo `"./src/**/*.{ts,tsx}"` en content paths. PR #112.
 
 ---
 
-## P8 — Componentes no usados: audit shadcn/ui (⚡ Medio / Medio)
+## ✅ P8 — Componentes no usados: audit shadcn/ui (⚡ Medio / Medio) — COMPLETADO
 
-**Problema:** Hay 50 componentes en `src/components/ui/`. Algunos probablemente no se usan (ej: `carousel.tsx`, `context-menu.tsx`, `menubar.tsx`, `toggle-group.tsx`, `hover-card.tsx`, `aspect-ratio.tsx`).
+**Resultado:** 24 archivos eliminados (~2,208 líneas). PR #113.
 
-**Solución:** `rg "from.*@/components/ui/" --type tsx` para detectar imports y eliminar no usados. Reduce bundle de vendor y mejora DX.
+| Componente | Motivo |
+|---|---|
+| accordion, alert, carousel, collapsible, command, context-menu, breadcrumb, drawer, form, menubar, navigation-menu, progress, radio-group, separator, sheet, skeleton, toggle, toggle-group | 0 imports de la app |
+| form-context, navigation-menu.variants, toggle.variants | Internos de componentes muertos |
+| sidebar, sidebar-context | 0 imports |
+| use-toast.ts | Re-export shim, el real está en src/hooks |
+
+**Estado luego de la limpieza:** 26 componentes vivos en `src/components/ui/`.
 
 ---
 
@@ -292,3 +289,4 @@ content: [
 | Fase 8 | P6a (noUnusedLocals + noUnusedParameters) | #110 |
 | Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | #111 |
 | Fase 10 | P7 (Tailwind content paths) | #112 |
+| Fase 11 | P8 (shadcn/ui unused components audit) | #113 |
