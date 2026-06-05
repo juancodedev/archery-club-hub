@@ -31,8 +31,11 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/@tanstack/react-query")) {
             return "vendor-query";
           }
-          if (id.includes("node_modules/framer-motion") || id.includes("node_modules/recharts")) {
+          if (id.includes("node_modules/framer-motion")) {
             return "vendor-ui";
+          }
+          if (id.includes("node_modules/recharts")) {
+            return "vendor-recharts";
           }
         },
       },
