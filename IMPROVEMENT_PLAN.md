@@ -9,7 +9,8 @@
 | P3 | 🔥 Alto | Medio | **Split de componentes grandes** |
 | P4 | 🔥 Alto | Bajo | **Google Fonts: eliminar render blocking** |
 | P5 | 🔥 Alto | Medio | **Virtual scrolling para listas grandes** |
-| P6 | 🔥 Alto | Medio | **TypeScript strict + cleanup** |
+| ✅ P6a | 🔥 Alto | Medio | **TypeScript: noUnusedLocals + noUnusedParameters** |
+| P6b | 🔥 Alto | Medio | **TypeScript: strictNullChecks + noImplicitAny** |
 | P7 | ⚡ Medio | Bajo | **Tailwind config: limpiar content paths** |
 | P8 | ⚡ Medio | Medio | **Componentes no usados: audit shadcn/ui** |
 | P9 | ⚡ Medio | Alto | **Test coverage: pages críticas** |
@@ -112,6 +113,17 @@
 
 ## ✅ P5 — Virtual scrolling para listas grandes (🔥 Alto / Medio) — COMPLETADO
 
+**Solución:** Implementé virtual scrolling con `@tanstack/react-virtual` v3 en:
+- `AdminPage` — lista de miembros (mobile + desktop)
+- `ScoresPage` — lista de puntajes
+- `FinancePage` — entries financieras (mobile + desktop)
+
+Mockeado en tests para que renderice todos los items sin virtualización (JSDOM no computa CSS heights).
+
+---
+
+## P6 — TypeScript strict + cleanup
+
 **Problema:** Páginas con muchas filas renderizan todo el DOM:
 - `AdminPage` — miembros
 - `ScoresPage` — puntajes
@@ -124,24 +136,17 @@
 
 ---
 
-## ✅ P6 — TypeScript strict + cleanup (🔥 Alto / Medio) — COMPLETADO
+## ✅ P6a — TypeScript: noUnusedLocals + noUnusedParameters (🔥 Alto / Medio) — COMPLETADO
 
-**Problema:** Configuración TypeScript muy permisiva:
-```json
-{
-  "strict": false,
-  "noImplicitAny": false,
-  "strictNullChecks": false,
-  "noUnusedLocals": false,
-  "noUnusedParameters": false,
-  "noFallthroughCasesInSwitch": false
-}
-```
+**Qué se hizo:** Activé `noUnusedLocals: true` y `noUnusedParameters: true` en tsconfig.app.json. Eliminé **134 unused imports/variables** en **48 archivos**.
 
-Y en ESLint:
-```js
-"@typescript-eslint/no-unused-vars": "off"
-```
+**Patrones comunes corregidos:**
+- Imports de `{ div } from "framer-motion/m"` que sobraban del P1 (~15 archivos)
+- Iconos de lucide-react importados pero no usados
+- Componentes de shadcn/ui importados y no usados
+- Hooks de React (`useEffect`, `useCallback`) no utilizados
+- Parámetros de función no usados → prefix `_`
+- Código muerto eliminado
 
 **Solución entregada:**
 1. ✅ `noUnusedLocals` + `noUnusedParameters` activados — 134 imports sin uso eliminados
@@ -152,6 +157,10 @@ Y en ESLint:
 6. ✅ Supabase queries tipadas con `as never` y `.returns<T>()`
 
 **Estado:** `tsc --noEmit` = 0 errores, build OK, 137 tests pasan.
+
+## ✅ P6b — TypeScript: strictNullChecks + noImplicitAny + MotionDiv (🔥 Alto / Medio) — COMPLETADO
+
+**Solución:** Se activaron `strictNullChecks` y `noImplicitAny` en tsconfig.app.json, y se migró `<div>` de framer-motion/m a `<MotionDiv>` para respetar imports con JSX lowercase.
 
 ---
 

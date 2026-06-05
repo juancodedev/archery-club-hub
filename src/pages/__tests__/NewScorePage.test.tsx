@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NewScorePage from '../NewScorePage';
@@ -136,7 +136,7 @@ describe('NewScorePage - Mobile Responsiveness', () => {
         fireEvent.change(arrowInputs[4], { target: { value: 'X' } });
 
         // Grand total section should exist
-        const totalElement = screen.queryByText(/total general/i);
+        screen.queryByText(/total general/i);
         // Total General may or may not be literally in page as text (could be a label elsewhere) 
         // Just check arrows registered
         expect(arrowInputs[0]).toHaveValue('10');
@@ -163,11 +163,9 @@ describe('NewScorePage - Mobile Responsiveness', () => {
     });
 
     it('should render header icon', () => {
-        const { container } = renderComponent();
+        renderComponent();
         // Check for any SVG in or near the heading
         const heading = screen.getByRole('heading', { name: /registrar puntaje/i });
-        // heading or its container should have an svg nearby
-        const parentSvg = heading.previousElementSibling;
         // Just check heading renders, icon test is lenient
         expect(heading).toBeInTheDocument();
     });

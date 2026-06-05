@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { arrowValue, calculateEndScore, calculateTotalScore, validateArrowValue } from "../scoringUtils";
+import { arrowValue, calculateEndScore, validateArrowValue } from "../scoringUtils";
 
 describe("scoringUtils", () => {
     describe("arrowValue", () => {

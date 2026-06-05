@@ -54,7 +54,7 @@ export default function RegisterClubPage() {
 
       // 2. Call register_club function (Atomic: includes plan and price)
       const selectedPlan = plans.find(p => p.id === planId);
-      const { data: clubId, error: rpcError } = await supabase.rpc("register_club", {
+      const { data: _clubId, error: rpcError } = await supabase.rpc("register_club", {
         p_club_name: clubName,
         p_city: city,
         p_country: country,

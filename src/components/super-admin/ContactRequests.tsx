@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckedState } from "@radix-ui/react-checkbox";
-import { Loader2, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { Loader2, CheckCircle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 

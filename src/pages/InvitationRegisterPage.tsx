@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { div as MotionDiv } from "framer-motion/m";
-import { Target, AlertTriangle, Shield, User as UserIcon, Phone, Mail, MapPin, Calendar, Heart, GraduationCap, Info } from "lucide-react";
+import { Target, AlertTriangle, Heart } from "lucide-react";
 import { formatRUT } from "@/lib/rut";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getSafeErrorMessage } from "@/lib/errorUtils";

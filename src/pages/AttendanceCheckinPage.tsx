@@ -7,7 +7,7 @@ import { AnimatePresence } from "framer-motion";
 import { logger } from "@/lib/logger";
 import { 
   Target, Loader2, CheckCircle2, AlertTriangle, 
-  MapPin, ShieldAlert, Navigation, ArrowRight, RefreshCw 
+  MapPin, ShieldAlert, Navigation, RefreshCw 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

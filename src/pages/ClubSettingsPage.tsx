@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { div as MotionDiv } from "framer-motion/m";
-import { Settings, DollarSign, Link as LinkIcon, Plus, Trophy, Target, QrCode, Copy } from "lucide-react";
+import { Settings, Link as LinkIcon, Plus, Trophy, Target, QrCode, Copy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { div as MotionDiv } from "framer-motion/m";
-import { User, Phone, Mail, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
+import { User, Phone, MapPin, Shield, Heart, Save, Pencil, X, Lock, Key, Eye, EyeOff, Wallet, CreditCard, DollarSign, Calendar } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEffect, useState, useMemo } from "react";
@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { formatRUT } from "@/lib/rut";
 import { formatCurrency, cn, getAvatarUrl } from "@/lib/utils";
-import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
 import { calculateFinancialStatus, isMembershipCategory, MemberForStatus, PaymentForStatus } from "@/lib/membershipUtils";
 
 interface MemberItem { id: string; full_name: string; }
@@ -97,7 +96,7 @@ export default function ProfilePage() {
     if (data) setMembersList(data as MemberItem[]);
   };
 
-  const { data: fullMember, isLoading: loadingMember } = useQuery<FullMember | null>({
+  const { data: fullMember, isLoading: _loadingMember } = useQuery<FullMember | null>({
     queryKey: ["member-profile", selectedMemberId],
     queryFn: async () => {
       if (!selectedMemberId || selectedMemberId === "null" || selectedMemberId === "00000000-0000-0000-0000-000000000000") return null;

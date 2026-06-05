@@ -62,7 +62,7 @@ export default function AttendanceMarkPage() {
                 }
 
                 // 2. Check if already enrolled, if not, enroll them automatically
-                const { data: enrollment, error: enrollCheckError } = await supabase
+                const { data: enrollment } = await supabase
                     .from("training_enrollments")
                     .select("id")
                     .eq("training_session_id", sessionId)

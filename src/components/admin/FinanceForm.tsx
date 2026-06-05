@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,8 +20,6 @@ import {
     FileText,
     Upload,
     X,
-    CreditCard,
-    Ticket,
     User,
     CalendarDays,
     Plus

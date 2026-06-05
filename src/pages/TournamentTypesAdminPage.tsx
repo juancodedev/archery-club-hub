@@ -20,7 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DISCIPLINES, BOW_TYPES, TOURNAMENT_FORMATS, yardsToMeters, metersToYards, formatYards } from "@/lib/archeryConstants";
+import { DISCIPLINES, BOW_TYPES, TOURNAMENT_FORMATS, yardsToMeters, metersToYards } from "@/lib/archeryConstants";
 import type { TournamentType } from "@/types/archery";
 
 
@@ -41,7 +41,6 @@ const DISCIPLINE_ICONS: Record<string, string> = {
 
 export default function TournamentTypesAdminPage() {
     const { member } = useAuth();
-    const isSuperAdmin = member?.is_super_admin ?? false;
 
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -241,11 +240,6 @@ export default function TournamentTypesAdminPage() {
         }
         setSelectedType(type);
         setDeleteDialogOpen(true);
-    };
-
-    const getDisciplineLabel = (d: string | null) => {
-        const found = DISCIPLINES.find(disc => disc.value === d);
-        return found ? `${found.icon} ${found.label}` : "—";
     };
 
     const getFormatLabel = (f: string | null) => {

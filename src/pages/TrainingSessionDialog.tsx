@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert, Json } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
-import { useClubs, type ClubOption } from "@/hooks/useClubs";
+import type { ClubOption } from "@/hooks/useClubs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { div as MotionDiv } from "framer-motion/m";
 import { Trophy, Plus, Search, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +35,6 @@ interface Division {
 
 export default function DivisionsAdminPage() {
     const { member } = useAuth();
-    const isSuperAdmin = !!member?.is_super_admin;
     const { toast } = useToast();
     const queryClient = useQueryClient();
     const [search, setSearch] = useState("");

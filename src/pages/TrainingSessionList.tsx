@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar,
@@ -13,12 +12,10 @@ import {
   ArrowRight,
   Target,
   Wind,
-  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContextCore";
-import { cn } from "@/lib/utils";
 import { WEATHER_TYPES, WIND_DIRECTIONS } from "@/lib/archeryConstants";
 import TrainingEnrollmentPanel, {
   type TrainingEnrollment,
@@ -242,7 +239,7 @@ export default function TrainingSessionList({
 
   return (
     <div className="space-y-4">
-      {sessions.map((session, i: number) => {
+      {sessions.map((session, _i: number) => {
         const enrolled = isEnrolled(session);
         const enrollments: TrainingEnrollment[] =
           (session.training_enrollments as TrainingEnrollment[]) || [];
