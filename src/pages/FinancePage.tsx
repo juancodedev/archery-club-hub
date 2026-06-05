@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -142,6 +143,23 @@ export default function FinancePage() {
     }, { income: 0, expense: 0 }) || { income: 0, expense: 0 };
 
     const balance = totals.income - totals.expense;
+
+    const financeDesktopRef = useRef<HTMLDivElement>(null);
+    const financeMobileRef = useRef<HTMLDivElement>(null);
+
+    const desktopFinanceVirtualizer = useVirtualizer({
+        count: entries?.length ?? 0,
+        getScrollElement: () => financeDesktopRef.current,
+        estimateSize: () => 64,
+        getItemKey: (index) => entries?.[index]?.id ?? index,
+    });
+
+    const mobileFinanceVirtualizer = useVirtualizer({
+        count: entries?.length ?? 0,
+        getScrollElement: () => financeMobileRef.current,
+        estimateSize: () => 200,
+        getItemKey: (index) => entries?.[index]?.id ?? index,
+    });
 
     const openForm = (type: "income" | "expense", entry?: FinancialEntry) => {
         setSelectedType(type);
@@ -307,92 +325,119 @@ export default function FinancePage() {
                 </div>
 
                 {/* Desktop Table View (lg+) */}
-                <div className="hidden lg:block overflow-x-auto">
-                    <Table>
-                        <TableHeader className="bg-muted/30">
-                            <TableRow>
-                                <TableHead className="w-[120px] font-bold">Fecha</TableHead>
-                                <TableHead className="font-bold">Categoría / Miembro</TableHead>
-                                <TableHead className="font-bold">Descripción</TableHead>
-                                <TableHead className="font-bold text-right">Monto</TableHead>
-                                <TableHead className="w-[150px] text-center font-bold">Acciones</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
+                <div className="hidden lg:block">
+                    <div ref={financeDesktopRef} style={{ height: 'calc(100vh - 350px)', minHeight: '400px', overflowY: 'auto' }}>
+                        <Table>
+                            <TableHeader className="bg-muted/30">
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground animate-pulse font-medium italic">Sincronizando con el banco central de Quiver...</TableCell>
+                                    <TableHead className="w-[120px] font-bold">Fecha</TableHead>
+                                    <TableHead className="font-bold">Categoría / Miembro</TableHead>
+                                    <TableHead className="font-bold">Descripción</TableHead>
+                                    <TableHead className="font-bold text-right">Monto</TableHead>
+                                    <TableHead className="w-[150px] text-center font-bold">Acciones</TableHead>
                                 </TableRow>
-                            ) : entries?.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic">No hay transacciones registradas.</TableCell>
-                                </TableRow>
-                            ) : entries?.map((entry) => (
-                                <TableRow key={entry.id} className="hover:bg-muted/20 transition-colors border-border/30">
-                                    <TableCell className="font-bold text-xs">
-                                        {new Date(entry.entry_date).toLocaleDateString("es-CL")}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex flex-col gap-1">
-                                            <Badge variant="outline" className="capitalize w-fit text-[10px] font-bold border-primary/30">
-                                                {entry.category}
-                                            </Badge>
-                                            {entry.members && (
-                                                <span className="text-[10px] font-medium text-foreground mt-0.5 flex items-center gap-1">
-                                                    <User className="h-3 w-3 text-primary/60" />
-                                                    {entry.members.full_name}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="max-w-[250px] truncate text-xs text-muted-foreground">
-                                        {entry.description || "-"}
-                                    </TableCell>
-                                    <TableCell className={cn(
-                                        "text-right font-black tabular-nums",
-                                        entry.type === "income" ? "text-emerald-600" : "text-rose-600"
-                                    )}>
-                                        {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center justify-center gap-1">
-                                            {(entry.receipt_urls?.length ?? 0) > 0 ? (
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
-                                                    <Receipt className="h-4 w-4" />
-                                                    {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
-                                                </Button>
-                                            ) : entry.receipt_url && (
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
-                                                    <Receipt className="h-4 w-4" />
-                                                </Button>
-                                            )}
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody style={{ display: 'block', position: 'relative', height: `${desktopFinanceVirtualizer.getTotalSize()}px` }}>
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground animate-pulse font-medium italic" style={{ display: 'block' }}>Sincronizando con el banco central de Quiver...</TableCell>
+                                    </TableRow>
+                                ) : entries?.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic" style={{ display: 'block' }}>No hay transacciones registradas.</TableCell>
+                                    </TableRow>
+                                ) : desktopFinanceVirtualizer.getVirtualItems().map((virtualItem) => {
+                                    const entry = entries![virtualItem.index];
+                                    return (
+                                        <TableRow
+                                            key={entry.id}
+                                            className="hover:bg-muted/20 transition-colors border-border/30"
+                                            style={{
+                                                display: 'flex',
+                                                width: '100%',
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                height: `${virtualItem.size}px`,
+                                                transform: `translateY(${virtualItem.start}px)`,
+                                            }}
+                                        >
+                                            <TableCell className="font-bold text-xs" style={{ flex: '1.5', minWidth: 0 }}>
+                                                {new Date(entry.entry_date).toLocaleDateString("es-CL")}
+                                            </TableCell>
+                                            <TableCell style={{ flex: '2', minWidth: 0 }}>
+                                                <div className="flex flex-col gap-1">
+                                                    <Badge variant="outline" className="capitalize w-fit text-[10px] font-bold border-primary/30">
+                                                        {entry.category}
+                                                    </Badge>
+                                                    {entry.members && (
+                                                        <span className="text-[10px] font-medium text-foreground mt-0.5 flex items-center gap-1">
+                                                            <User className="h-3 w-3 text-primary/60" />
+                                                            {entry.members.full_name}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="max-w-[250px] truncate text-xs text-muted-foreground" style={{ flex: '2.5', minWidth: 0 }}>
+                                                {entry.description || "-"}
+                                            </TableCell>
+                                            <TableCell className={cn(
+                                                "text-right font-black tabular-nums",
+                                                entry.type === "income" ? "text-emerald-600" : "text-rose-600"
+                                            )} style={{ flex: '1.5', minWidth: 0 }}>
+                                                {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
+                                            </TableCell>
+                                            <TableCell style={{ flex: '1.5', minWidth: 0 }}>
+                                                <div className="flex items-center justify-center gap-1">
+                                                    {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                                            <Receipt className="h-4 w-4" />
+                                                            {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
+                                                        </Button>
+                                                    ) : entry.receipt_url && (
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
+                                                            <Receipt className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
 
                 {/* Mobile/Tablet Card View (<lg) */}
-                <div className="lg:hidden p-4 space-y-4 bg-muted/10">
+                <div ref={financeMobileRef} style={{ height: 'calc(100vh - 350px)', minHeight: '400px', overflowY: 'auto' }} className="lg:hidden p-4 bg-muted/10">
                     {isLoading ? (
                         <div className="text-center py-20 animate-pulse italic text-muted-foreground">Cargando transacciones...</div>
                     ) : entries?.length === 0 ? (
                         <div className="text-center py-20 text-muted-foreground italic">No hay registros.</div>
-                    ) : entries?.map((entry) => (
-                        <div
-                            key={entry.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-5 rounded-2xl bg-card border border-border/50 space-y-4 shadow-sm active:scale-[0.98] transition-transform"
-                        >
+                    ) : (
+                        <div style={{ position: 'relative', height: `${mobileFinanceVirtualizer.getTotalSize()}px` }}>
+                            {mobileFinanceVirtualizer.getVirtualItems().map((virtualItem) => {
+                                const entry = entries![virtualItem.index];
+                                return (
+                                    <div
+                                        key={entry.id}
+                                        className="absolute top-0 left-0 w-full"
+                                        style={{
+                                            height: `${virtualItem.size}px`,
+                                            transform: `translateY(${virtualItem.start}px)`,
+                                            paddingBottom: '16px',
+                                        }}
+                                    >
+                                        <div
+                                            className="p-5 rounded-2xl bg-card border border-border/50 space-y-4 shadow-sm active:scale-[0.98] transition-transform"
+                                        >
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1.5">
                                     <p className="text-[10px] font-black text-primary uppercase tracking-widest">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</p>
@@ -449,8 +494,12 @@ export default function FinancePage() {
                                 </div>
                             </div>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                );
+            })}
+            </div>
+        )}
+    </div>
             </div>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

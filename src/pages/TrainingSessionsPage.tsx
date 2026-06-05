@@ -40,6 +40,7 @@ import {
   Navigation,
   Copy,
 } from "lucide-react";
+import QRCode from "qrcode";
 import TrainingSessionDialog from "./TrainingSessionDialog";
 import TrainingSessionList from "./TrainingSessionList";
 import TrainingQRDialog from "./TrainingQRDialog";
