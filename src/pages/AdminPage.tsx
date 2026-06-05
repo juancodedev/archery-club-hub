@@ -4,7 +4,8 @@ import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { div } from "framer-motion/m";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -154,6 +155,23 @@ export default function AdminPage() {
     m.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const desktopListRef = useRef<HTMLDivElement>(null);
+  const mobileListRef = useRef<HTMLDivElement>(null);
+
+  const desktopVirtualizer = useVirtualizer({
+    count: filtered?.length ?? 0,
+    getScrollElement: () => desktopListRef.current,
+    estimateSize: () => 48,
+    getItemKey: (index) => filtered?.[index]?.id ?? index,
+  });
+
+  const mobileVirtualizer = useVirtualizer({
+    count: filtered?.length ?? 0,
+    getScrollElement: () => mobileListRef.current,
+    estimateSize: () => 260,
+    getItemKey: (index) => filtered?.[index]?.id ?? index,
+  });
+
   return (
     <div className="space-y-6 pb-20">
       <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
@@ -201,7 +219,7 @@ export default function AdminPage() {
         <div className="space-y-4">
           {/* Desktop Table View (lg+) */}
           <div className="hidden lg:block glass rounded-2xl overflow-hidden border border-border/50">
-            <div className="overflow-x-auto">
+            <div ref={desktopListRef} style={{ height: 'calc(100vh - 300px)', minHeight: '400px', overflowY: 'auto' }}>
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-border/50">
@@ -214,21 +232,34 @@ export default function AdminPage() {
                     <TableHead className="text-right font-bold text-foreground">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {filtered?.map((m) => {
+                <TableBody style={{ display: 'block', position: 'relative', height: `${desktopVirtualizer.getTotalSize()}px` }}>
+                  {desktopVirtualizer.getVirtualItems().map((virtualItem) => {
+                    const m = filtered![virtualItem.index];
                     const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
                     return (
-                      <TableRow key={m.id} className="hover:bg-muted/20 border-border/30 transition-colors">
-                        <TableCell className="font-bold text-foreground whitespace-nowrap">
+                      <TableRow
+                        key={m.id}
+                        className="hover:bg-muted/20 border-border/30 transition-colors"
+                        style={{
+                          display: 'flex',
+                          width: '100%',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          height: `${virtualItem.size}px`,
+                          transform: `translateY(${virtualItem.start}px)`,
+                        }}
+                      >
+                        <TableCell className="font-bold text-foreground whitespace-nowrap" style={{ flex: '2', minWidth: 0 }}>
                           {m.full_name}
                         </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap">
+                        <TableCell className="text-muted-foreground whitespace-nowrap" style={{ flex: '1.5', minWidth: 0 }}>
                           {m.identification || "—"}
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-xs">
+                        <TableCell className="text-muted-foreground text-xs" style={{ flex: '2', minWidth: 0 }}>
                           {m.email || "Sin email"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell style={{ flex: '2', minWidth: 0 }}>
                           <div className="flex flex-wrap gap-1">
                             {roles.map((role: string) => (
                               <Badge key={role} variant="outline" className="capitalize text-[9px] px-1.5 py-0 h-4 border-primary/20">
@@ -237,7 +268,7 @@ export default function AdminPage() {
                             ))}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell style={{ flex: '1.5', minWidth: 0 }}>
                           <div className="flex flex-col gap-1">
                             <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-[9px] h-4">
                               {m.status}
@@ -249,10 +280,10 @@ export default function AdminPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap" style={{ flex: '1.5', minWidth: 0 }}>
                           {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right" style={{ flex: '1', minWidth: 0 }}>
                           <div className="flex justify-end gap-2">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -302,17 +333,27 @@ export default function AdminPage() {
           </div>
 
           {/* Mobile & Tablet Card View (<lg) */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
-            {filtered?.map((m) => {
-              const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
-              return (
-                <div
-                  key={m.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="glass rounded-2xl p-5 border-l-4 border-l-transparent transition-all active:scale-[0.98] shadow-lg shadow-black/5"
-                  style={{ borderLeftColor: m.status === 'activo' ? 'var(--primary)' : 'var(--destructive)' }}
-                >
+          <div ref={mobileListRef} style={{ height: 'calc(100vh - 300px)', minHeight: '400px', overflowY: 'auto' }} className="lg:hidden">
+            <div style={{ position: 'relative', height: `${mobileVirtualizer.getTotalSize()}px`, minHeight: mobileVirtualizer.getTotalSize() > 0 ? undefined : '200px' }}>
+              {mobileVirtualizer.getVirtualItems().map((virtualItem) => {
+                const m = filtered![virtualItem.index];
+                const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
+                return (
+                  <div
+                    key={m.id}
+                    className="absolute top-0 left-0 w-full"
+                    style={{
+                      height: `${virtualItem.size}px`,
+                      transform: `translateY(${virtualItem.start}px)`,
+                      padding: '0 0 16px 0',
+                    }}
+                  >
+                    <div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="glass rounded-2xl p-5 border-l-4 border-l-transparent transition-all active:scale-[0.98] shadow-lg shadow-black/5"
+                      style={{ borderLeftColor: m.status === 'activo' ? 'var(--primary)' : 'var(--destructive)' }}
+                    >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="font-bold text-foreground text-lg leading-tight">{m.full_name}</h3>
@@ -383,9 +424,11 @@ export default function AdminPage() {
                       <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
-                </div>
-              );
-            })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {filtered?.length === 0 && (

@@ -110,7 +110,18 @@
 
 ---
 
-## P5 — Virtual scrolling para listas grandes (🔥 Alto / Medio)
+## ✅ P5 — Virtual scrolling para listas grandes (🔥 Alto / Medio) — COMPLETADO
+
+**Solución:** Implementé virtual scrolling con `@tanstack/react-virtual` v3 en:
+- `AdminPage` — lista de miembros (mobile + desktop)
+- `ScoresPage` — lista de puntajes
+- `FinancePage` — entries financieras (mobile + desktop)
+
+Mockeado en tests para que renderice todos los items sin virtualización (JSDOM no computa CSS heights).
+
+---
+
+## P6 — TypeScript strict + cleanup
 
 **Problema:** Páginas con muchas filas renderizan todo el DOM:
 - `AdminPage` — miembros
