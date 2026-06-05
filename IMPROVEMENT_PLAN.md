@@ -290,4 +290,5 @@ content: [
 | Fase 6 | P4 (Google Fonts render blocking) | #108 |
 | Fase 7 | P5 (virtual scrolling @tanstack/react-virtual) | #109 |
 | Fase 8 | P6a (noUnusedLocals + noUnusedParameters) | #110 |
-| Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | — |
+| Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | #111 |
+| Fase 10 | P7 (Tailwind content paths) | #112 |
