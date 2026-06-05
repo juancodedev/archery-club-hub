@@ -17,15 +17,47 @@ Object.defineProperty(window, 'matchMedia', {
     })),
 });
 
-// Mock ResizeObserver
-const MockResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-}));
+// Mock @tanstack/react-virtual to render ALL items in tests (no actual virtualization)
+// JSDOM doesn't compute CSS sizes, so the virtualizer's async measurement/render breaks tests
+vi.mock('@tanstack/react-virtual', () => {
+    function useVirtualizer({ count, estimateSize, getItemKey }: {
+        count: number;
+        estimateSize: number | ((index: number) => number);
+        getItemKey?: (index: number) => string | number;
+    }) {
+        const items = Array.from({ length: count }, (_, index) => ({
+            key: getItemKey ? getItemKey(index) : index,
+            index,
+            start: 0,
+            size: typeof estimateSize === 'function' ? estimateSize(index) : estimateSize,
+            lane: 0,
+        }));
+        const totalSize = items.reduce((sum, item) => sum + item.size, 0);
+        return {
+            getVirtualItems: () => items,
+            getTotalSize: () => totalSize,
+            scrollToIndex: vi.fn(),
+            scrollToOffset: vi.fn(),
+            scrollOffset: 0,
+            measureElement: vi.fn(),
+        };
+    }
+    return { useVirtualizer };
+});
 
-global.ResizeObserver = MockResizeObserver;
-window.ResizeObserver = MockResizeObserver;
+// Mock ResizeObserver (no longer needed for @tanstack/react-virtual, kept for other libs)
+class MockResizeObserver {
+    private callback: ResizeObserverCallback;
+    constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+    }
+    observe = vi.fn();
+    unobserve = vi.fn();
+    disconnect = vi.fn();
+}
+
+global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
 // Mock IntersectionObserver
 const MockIntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -108,6 +140,22 @@ vi.mock('@/integrations/supabase/client', () => {
             removeChannel: vi.fn(),
         },
     };
+});
+
+// Mock framer-motion/m for tree-shaken imports (P1)
+vi.mock('framer-motion/m', () => {
+    const createEl = (tag: string) => {
+        return ({ children, ...props }: { children?: React.ReactNode;[key: string]: unknown }) => React.createElement(tag, props, children);
+    };
+    return { div: createEl('div') };
+});
+
+// Mock qrcode (canvas-dependent, not available in JSDOM)
+vi.mock('qrcode', () => {
+    const mockToCanvas = (_canvas: unknown, _text: string, _options: unknown, cb?: (err: Error | null) => void) => {
+        if (cb) cb(null);
+    };
+    return { default: { toCanvas: mockToCanvas }, toCanvas: mockToCanvas };
 });
 
 // Mock framer-motion with simple pass-through components

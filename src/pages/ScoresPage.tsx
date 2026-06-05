@@ -4,7 +4,8 @@ import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { div } from "framer-motion/m";
 import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -194,6 +195,15 @@ export default function ScoresPage() {
     enabled: !!member,
   });
 
+  const scoresListRef = useRef<HTMLDivElement>(null);
+
+  const scoresVirtualizer = useVirtualizer({
+    count: scores?.length ?? 0,
+    getScrollElement: () => scoresListRef.current,
+    estimateSize: () => 200,
+    getItemKey: (index) => scores?.[index]?.id ?? index,
+  });
+
   return (
     <div className="space-y-6 pb-20 max-w-5xl mx-auto">
       <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -308,15 +318,23 @@ export default function ScoresPage() {
           ))}
         </div>
       ) : scores && scores.length > 0 ? (
-        <div className="space-y-4">
-          {scores.map((score, i) => (
-            <div
-              key={score.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="glass rounded-2xl overflow-hidden border border-white/5 hover:border-primary/20 transition-all shadow-lg active:scale-[0.99]"
-            >
+        <div ref={scoresListRef} style={{ height: 'calc(100vh - 300px)', minHeight: '400px', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', height: `${scoresVirtualizer.getTotalSize()}px` }}>
+            {scoresVirtualizer.getVirtualItems().map((virtualItem) => {
+              const score = scores![virtualItem.index];
+              return (
+                <div
+                  key={score.id}
+                  className="absolute top-0 left-0 w-full"
+                  style={{
+                    height: `${virtualItem.size}px`,
+                    transform: `translateY(${virtualItem.start}px)`,
+                    paddingBottom: '16px',
+                  }}
+                >
+                  <div
+                    className="glass rounded-2xl overflow-hidden border border-white/5 hover:border-primary/20 transition-all shadow-lg active:scale-[0.99]"
+                  >
               <button
                 onClick={() => setExpandedId(expandedId === score.id ? null : score.id)}
                 className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors relative"
@@ -448,8 +466,11 @@ export default function ScoresPage() {
                   </div>
                 </div>
               )}
-            </div>
-          ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="glass rounded-3xl p-16 text-center space-y-6 border-dashed border-2 border-white/5">
