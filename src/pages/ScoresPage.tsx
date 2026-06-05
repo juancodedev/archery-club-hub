@@ -200,7 +200,7 @@ export default function ScoresPage() {
   const scoresVirtualizer = useVirtualizer({
     count: scores?.length ?? 0,
     getScrollElement: () => scoresListRef.current,
-    estimateSize: () => 200,
+    estimateSize: () => 90,
     getItemKey: (index) => scores?.[index]?.id ?? index,
   });
 
