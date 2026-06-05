@@ -41,7 +41,7 @@ export default function DivisionChangeNotifications() {
           old_division:divisions!old_division_id(name),
           new_division:divisions!new_division_id(name)
         `)
-                .eq("member_id", member?.id)
+                .eq("member_id", member?.id ?? "")
                 .is("acknowledged_at", null)
                 .order("change_date", { ascending: false });
 

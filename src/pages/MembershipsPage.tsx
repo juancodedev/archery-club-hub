@@ -1,13 +1,14 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { div as MotionDiv } from "framer-motion/m";
 import { Wallet, Search, Filter, CheckCircle2, XCircle, AlertCircle, CalendarDays } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { calculateFinancialStatus, isMembershipCategory, isInscriptionCategory } from "@/lib/membershipUtils";
+import { calculateFinancialStatus, isMembershipCategory, isInscriptionCategory, MemberForStatus, PaymentForStatus } from "@/lib/membershipUtils";
 
 interface MonthStatus { month: number; year: number; status: string; label: string; }
 
@@ -46,7 +47,8 @@ export default function MembershipsPage() {
 
             return members.map(m => {
                 const memberPayments = payments?.filter(p => p.member_id === m.id) || [];
-                const billingDay = m.billing_day || new Date(m.enrollment_date).getDate();
+                const enrollmentDateStr = m.enrollment_date ?? new Date().toISOString().split('T')[0];
+                const billingDay = m.billing_day ?? new Date(enrollmentDateStr).getDate();
                 const graceDays = m.grace_days ?? 7;
 
                 // Calculate status for each of the last 6 months
@@ -73,7 +75,7 @@ export default function MembershipsPage() {
                         } else {
                             // Check if this month was after enrollment
                             const monthDate = new Date(year, month - 1, 1);
-                            const enrollmentDate = new Date(m.enrollment_date);
+                            const enrollmentDate = new Date(enrollmentDateStr);
                             const startOfEnrollmentMonth = new Date(enrollmentDate.getFullYear(), enrollmentDate.getMonth(), 1);
 
                             if (monthDate >= startOfEnrollmentMonth) {
@@ -87,10 +89,11 @@ export default function MembershipsPage() {
 
                 // Check if inscription is missing
                 const hasPaidInscription = memberPayments.some(p => isInscriptionCategory(p.category));
-                const overallStatus = calculateFinancialStatus(m, memberPayments);
+                const overallStatus = calculateFinancialStatus(m as unknown as MemberForStatus, memberPayments as unknown as PaymentForStatus[]);
 
                 return {
                     ...m,
+                    enrollment_date: enrollmentDateStr,
                     monthsStatus,
                     overallStatus,
                     hasPaidInscription
@@ -112,13 +115,13 @@ export default function MembershipsPage() {
 
     return (
         <div className="space-y-6 pb-10">
-            <div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+            <MotionDiv initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-3">
                     <Wallet className="h-8 w-8 text-primary" />
                     Estado de Membresías
                 </h1>
                 <p className="text-muted-foreground mt-1 text-sm sm:text-base">Seguimiento global de cuotas mensuales del club.</p>
-            </div>
+            </MotionDiv>
 
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
@@ -155,7 +158,7 @@ export default function MembershipsPage() {
                     </div>
                 ) : (
                     filteredMembers?.map((m) => (
-                        <div
+                        <MotionDiv
                             key={m.id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -204,7 +207,7 @@ export default function MembershipsPage() {
                                     ))}
                                 </div>
                             </div>
-                        </div>
+                        </MotionDiv>
                     ))
                 )}
             </div>

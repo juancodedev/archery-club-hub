@@ -2,8 +2,8 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
-import { History, Target, ChevronDown, ChevronUp, Search, Filter, Building2, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
+import { div as MotionDiv } from "framer-motion/m";
+import { History, Target, ChevronDown, ChevronUp, Filter, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Link } from "react-router-dom";
@@ -206,13 +206,16 @@ export default function ScoresPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-5xl mx-auto">
-      <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <History className="h-7 w-7 text-primary" />
             Rendimiento
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 font-medium italic">"Tus flechas no mienten"</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isSuperAdmin && selectedClubId !== "all" ? `${clubs?.find(c => c.id === selectedClubId)?.name} • ` : ""}
+            Historial de puntajes de los arqueros
+          </p>
         </div>
         <Link to="/scores/new" className="w-full sm:w-auto">
           <Button className="gap-2 w-full sm:w-auto h-11 sm:h-10 font-bold shadow-lg shadow-primary/20">
@@ -220,10 +223,10 @@ export default function ScoresPage() {
             Registrar Puntaje
           </Button>
         </Link>
-      </div>
+      </MotionDiv>
 
       {/* FILTERS PANEL */}
-      <div
+      <MotionDiv
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -240,7 +243,7 @@ export default function ScoresPage() {
         </button>
 
         {isFiltersOpen && (
-          <div
+          <MotionDiv
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             className="p-5 space-y-6 border-t border-white/5"
@@ -253,7 +256,7 @@ export default function ScoresPage() {
                     <SelectTrigger className="glass h-10"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent className="glass">
                       <SelectItem value="all">Todos los Clubes</SelectItem>
-                      {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -307,9 +310,9 @@ export default function ScoresPage() {
                 Limpiar Búsqueda
               </Button>
             </div>
-          </div>
+          </MotionDiv>
         )}
-      </div>
+      </MotionDiv>
 
       {isLoading ? (
         <div className="space-y-4">

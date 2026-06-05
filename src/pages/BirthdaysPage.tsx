@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { div as MotionDiv } from "framer-motion/m";
 import { Cake, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -118,7 +119,7 @@ export default function BirthdaysPage() {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {todaysBirthdays.length > 0 ? (
                         todaysBirthdays.map((m, i) => (
-                            <div
+                            <MotionDiv
                                 key={m.id}
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -140,7 +141,7 @@ export default function BirthdaysPage() {
                                     <h3 className="text-xl font-display font-bold text-foreground">{m.full_name}</h3>
                                     <Badge variant="secondary" className="mt-2 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 border-primary/20">¡FELIZ CUMPLEAÑOS!</Badge>
                                 </div>
-                            </div>
+                            </MotionDiv>
                         ))
                     ) : (
                         <div className="sm:col-span-2 lg:col-span-3 glass rounded-[2rem] p-12 text-center border-dashed border-2 border-white/5">
@@ -173,7 +174,7 @@ export default function BirthdaysPage() {
                             </SelectTrigger>
                             <SelectContent className="glass">
                                 {clubs.map((c) => (
-                                    <SelectItem key={c.id} value={c.id}>
+                                    <SelectItem key={c.id} value={c.id ?? ""}>
                                         {c.name}
                                     </SelectItem>
                                 ))}
@@ -237,7 +238,7 @@ export default function BirthdaysPage() {
 
                                 <div className="mt-2 space-y-1 overflow-y-auto max-h-[80px] sm:max-h-[100px] no-scrollbar">
                                     {dayBirthdays.map((m, i) => (
-                                        <div
+                                        <MotionDiv
                                             key={m.id}
                                             initial={{ opacity: 0, x: -5 }}
                                             animate={{ opacity: 1, x: 0 }}
@@ -251,7 +252,7 @@ export default function BirthdaysPage() {
                                                 </AvatarFallback>
                                             </Avatar>
                                             <span className="text-[9px] font-bold truncate text-foreground">{m.full_name.split(' ')[0]}</span>
-                                        </div>
+                                        </MotionDiv>
                                     ))}
                                 </div>
 

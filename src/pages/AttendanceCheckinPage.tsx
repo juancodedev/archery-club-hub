@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
+import { div as MotionDiv } from "framer-motion/m";
 import { AnimatePresence } from "framer-motion";
 import { logger } from "@/lib/logger";
 import { 
@@ -128,12 +129,12 @@ export default function AttendanceCheckinPage() {
       setAllowedRadius(current.allowed_radius_meters);
 
       // 5. Check if user already registered attendance
-      const { data: attendanceRecord, error: attendanceError } = await supabase
+      const { data: attendanceRecord, error: attendanceError } = await (supabase
         .from("training_attendance" as never)
         .select("id, distance_meters")
         .eq("training_id", current.id)
         .eq("user_id", user.id)
-        .maybeSingle();
+        .maybeSingle() as unknown as Promise<{ data: { distance_meters: number | null } | null; error: any }>);
 
       if (attendanceError) throw attendanceError;
 
@@ -209,13 +210,13 @@ export default function AttendanceCheckinPage() {
       const userAgent = navigator.userAgent;
 
       logger.log("📤 Enviando datos de asistencia al servidor...");
-      const { data, error } = await supabase.rpc("check_in_attendance", {
+      const { data, error } = await supabase.rpc("check_in_attendance" as never, {
         p_training_id: training.id,
         p_latitude: lat,
         p_longitude: lng,
         p_ip_address: clientIp,
         p_user_agent: userAgent
-      });
+      } as never);
 
       if (error) throw error;
 
@@ -264,7 +265,7 @@ export default function AttendanceCheckinPage() {
       <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl" />
 
       <AnimatePresence mode="wait">
-        <div
+        <MotionDiv
           key={status}
           initial={{ opacity: 0, y: 15, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -584,7 +585,7 @@ export default function AttendanceCheckinPage() {
               </Button>
             </div>
           )}
-        </div>
+        </MotionDiv>
       </AnimatePresence>
     </div>
   );

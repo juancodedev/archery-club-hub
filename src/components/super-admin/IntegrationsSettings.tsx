@@ -9,9 +9,9 @@ import { Loader2, Save } from "lucide-react";
 
 interface SystemSettings {
     id?: string;
-    mercadopago_mode: string;
-    mercadopago_public_key?: string;
-    annual_discount_percentage: number;
+    mercadopago_mode: string | null;
+    mercadopago_public_key?: string | null;
+    annual_discount_percentage: number | null;
 }
 
 export default function IntegrationsSettings() {
@@ -38,6 +38,7 @@ export default function IntegrationsSettings() {
     };
 
     const handleSave = async () => {
+        if (!settings) return;
         setSaving(true);
         const { error } = await supabase.from("system_settings").upsert({
             id: settings.id,
@@ -57,6 +58,12 @@ export default function IntegrationsSettings() {
     };
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
+    if (!settings) return (
+        <div className="p-8 text-center bg-destructive/5 rounded-xl border border-destructive/20">
+            <p className="text-sm text-destructive font-medium mb-4">No se pudo cargar la configuración del sistema.</p>
+            <Button variant="outline" size="sm" onClick={fetchSettings}>Reintentar</Button>
+        </div>
+    );
 
     return (
         <div className="space-y-6 max-w-2xl">
@@ -70,15 +77,15 @@ export default function IntegrationsSettings() {
                     <div className="space-y-0.5">
                         <Label className="text-base">Modo de Operación</Label>
                         <p className="text-sm text-muted-foreground">
-                            {settings?.mercadopago_mode === 'real' ? 'Modo Producción habilitado.' : 'Modo Pruebas habilitado.'}
+                            {settings.mercadopago_mode === 'real' ? 'Modo Producción habilitado.' : 'Modo Pruebas habilitado.'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                            {settings?.mercadopago_mode === 'real' ? 'Producción' : 'Pruebas'}
+                            {settings.mercadopago_mode === 'real' ? 'Producción' : 'Pruebas'}
                         </span>
                         <Switch
-                            checked={settings?.mercadopago_mode === 'real'}
+                            checked={settings.mercadopago_mode === 'real'}
                             onCheckedChange={(checked) => setSettings({ ...settings, mercadopago_mode: checked ? 'real' : 'fictitious' })}
                         />
                     </div>
@@ -111,17 +118,10 @@ export default function IntegrationsSettings() {
                     </div>
                 </div>
 
-                {!settings ? (
-                    <div className="p-8 text-center bg-destructive/5 rounded-xl border border-destructive/20">
-                        <p className="text-sm text-destructive font-medium mb-4">No se pudo cargar la configuración del sistema.</p>
-                        <Button variant="outline" size="sm" onClick={fetchSettings}>Reintentar</Button>
-                    </div>
-                ) : (
-                    <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
-                        {saving ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                        Guardar Cambios
-                    </Button>
-                )}
+                <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+                    {saving ? <Loader2 className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
+                    Guardar Cambios
+                </Button>
             </div>
         </div>
     );

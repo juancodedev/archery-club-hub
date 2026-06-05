@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setMember(restored);
                 } else if (allMemberships.length > 0) {
                     setMember(allMemberships[0]);
-                    localStorage.setItem("activeClubId", allMemberships[0].club_id);
+                    if (allMemberships[0].club_id) localStorage.setItem("activeClubId", allMemberships[0].club_id);
                 }
                 logger.log("Miembro activo establecido: " + JSON.stringify(restored || allMemberships[0]));
             } else {

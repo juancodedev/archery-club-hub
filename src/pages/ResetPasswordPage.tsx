@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Target, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { div as MotionDiv } from "framer-motion/m";
 
 export default function ResetPasswordPage() {
     const { toast } = useToast();
@@ -53,7 +54,7 @@ export default function ResetPasswordPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div
+            <MotionDiv
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-md"
@@ -70,11 +71,11 @@ export default function ResetPasswordPage() {
 
                 <div className="glass rounded-[2rem] p-8 border border-primary/10 shadow-2xl shadow-primary/5">
                     {done ? (
-                        <div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-4 py-4">
+                        <MotionDiv initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-4 py-4">
                             <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto" />
                             <h2 className="text-xl font-display font-bold">¡Contraseña actualizada!</h2>
                             <p className="text-sm text-muted-foreground">Serás redirigido al login en unos segundos...</p>
-                        </div>
+                        </MotionDiv>
                     ) : !sessionReady ? (
                         <div className="text-center space-y-4 py-6">
                             <div className="h-10 w-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto" />
@@ -139,7 +140,7 @@ export default function ResetPasswordPage() {
                         </>
                     )}
                 </div>
-            </div>
+            </MotionDiv>
         </div>
     );
 }

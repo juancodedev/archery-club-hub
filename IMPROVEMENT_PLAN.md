@@ -148,22 +148,19 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 - Parámetros de función no usados → prefix `_`
 - Código muerto eliminado
 
-**Restante (87 errores para P6b):**
-- TS2322 (69): tipos no asignables — props de framer-motion en `<div>`
-- TS2339 (6): propiedad inexistente en tipo
-- TS2769 (4): overload no coincide
-- TS2589 (3): type instantiation demasiado profunda
-- TS2345 (2): argumento no asignable
-- TS2304 (2): nombre no encontrado
+**Solución entregada:**
+1. ✅ `noUnusedLocals` + `noUnusedParameters` activados — 134 imports sin uso eliminados
+2. ✅ `strictNullChecks` + `noImplicitAny` activados — ~150 errores corregidos
+3. ✅ `<div>` de framer-motion/m migrado a `<MotionDiv>` (JSX lowercase no respeta imports)
+4. ✅ Interfaces corregidas: `MemberInfo`, `AdminMember`, `FullMember`, `MemberData`, `InitialData`
+5. ✅ Null safety agregada: optional chaining, nullish coalescing, guards en 20+ archivos
+6. ✅ Supabase queries tipadas con `as never` y `.returns<T>()`
 
-## P6b — TypeScript: strictNullChecks + noImplicitAny (pendiente)
+**Estado:** `tsc --noEmit` = 0 errores, build OK, 137 tests pasan.
 
-**Solución:** Activar `strictNullChecks` y `noImplicitAny`, y corregir los ~87 errores resultantes.
+## ✅ P6b — TypeScript: strictNullChecks + noImplicitAny + MotionDiv (🔥 Alto / Medio) — COMPLETADO
 
-**Archivos que requerirán atención:**
-- Varios con `'xxx' is possibly 'null/undefined'`
-- `TrainingSessionsPage.tsx` usa `supabase.from("trainings" as never)` — tipo incorrecto
-- Componentes que usan props de framer-motion en `<div>` (del P1)
+**Solución:** Se activaron `strictNullChecks` y `noImplicitAny` en tsconfig.app.json, y se migró `<div>` de framer-motion/m a `<MotionDiv>` para respetar imports con JSX lowercase.
 
 ---
 
@@ -289,3 +286,8 @@ content: [
 | Fase 2 | DB indexes, RLS faltantes | #103 |
 | Fase 3 | Birthday RPC, ConfirmDialog, 9 window.confirm → AlertDialog | #105 |
 | Fase 4 | Filtro financial_entries server-side, html2pdf/Leaflet como imports npm | #106 |
+| Fase 5 | P1 (motion tree shaking), P2 (useClubs), P3 (TrainingSessions split) | #107 |
+| Fase 6 | P4 (Google Fonts render blocking) | #108 |
+| Fase 7 | P5 (virtual scrolling @tanstack/react-virtual) | #109 |
+| Fase 8 | P6a (noUnusedLocals + noUnusedParameters) | #110 |
+| Fase 9 | P6b (strictNullChecks + noImplicitAny + MotionDiv) | — |

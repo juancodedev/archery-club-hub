@@ -11,9 +11,9 @@ export const isInscriptionCategory = (cat: string) => {
 };
 
 export interface MemberForStatus {
-    status: string;
+    status: string | null;
     enrollment_date: string;
-    billing_day?: number;
+    billing_day?: number | null;
     grace_days?: number;
 }
 

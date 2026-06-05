@@ -47,9 +47,7 @@ vi.mock('@tanstack/react-virtual', () => {
 
 // Mock ResizeObserver (no longer needed for @tanstack/react-virtual, kept for other libs)
 class MockResizeObserver {
-    private callback: ResizeObserverCallback;
-    constructor(callback: ResizeObserverCallback) {
-        this.callback = callback;
+    constructor(_callback: ResizeObserverCallback) {
     }
     observe = vi.fn();
     unobserve = vi.fn();

@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { div as MotionDiv } from "framer-motion/m";
 import { Target, Plus, Search, Pencil, Trash2, ToggleLeft, ToggleRight, Mountain, Compass } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -259,7 +260,7 @@ export default function TournamentTypesAdminPage() {
 
     return (
         <div className="space-y-4 sm:space-y-6">
-            <div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+            <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex-1">
                         <h1 className="text-xl sm:text-2xl font-display font-bold text-foreground flex items-center gap-2">
@@ -275,7 +276,7 @@ export default function TournamentTypesAdminPage() {
                         Nuevo Tipo de Torneo
                     </Button>
                 </div>
-            </div>
+            </MotionDiv>
 
             {/* Search */}
             <div className="relative w-full sm:max-w-sm">
@@ -369,7 +370,7 @@ export default function TournamentTypesAdminPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => toggleActiveMutation.mutate({ id: type.id, active: type.active })}
+                                                            onClick={() => toggleActiveMutation.mutate({ id: type.id, active: type.active ?? true })}
                                                         >
                                                             {type.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                                         </Button>

@@ -3,11 +3,11 @@ import { Session, User } from "@supabase/supabase-js";
 
 export interface MemberInfo {
     id: string;
-    user_id: string;
+    user_id: string | null;
     club_id: string | null;
     full_name: string;
-    email: string;
-    status: string;
+    email: string | null;
+    status: string | null;
     roles: string[];
     is_super_admin: boolean;
     club_status?: string;

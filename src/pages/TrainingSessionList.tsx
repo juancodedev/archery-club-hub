@@ -485,7 +485,7 @@ export default function TrainingSessionList({
             <TrainingEnrollmentPanel
               sessionId={session.id}
               enrollments={enrollments}
-              isAdmin={isAdmin}
+              isAdmin={isAdmin ?? false}
             />
           </div>
         );

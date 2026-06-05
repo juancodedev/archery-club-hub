@@ -155,7 +155,7 @@ export default function MembersManagement() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Todos los clubes</SelectItem>
-                                {clubs.map(c => (
+                                {clubs?.map(c => (
                                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                                 ))}
                             </SelectContent>

@@ -91,7 +91,7 @@ export default function InviteMemberDialog({ clubId: initialClubId, disabled }: 
                             <Select value={selectedClubId} onValueChange={setSelectedClubId}>
                                 <SelectTrigger><SelectValue placeholder="Seleccionar club" /></SelectTrigger>
                                 <SelectContent>
-                                    {clubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                                    {clubs?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

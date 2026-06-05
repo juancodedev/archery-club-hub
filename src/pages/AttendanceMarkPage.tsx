@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useToast } from "@/hooks/use-toast";
+import { div as MotionDiv } from "framer-motion/m";
 import { logger } from "@/lib/logger";
 import { CheckCircle2, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ export default function AttendanceMarkPage() {
                         .insert({
                             training_session_id: sessionId,
                             member_id: member.id,
-                            club_id: member.club_id,
+                            club_id: member.club_id!,
                             attended: true
                         });
 
@@ -106,7 +107,7 @@ export default function AttendanceMarkPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div
+            <MotionDiv
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="glass max-w-sm w-full p-8 text-center space-y-6 rounded-2xl"
@@ -150,7 +151,7 @@ export default function AttendanceMarkPage() {
                         )}
                     </div>
                 )}
-            </div>
+            </MotionDiv>
         </div>
     );
 }

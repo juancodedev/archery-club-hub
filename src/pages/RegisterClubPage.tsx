@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { div as MotionDiv } from "framer-motion/m";
 import { Building2 } from "lucide-react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -82,7 +83,7 @@ export default function RegisterClubPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
-      <div
+      <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -163,7 +164,7 @@ export default function RegisterClubPage() {
             Iniciar sesión
           </Link>
         </p>
-      </div>
+      </MotionDiv>
     </div>
   );
 }
