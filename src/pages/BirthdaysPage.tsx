@@ -2,16 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
-import { AnimatePresence } from "framer-motion";
-import { Cake, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Users, Building2, Search } from "lucide-react";
+import { Cake, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn, getAvatarUrl } from "@/lib/utils";
-import { isAdmin as checkIsAdmin } from "@/lib/permissions";
 
 interface BirthdayMember {
     id: string;
@@ -34,7 +30,6 @@ export default function BirthdaysPage() {
 
     const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
     const roles = member?.roles || [];
-    const isAdmin = checkIsAdmin(roles, isSuperAdmin);
     const isArcherOnly = roles.includes("arquero") && roles.length === 1 && !isSuperAdmin;
 
     // Fetch clubs for superadmin
@@ -49,7 +44,7 @@ export default function BirthdaysPage() {
     });
 
     // Fetch members with birthdays
-    const { data: members, isLoading } = useQuery<BirthdayMember[]>({
+    const { data: members } = useQuery<BirthdayMember[]>({
         queryKey: ["club-birthdays", selectedClubId],
         queryFn: async () => {
             if (!selectedClubId) return [];

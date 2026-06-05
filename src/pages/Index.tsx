@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { div } from "framer-motion/m";
 import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard, Check } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useState, useEffect } from "react";

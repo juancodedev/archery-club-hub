@@ -1,12 +1,9 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
 import { Wallet, Search, Filter, CheckCircle2, XCircle, AlertCircle, CalendarDays } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";

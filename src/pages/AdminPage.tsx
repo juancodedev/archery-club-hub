@@ -2,9 +2,8 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -93,7 +92,6 @@ export default function AdminPage() {
       // Only fetch membership-related payments for computing financial status
       // instead of downloading ALL financial entries for the club
       const now = new Date();
-      const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
 
       const { data: relevantPayments } = await supabase
@@ -138,7 +136,7 @@ export default function AdminPage() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data, member) => {
+    onSuccess: (_data, member) => {
       toast({
         title: "Enlace de recuperación enviado",
         description: `Se envió un correo de recuperación a ${member.email}.`

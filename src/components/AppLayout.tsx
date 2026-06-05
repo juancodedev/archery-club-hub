@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, Crosshair, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Trophy, Cake, type LucideIcon } from "lucide-react";
+import { Target, LayoutDashboard, User, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Cake, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { cn, getAvatarUrl } from "@/lib/utils";
@@ -8,20 +8,7 @@ import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente, isTesorero 
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "@/integrations/supabase/client";
 
-const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/profile", icon: User, label: "Mi Perfil" },
-  { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
-];
-
-const adminItems = [
-  { to: "/admin", icon: Users, label: "Miembros" },
-  { to: "/admin/memberships", icon: Wallet, label: "Membresías" },
-  { to: "/billing", icon: CreditCard, label: "Planes y alumnos" },
-  { to: "/settings", icon: Settings, label: "Configuración" },
-];
 
 const presidenteItems = [
   { to: "/reports", icon: BarChart3, label: "Reportes" },

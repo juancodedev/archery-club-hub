@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Target, Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
-import { div } from "framer-motion/m";
 
 export default function ResetPasswordPage() {
     const { toast } = useToast();

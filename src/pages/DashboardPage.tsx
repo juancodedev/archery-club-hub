@@ -1,9 +1,8 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
 import { AnimatePresence } from "framer-motion";
-import { Target, TrendingUp, Calendar, Award, BarChart3, Shield, Cake } from "lucide-react";
+import { Target, TrendingUp, Calendar, Award, BarChart3, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

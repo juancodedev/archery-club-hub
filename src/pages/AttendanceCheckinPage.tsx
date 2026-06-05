@@ -2,12 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
-import { div } from "framer-motion/m";
 import { AnimatePresence } from "framer-motion";
 import { logger } from "@/lib/logger";
 import { 
   Target, Loader2, CheckCircle2, AlertTriangle, 
-  MapPin, ShieldAlert, Navigation, ArrowRight, RefreshCw 
+  MapPin, ShieldAlert, Navigation, RefreshCw 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

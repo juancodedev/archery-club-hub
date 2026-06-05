@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { div } from "framer-motion/m";
 import { Target, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { logger } from "@/lib/logger";

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
-import { div } from "framer-motion/m";
 import { Badge } from "@/components/ui/badge";
 import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

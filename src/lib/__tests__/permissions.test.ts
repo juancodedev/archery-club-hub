@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isAdmin, isPresidente, isTesorero } from "../permissions";
+import { isAdmin, isPresidente } from "../permissions";
 
 describe("permissions", () => {
     const adminRoles = ["administrador"];

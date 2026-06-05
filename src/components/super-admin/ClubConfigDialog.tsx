@@ -13,19 +13,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Key, Link as LinkIcon, DollarSign, Users } from "lucide-react";
+import { Copy, Key, Link as LinkIcon, DollarSign } from "lucide-react";
 import { toast } from "sonner";
-import { formatCurrency } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
     RefreshCcw,
     Calendar,
     CheckCircle2,
-    XCircle,
-    Clock,
     Send,
-    Plus,
-    Target
+    Plus
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -37,7 +33,7 @@ interface ClubConfigDialogProps {
 }
 
 export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChange }: ClubConfigDialogProps) {
-    const { data: clubData, isLoading: loadingClub } = useQuery({
+    const { data: clubData } = useQuery({
         queryKey: ["club-config", clubId],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -66,7 +62,6 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
     });
 
     const queryClient = useQueryClient();
-    const [isSaving, setIsSaving] = useState(false);
 
     // Local states for club settings
     const [inscriptionFee, setInscriptionFee] = useState<number>(0);
@@ -98,12 +93,6 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
         },
         enabled: isOpen,
     });
-
-interface InvitationRecord {
-    expires_at: string;
-    used_at?: string | null;
-    invitation_type: string;
-}
 
     const updateClubMutation = useMutation({
         mutationFn: async (updates: Record<string, unknown>) => {

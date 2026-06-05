@@ -2,7 +2,6 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery } from "@tanstack/react-query";
-import { div } from "framer-motion/m";
 import { AnimatePresence } from "framer-motion";
 import { BarChart3, TrendingUp, Users, Target, Calendar, Filter, ChevronDown, ChevronUp, CheckCircle2, XCircle, PieChart as PieChartIcon } from "lucide-react";
 import {
@@ -17,8 +16,7 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell,
-  Legend
+  Cell
 } from "recharts";
 
 const COLORS = [
@@ -33,9 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useEffect, useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 interface ScoreReport {
@@ -346,7 +342,7 @@ export default function ReportsPage() {
                 { icon: Target, label: "Registros", value: totalScores, color: "text-amber-500" },
                 { icon: TrendingUp, label: "Promedio", value: avgScore, color: "text-emerald-500" },
                 { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-400" },
-              ].map(({ icon: Icon, label, value, color }, i) => (
+              ].map(({ icon: Icon, label, value, color }) => (
                 <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>
@@ -453,7 +449,7 @@ export default function ReportsPage() {
                 { icon: XCircle, label: "Total Faltas", value: attendanceStats.total - attendanceStats.count, color: "text-rose-500" },
                 { icon: Calendar, label: "Total Sesiones", value: attendanceRaw?.length || 0, color: "text-primary" },
                 { icon: Users, label: "Presentes", value: attendanceStats.count, color: "text-amber-500" },
-              ].map(({ icon: Icon, label, value, color }, i) => (
+              ].map(({ icon: Icon, label, value, color }) => (
                 <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>

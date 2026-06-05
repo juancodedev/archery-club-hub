@@ -26,14 +26,6 @@ import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 // Leaflet CSS — imported at build time instead of injected from CDN
 import "leaflet/dist/leaflet.css";
-import {
-  DISCIPLINES, STANDARD_DISTANCES, formatYards,
-  TRAINING_TYPES, WEATHER_TYPES, WIND_DIRECTIONS, TRAINING_PRESETS,
-  NFAA_DISCIPLINES, NFAA_BOW_STYLES, NFAA_AGE_CATEGORIES, NFAA_GENDERS,
-  INDOOR_TARGET_TYPES, SESSION_MODES, NFAA_ALL_DIVISIONS,
-  type DisciplineValue
-} from "@/lib/archeryConstants";
-import { buildDivisionCode } from "@/lib/divisionUtils";
 import { logger } from "@/lib/logger";
 import {
   Calendar,
