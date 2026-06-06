@@ -437,7 +437,7 @@ export default function TournamentTypesAdminPage() {
                         </div>
 
                         {/* Disciplina + Tipo de arco */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label>Disciplina</Label>
                                 <Select value={formData.discipline} onValueChange={(v) => setFormData({ ...formData, discipline: v, is_indoor: v === "indoor" })}>
@@ -489,7 +489,7 @@ export default function TournamentTypesAdminPage() {
                         </div>
 
                         {/* Flechas + Series */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="arrows_per_end">Flechas por Serie *</Label>
                                 <Input
@@ -515,7 +515,7 @@ export default function TournamentTypesAdminPage() {
                         </div>
 
                         {/* Distancia (yd) + Cara de diana */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="distance_yards">Distancia (yardas)</Label>
                                 <Input

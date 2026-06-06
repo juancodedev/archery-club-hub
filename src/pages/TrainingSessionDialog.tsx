@@ -351,7 +351,7 @@ export default function TrainingSessionDialog({
             onValueChange={setTrainingType}
             className="w-full"
           >
-            <TabsList className="grid grid-cols-3 w-full glass p-1 h-12 mb-4">
+            <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full glass p-1 h-12 mb-4">
               {TRAINING_TYPES.map((t) => (
                 <TabsTrigger
                   key={t.value}
@@ -385,7 +385,7 @@ export default function TrainingSessionDialog({
                   className="h-11 glass border-primary/10"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                     Disciplina
@@ -454,7 +454,7 @@ export default function TrainingSessionDialog({
               className="space-y-4 animate-in fade-in-50 duration-300"
             >
               {/* 1. Modalidad toggle */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {SESSION_MODES.map((m) => (
                   <button
                     key={m.value}
@@ -516,7 +516,7 @@ export default function TrainingSessionDialog({
                 <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">
                   Disciplina
                 </Label>
-                <div className="grid grid-cols-4 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                   {NFAA_DISCIPLINES.map((d) => (
                     <button
                       key={d.value}
@@ -580,7 +580,7 @@ export default function TrainingSessionDialog({
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-muted-foreground">
                       Edad
@@ -589,7 +589,7 @@ export default function TrainingSessionDialog({
                       value={ageCategory}
                       onValueChange={setAgeCategory}
                     >
-                      <SelectTrigger className="h-9 glass text-xs">
+                      <SelectTrigger className="h-10 glass text-xs">
                         <SelectValue placeholder="…" />
                       </SelectTrigger>
                       <SelectContent className="glass">
@@ -607,7 +607,7 @@ export default function TrainingSessionDialog({
                       Género
                     </Label>
                     <Select value={gender} onValueChange={setGender}>
-                      <SelectTrigger className="h-9 glass text-xs">
+                      <SelectTrigger className="h-10 glass text-xs">
                         <SelectValue placeholder="…" />
                       </SelectTrigger>
                       <SelectContent className="glass">
@@ -624,7 +624,7 @@ export default function TrainingSessionDialog({
                       Estilo
                     </Label>
                     <Select value={bowStyle} onValueChange={setBowStyle}>
-                      <SelectTrigger className="h-9 glass text-xs">
+                      <SelectTrigger className="h-10 glass text-xs">
                         <SelectValue placeholder="…" />
                       </SelectTrigger>
                       <SelectContent className="glass">
@@ -681,7 +681,7 @@ export default function TrainingSessionDialog({
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="glass p-3 rounded-xl border-white/5 space-y-2">
                       <p className="text-[10px] font-black uppercase text-muted-foreground text-center">
                         1er Standard
@@ -698,7 +698,7 @@ export default function TrainingSessionDialog({
                             value={std1Score}
                             onChange={(e) => setStd1Score(e.target.value)}
                             placeholder="0"
-                            className="h-9 text-sm glass text-center font-mono"
+                            className="h-10 text-sm glass text-center font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -711,7 +711,7 @@ export default function TrainingSessionDialog({
                             value={std1X}
                             onChange={(e) => setStd1X(e.target.value)}
                             placeholder="0"
-                            className="h-9 text-sm glass text-center font-mono"
+                            className="h-10 text-sm glass text-center font-mono"
                           />
                         </div>
                       </div>
@@ -720,7 +720,7 @@ export default function TrainingSessionDialog({
                       <p className="text-[10px] font-black uppercase text-muted-foreground text-center">
                         2do Standard
                       </p>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="space-y-1">
                           <Label className="text-[9px] font-bold text-muted-foreground">
                             Puntuación
@@ -732,7 +732,7 @@ export default function TrainingSessionDialog({
                             value={std2Score}
                             onChange={(e) => setStd2Score(e.target.value)}
                             placeholder="0"
-                            className="h-9 text-sm glass text-center font-mono"
+                            className="h-10 text-sm glass text-center font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -745,7 +745,7 @@ export default function TrainingSessionDialog({
                             value={std2X}
                             onChange={(e) => setStd2X(e.target.value)}
                             placeholder="0"
-                            className="h-9 text-sm glass text-center font-mono"
+                            className="h-10 text-sm glass text-center font-mono"
                           />
                         </div>
                       </div>
@@ -782,7 +782,7 @@ export default function TrainingSessionDialog({
                 <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                   Presets de Serie
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {TRAINING_PRESETS.map((p) => (
                     <Button
                       key={p.id}
@@ -854,7 +854,7 @@ export default function TrainingSessionDialog({
                       >
                         <Trash2 className="h-3 w-3 text-destructive" />
                       </Button>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-[9px] font-bold uppercase text-muted-foreground">
                             Distancia (yd)
@@ -869,7 +869,7 @@ export default function TrainingSessionDialog({
                               );
                               setRounds(newRounds);
                             }}
-                            className="h-8 text-xs glass"
+                            className="h-10 text-xs glass"
                           />
                         </div>
                         <div className="space-y-1">
@@ -883,11 +883,11 @@ export default function TrainingSessionDialog({
                               newRounds[idx].target = e.target.value;
                               setRounds(newRounds);
                             }}
-                            className="h-8 text-xs glass"
+                            className="h-10 text-xs glass"
                           />
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <Label className="text-[9px] font-bold uppercase text-muted-foreground">
                             Ends
@@ -900,7 +900,7 @@ export default function TrainingSessionDialog({
                               newRounds[idx].ends = parseInt(e.target.value);
                               setRounds(newRounds);
                             }}
-                            className="h-8 text-xs glass"
+                            className="h-10 text-xs glass"
                           />
                         </div>
                         <div className="space-y-1">
@@ -915,7 +915,7 @@ export default function TrainingSessionDialog({
                               newRounds[idx].arrows = parseInt(e.target.value);
                               setRounds(newRounds);
                             }}
-                            className="h-8 text-xs glass"
+                            className="h-10 text-xs glass"
                           />
                         </div>
                       </div>
@@ -935,7 +935,7 @@ export default function TrainingSessionDialog({
               </Label>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold uppercase text-muted-foreground">
                   Clima
@@ -971,7 +971,7 @@ export default function TrainingSessionDialog({
 
             <div
               className={`grid gap-3 ${
-                trainingType === "torneo" ? "grid-cols-1" : "grid-cols-3"
+                trainingType === "torneo" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
               }`}
             >
               <div
@@ -1027,7 +1027,7 @@ export default function TrainingSessionDialog({
                 <p className="text-[9px] uppercase font-black tracking-widest text-muted-foreground">
                   Detalle de Equipo
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[9px] font-bold uppercase text-muted-foreground">
                       Marca/Modelo Arco
@@ -1036,7 +1036,7 @@ export default function TrainingSessionDialog({
                       value={eqBow}
                       onChange={(e) => setEqBow(e.target.value)}
                       placeholder="Ej: Win&Win Inno EX"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1047,7 +1047,7 @@ export default function TrainingSessionDialog({
                       value={eqLimbs}
                       onChange={(e) => setEqLimbs(e.target.value)}
                       placeholder="Ej: Mybo X7 36#"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1058,7 +1058,7 @@ export default function TrainingSessionDialog({
                       value={eqString}
                       onChange={(e) => setEqString(e.target.value)}
                       placeholder="Ej: BCY 8125 16h"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1069,7 +1069,7 @@ export default function TrainingSessionDialog({
                       value={eqTab}
                       onChange={(e) => setEqTab(e.target.value)}
                       placeholder="Ej: Shibuya Ultima"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1080,7 +1080,7 @@ export default function TrainingSessionDialog({
                       value={eqSight}
                       onChange={(e) => setEqSight(e.target.value)}
                       placeholder="Ej: Shrewd Micro"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1091,7 +1091,7 @@ export default function TrainingSessionDialog({
                       value={eqStabilizer}
                       onChange={(e) => setEqStabilizer(e.target.value)}
                       placeholder="Ej: Doinker A27"
-                      className="h-9 text-xs glass"
+                      className="h-10 text-xs glass"
                     />
                   </div>
                   {(bowStyle === "BH-C" ||
@@ -1106,7 +1106,7 @@ export default function TrainingSessionDialog({
                         value={eqRelease}
                         onChange={(e) => setEqRelease(e.target.value)}
                         placeholder="Ej: Stan SX3"
-                        className="h-9 text-xs glass"
+                        className="h-10 text-xs glass"
                       />
                     </div>
                   )}

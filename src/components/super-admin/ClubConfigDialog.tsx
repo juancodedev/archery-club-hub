@@ -197,7 +197,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                                             onChange={(e) => setNewTitle(e.target.value)}
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>Cupos Máx.</Label>
                                             <Input
@@ -324,7 +324,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                     </TabsContent>
 
                     <TabsContent value="fees" className="mt-4 space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Cuota de Inscripción</Label>
                                 <div className="relative">

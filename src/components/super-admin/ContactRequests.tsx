@@ -69,6 +69,7 @@ export default function ContactRequests() {
     return (
         <div className="space-y-4">
             <div className="glass rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -134,6 +135,7 @@ export default function ContactRequests() {
                         )}
                     </TableBody>
                 </Table>
+                </div>
             </div>
         </div>
     );

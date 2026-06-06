@@ -259,6 +259,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                 </div>
             ) : (
                 <div className="glass rounded-xl overflow-hidden border border-border/50">
+                    <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent border-border/50">
@@ -334,6 +335,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
 
                     {filtered?.length === 0 && (
                         <div className="p-8 text-center">
@@ -362,7 +364,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                             <Label htmlFor="abbreviation">Abreviación *</Label>
                             <Input id="abbreviation" value={formData.abbreviation} onChange={(e) => setFormData({ ...formData, abbreviation: e.target.value })} maxLength={5} />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2 text-left">
                                 <Label htmlFor="min_age">Edad Mínima</Label>
                                 <Input id="min_age" type="number" value={formData.min_age} onChange={(e) => setFormData({ ...formData, min_age: e.target.value })} />

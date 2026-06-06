@@ -236,6 +236,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                 </div>
             ) : (
                 <div className="glass rounded-xl overflow-hidden border border-border/50">
+                    <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="hover:bg-transparent border-border/50">
@@ -290,6 +291,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                             ))}
                         </TableBody>
                     </Table>
+                    </div>
                 </div>
             )}
 
@@ -303,7 +305,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                             <Label htmlFor="t-name">Nombre *</Label>
                             <Input id="t-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="grid gap-2 text-left">
                                 <Label htmlFor="arrows">Flechas por Serie</Label>
                                 <Input id="arrows" type="number" value={formData.arrows_per_end} onChange={(e) => setFormData({ ...formData, arrows_per_end: e.target.value })} />

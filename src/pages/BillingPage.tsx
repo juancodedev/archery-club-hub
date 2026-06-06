@@ -353,7 +353,7 @@ export default function BillingPage() {
                         </div>
                     </DialogHeader>
 
-                    <div className="rounded-2xl border border-border/50 overflow-hidden bg-card/30">
+                    <div className="overflow-x-auto rounded-2xl border border-border/50 bg-card/30">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/50">

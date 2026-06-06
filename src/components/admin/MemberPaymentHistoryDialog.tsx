@@ -71,7 +71,7 @@ export default function MemberPaymentHistoryDialog({
                             <p className="text-muted-foreground font-medium">No hay registros de pagos para este miembro.</p>
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-border/50 overflow-hidden">
+                        <div className="rounded-xl border border-border/50 overflow-x-auto overflow-hidden">
                             <Table>
                                 <TableHeader className="bg-muted/30">
                                     <TableRow>

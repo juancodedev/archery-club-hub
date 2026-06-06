@@ -165,7 +165,8 @@ export default function MembersManagement() {
                 <AddMemberDialog clubId={selectedClubId === "all" ? "" : selectedClubId} />
             </div>
 
-            <div className="rounded-md border border-border/50 bg-card overflow-hidden">
+            <div className="rounded-md border border-border/50 bg-card">
+                <div className="overflow-x-auto">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow>
@@ -246,6 +247,7 @@ export default function MembersManagement() {
                         )}
                     </TableBody>
                 </Table>
+                </div>
             </div>
 
             {/* Comprehensive Dialogs */}

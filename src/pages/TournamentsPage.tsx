@@ -271,7 +271,7 @@ export default function TournamentsPage() {
                             </DialogHeader>
                             <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="space-y-4 pt-4">
                                 <div className="space-y-2"><Label>Nombre del Torneo</Label><Input value={name} onChange={e => setName(e.target.value)} required placeholder="Ej: Abierto de Primavera" className="glass h-11 rounded-xl" /></div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-2"><Label>Fecha Inicio</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required className="glass h-11 rounded-xl" /></div>
                                     <div className="space-y-2"><Label>Fecha Fin</Label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required className="glass h-11 rounded-xl" /></div>
                                 </div>

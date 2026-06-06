@@ -127,7 +127,7 @@ export default function PlansManagement() {
                                     onChange={e => setEditingPlan(prev => ({ ...prev, description: e.target.value }))}
                                 />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Precio Mensual</Label>
                                     <Input
@@ -181,8 +181,9 @@ export default function PlansManagement() {
                 </Dialog>
             </div>
 
-            <div className="glass rounded-xl overflow-hidden">
-                <Table>
+                    <div className="glass rounded-xl overflow-hidden border border-border/50">
+                        <div className="overflow-x-auto">
+                        <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Nombre</TableHead>
@@ -217,6 +218,7 @@ export default function PlansManagement() {
                         ))}
                     </TableBody>
                 </Table>
+                </div>
             </div>
             <ConfirmDialog
                 open={!!deletePlanId}
