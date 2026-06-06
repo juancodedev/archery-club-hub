@@ -191,7 +191,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col min-w-0">
         <header className="flex h-12 md:h-14 items-center justify-between border-b border-border px-3 md:px-4 bg-card sticky top-0 z-30">
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="h-9 w-9 md:h-10 md:w-10">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="hidden md:flex h-9 w-9 md:h-10 md:w-10">
               <Menu className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
             </Button>
             <div className="flex items-center gap-2">
