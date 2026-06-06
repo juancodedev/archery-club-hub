@@ -333,6 +333,7 @@ export default function ScoresPage() {
                     height: `${virtualItem.size}px`,
                     transform: `translateY(${virtualItem.start}px)`,
                     paddingBottom: '16px',
+                    zIndex: expandedId === score.id ? 10 : 0,
                   }}
                 >
                   <div
@@ -380,7 +381,7 @@ export default function ScoresPage() {
               </button>
 
               {expandedId === score.id && (
-                <div className="bg-black/40 border-t border-white/5 p-4 sm:p-6 animate-in slide-in-from-top duration-300">
+                <div className="bg-muted/30 border-t border-border/10 p-4 sm:p-6 animate-in slide-in-from-top duration-300">
                   <div className="max-w-xl mx-auto space-y-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="h-4 w-4 text-primary" />
