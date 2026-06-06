@@ -21,7 +21,7 @@ import DeleteMemberDialog from "@/components/admin/DeleteMemberDialog";
 import MemberScoreHistoryDialog from "@/components/admin/MemberScoreHistoryDialog";
 import MemberDivisionsDialog from "@/components/admin/MemberDivisionsDialog";
 import MemberPaymentHistoryDialog from "@/components/admin/MemberPaymentHistoryDialog";
-import { calculateFinancialStatus } from "@/lib/membershipUtils";
+import { calculateFinancialStatus, type MemberForStatus, type PaymentForStatus } from "@/lib/membershipUtils";
 import { isReadOnlyMode } from "@/lib/permissions";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 
@@ -105,7 +105,7 @@ export default function AdminPage() {
 
       return data.map(m => {
         const memberPayments = relevantPayments?.filter(p => p.member_id === m.id) || [];
-        const financialStatus = calculateFinancialStatus(m as any, memberPayments as any);
+        const financialStatus = calculateFinancialStatus(m as unknown as MemberForStatus, memberPayments as unknown as PaymentForStatus[]);
         return { ...m, financialStatus };
       });
     },

@@ -134,7 +134,7 @@ export default function AttendanceCheckinPage() {
         .select("id, distance_meters")
         .eq("training_id", current.id)
         .eq("user_id", user.id)
-        .maybeSingle() as unknown as Promise<{ data: { distance_meters: number | null } | null; error: any }>);
+        .maybeSingle() as unknown as Promise<{ data: { distance_meters: number | null } | null; error: Error | null }>);
 
       if (attendanceError) throw attendanceError;
 

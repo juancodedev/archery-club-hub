@@ -81,6 +81,7 @@ export default function NewScorePage() {
     if (editId) {
       fetchScoreForEdit(editId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
   const fetchScoreForEdit = async (id: string) => {

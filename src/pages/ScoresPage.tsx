@@ -86,7 +86,7 @@ export default function ScoresPage() {
     }
   };
 
-  const generatePDF = (html2pdf: any) => {
+  const generatePDF = (html2pdf: (el: HTMLElement, opts: Record<string, unknown>) => Promise<void>) => {
     const element = document.querySelector(".print-scorecard") as HTMLElement;
     if (!element) {
       toast.error("No se encontró el elemento de la ficha");
@@ -123,7 +123,7 @@ export default function ScoresPage() {
         // Restore scroll position
         window.scrollTo(0, currentScrollY);
         toast.success("¡Ficha PDF generada y descargada!");
-      }).catch((err: any) => {
+      }).catch((err: Error) => {
         // Restore scroll position even on error
         window.scrollTo(0, currentScrollY);
         console.error(err);

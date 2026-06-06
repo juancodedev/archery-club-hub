@@ -65,7 +65,7 @@ export default function DashboardPage() {
       if (!member?.club_id) return [];
       const result = await (supabase.rpc("get_todays_birthdays" as never, {
         p_club_id: member.club_id,
-      } as never) as unknown as Promise<{ data: { id: string; full_name: string; avatar_url: string | null }[] | null; error: any }>);
+      } as never) as unknown as Promise<{ data: { id: string; full_name: string; avatar_url: string | null }[] | null; error: Error | null }>);
       return result.data || [];
     },
     enabled: !!member?.club_id,
