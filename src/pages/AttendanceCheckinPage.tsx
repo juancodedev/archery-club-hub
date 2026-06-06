@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContextCore";
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { AnimatePresence } from "framer-motion";
 import { logger } from "@/lib/logger";
 import { 
@@ -265,7 +265,7 @@ export default function AttendanceCheckinPage() {
       <div className="absolute bottom-1/4 left-1/4 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl" />
 
       <AnimatePresence mode="wait">
-        <MotionDiv
+        <motion.div
           key={status}
           initial={{ opacity: 0, y: 15, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -585,7 +585,7 @@ export default function AttendanceCheckinPage() {
               </Button>
             </div>
           )}
-        </MotionDiv>
+        </motion.div>
       </AnimatePresence>
     </div>
   );

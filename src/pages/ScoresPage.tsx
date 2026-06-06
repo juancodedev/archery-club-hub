@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { History, Target, ChevronDown, ChevronUp, Filter, User as UserIcon, Calendar as CalendarIcon, Info, Edit, Trash2, Printer, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -206,7 +206,7 @@ export default function ScoresPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-5xl mx-auto">
-      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
             <History className="h-7 w-7 text-primary" />
@@ -223,10 +223,10 @@ export default function ScoresPage() {
             Registrar Puntaje
           </Button>
         </Link>
-      </MotionDiv>
+      </motion.div>
 
       {/* FILTERS PANEL */}
-      <MotionDiv
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -243,7 +243,7 @@ export default function ScoresPage() {
         </button>
 
         {isFiltersOpen && (
-          <MotionDiv
+          <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             className="p-5 space-y-6 border-t border-white/5"
@@ -310,9 +310,9 @@ export default function ScoresPage() {
                 Limpiar Búsqueda
               </Button>
             </div>
-          </MotionDiv>
+          </motion.div>
         )}
-      </MotionDiv>
+      </motion.div>
 
       {isLoading ? (
         <div className="space-y-4">

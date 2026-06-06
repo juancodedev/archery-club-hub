@@ -1,4 +1,4 @@
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { Check, HelpCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -174,7 +174,7 @@ export default function BillingPage() {
     };
     return (
         <div className="max-w-7xl mx-auto space-y-10 pb-20">
-            <MotionDiv
+            <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center justify-between"
@@ -187,11 +187,11 @@ export default function BillingPage() {
                     <HelpCircle className="h-4 w-4" />
                     <span className="text-xs font-semibold uppercase tracking-wider">Docs</span>
                 </Button>
-            </MotionDiv>
+            </motion.div>
 
             {/* Usage Overview Section */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-12">
-                <MotionDiv
+                <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="md:col-span-12 lg:col-span-5 glass rounded-[2.5rem] p-8 flex flex-col justify-between group h-full"
@@ -211,9 +211,9 @@ export default function BillingPage() {
                             Gestionar
                         </Button>
                     </div>
-                </MotionDiv>
+                </motion.div>
 
-                <MotionDiv
+                <motion.div
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="md:col-span-12 lg:col-span-7 glass rounded-2xl p-7 flex flex-col justify-between h-full"
@@ -226,7 +226,7 @@ export default function BillingPage() {
                             </span>
                         </div>
                         <div className="relative h-2.5 w-full bg-muted/30 rounded-full overflow-hidden">
-                            <MotionDiv
+                            <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${Math.min((studentCount / (clubDetails?.plans?.student_limit || 10)) * 100, 100)}%` }}
                                 className={cn(
@@ -258,14 +258,14 @@ export default function BillingPage() {
                             )}
                         </div>
                     </div>
-                </MotionDiv>
+                </motion.div>
             </div>
 
             {/* Pricing Grid */}
             <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 pt-4 sm:pt-6">
                 {
                     availablePlans.map((plan, index) => (
-                        <MotionDiv
+                        <motion.div
                             key={plan.name}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -334,7 +334,7 @@ export default function BillingPage() {
                                     <ExternalLink className="h-3 w-3" />
                                 </div>
                             </div>
-                        </MotionDiv>
+                        </motion.div>
                     ))}
             </div>
 

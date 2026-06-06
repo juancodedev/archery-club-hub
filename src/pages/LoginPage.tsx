@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { Target, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { logger } from "@/lib/logger";
@@ -103,7 +103,7 @@ export default function LoginPage() {
         <div className="flex min-h-screen">
             {/* Left panel - branding */}
             <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12" style={{ background: "var(--gradient-dark)" }}>
-                <MotionDiv
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
@@ -122,12 +122,12 @@ export default function LoginPage() {
                             ? "Panel de control maestro para la administración global de clubes de arquería."
                             : "La plataforma de gestión para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar."}
                     </p>
-                </MotionDiv>
+                </motion.div>
             </div>
 
             {/* Right panel - form */}
             <div className="flex w-full lg:w-1/2 flex-col justify-center items-center p-8 bg-background">
-                <MotionDiv
+                <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
@@ -210,7 +210,7 @@ export default function LoginPage() {
                             </Link>
                         </p>
                     </div>
-                </MotionDiv>
+                </motion.div>
             </div>
         </div>
     );

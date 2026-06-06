@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContextCore";
 import { supabase } from "@/integrations/supabase/client";
 import { useClubs } from "@/hooks/useClubs";
 import { useQuery } from "@tanstack/react-query";
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { AnimatePresence } from "framer-motion";
 import { BarChart3, TrendingUp, Users, Target, Calendar, Filter, ChevronDown, ChevronUp, CheckCircle2, XCircle, PieChart as PieChartIcon } from "lucide-react";
 import {
@@ -256,7 +256,7 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 pb-20 max-w-6xl mx-auto">
-      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1 text-center sm:text-left">
           <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center justify-center sm:justify-start gap-2">
             <BarChart3 className="h-7 w-7 text-primary" />
@@ -264,7 +264,7 @@ export default function ReportsPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1 font-medium italic opacity-80">"Análisis de rendimiento estratégico"</p>
         </div>
-      </MotionDiv>
+      </motion.div>
 
       {/* Tabs Selector */}
       <div className="flex justify-center sm:justify-start">
@@ -281,7 +281,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters Panel */}
-      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
           className="w-full p-4 flex items-center justify-between text-sm font-bold bg-white/5 hover:bg-white/10 transition-colors"
@@ -325,11 +325,11 @@ export default function ReportsPage() {
             </div>
           </div>
         )}
-      </MotionDiv>
+      </motion.div>
 
       <AnimatePresence mode="wait">
         {activeTab === "performance" ? (
-          <MotionDiv
+          <motion.div
             key="perf"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -434,9 +434,9 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
-          </MotionDiv>
+          </motion.div>
         ) : (
-          <MotionDiv
+          <motion.div
             key="attendance"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -537,7 +537,7 @@ export default function ReportsPage() {
                 </div>
               </div>
             </div>
-          </MotionDiv>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

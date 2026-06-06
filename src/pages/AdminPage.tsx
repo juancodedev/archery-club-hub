@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Users, Search, Pencil, Trash2, ShieldCheck, MoreHorizontal, History, Trophy, Wallet, CalendarDays, XCircle, CheckCircle2, Key } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { div as MotionDiv } from "framer-motion/m";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -174,7 +174,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 pb-20">
-      <MotionDiv initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex-1">
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground flex items-center gap-2">
@@ -200,7 +200,7 @@ export default function AdminPage() {
             </Select>
           </div>
         )}
-      </MotionDiv>
+      </motion.div>
 
       {/* Search */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -348,7 +348,7 @@ export default function AdminPage() {
                       padding: '0 0 16px 0',
                     }}
                   >
-                    <MotionDiv
+                    <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="glass rounded-2xl p-5 border-l-4 border-l-transparent transition-all active:scale-[0.98] shadow-lg shadow-black/5"
@@ -424,7 +424,7 @@ export default function AdminPage() {
                       <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
-                  </MotionDiv>
+                  </motion.div>
                 </div>
                 );
               })}
