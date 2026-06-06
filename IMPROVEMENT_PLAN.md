@@ -268,7 +268,56 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 
 ---
 
-## Historial de fases completadas
+---
+
+## P18 — Mobile-First Redesign (🔥 Alto / Alto)
+
+**Problema:** La plataforma se diseñó mobile-first originalmente pero entre iteraciones se priorizó desktop. Hoy:
+- Layouts usan `hidden lg:block` como default, relegando mobile a `lg:hidden`
+- Virtual scrolling con tablas HTML rotas en mobile (AdminPage, FinancePage)
+- Diálogos y formularios no optimizados para pantallas chicas
+- Touch targets (botones, enlaces) pueden ser demasiado pequeños
+- Navegación no adaptada para uso táctil
+
+**Objetivo:** Recuperar la experiencia mobile-first sin romper desktop.
+
+### Prioridades
+
+**P18a — 🔥 Crítico: Layouts responsive rotos**
+- Audit de todos los `hidden lg:block` / `lg:hidden` para asegurar que mobile sea el default
+- Revisar `AdminPage`, `FinancePage`, `ScoresPage` — ya migrados a CSS Grid, verificar mobile cards
+- Asegurar que `TrainingSessionsPage`, `ReportsPage`, `BillingPage` tengan vista mobile decente
+- **Criterio:** Cada página debe ser usable y legible en viewport de 375px sin scroll horizontal
+
+**P18b — ⚡ Alto: Navegación mobile**
+- Sidebar/Nav: ¿usar sheet/drawer en mobile? Actualmente AppLayout muestra sidebar siempre
+- Bottom navigation o hamburger menu para mobile
+- Asegurar que el club switcher funcione bien en pantalla chica
+- **Criterio:** Poder navegar a cualquier sección con una mano en mobile
+
+**P18c — ⚡ Alto: Formularios y diálogos responsive**
+- Diálogos (shadcn/ui Dialog): `max-w` y padding adaptados a mobile
+- Formularios largos (ProfilePage, NewScorePage) en single column en mobile
+- Inputs con tamaño táctil adecuado (min 44px height)
+- **Criterio:** Poder completar un formulario sin zoom en mobile
+
+**P18d — ⚡ Medio: Tablas y datos**
+- Tablas con scroll horizontal en vez de truncado
+- Cards como alternativa a tablas en mobile (ya implementado en AdminPage, FinancePage, ScoresPage)
+- Asegurar que Badges, tags y chips no se solapen
+- **Criterio:** Todos los datos visibles sin scroll horizontal forzado
+
+**P18e — 💡 Medio: Touch targets**
+- Botones: min 44x44px en mobile
+- DropdownMenus: que no se salgan del viewport
+- Fecha pickers: nativos vs simulados
+- **Criterio:** Pasar test de Lighthouse Mobile con touch targets adecuados
+
+**P18f — 💡 Bajo: Performance mobile**
+- Imágenes: lazy loading + tamaños responsivos
+- Animaciones: reducidas en mobile (prefers-reduced-motion)
+- Bundle: mantener chunk splitting actual (ya hecho en P1, P11)
+- **Criterio:** Lighthouse Mobile performance ≥ 80
 
 | Fase | Descripción | PR |
 |------|-------------|----|
@@ -284,3 +333,11 @@ Mockeado en tests para que renderice todos los items sin virtualización (JSDOM 
 | Fase 10 | P7 (Tailwind content paths) | #112 |
 | Fase 11 | P8 (shadcn/ui unused components audit) | #113 |
 | Fase 12 | P9 (test coverage 6 pages) | #114 |
+| Fase 13 | P10 (ErrorBoundary global) | #115 |
+| Fase 14 | P11 (recharts chunk separado) | #116 |
+| Fase 15 | P12+P13+P15 (meta cleanup, CSP, bundle analyzer) | #117 |
+| Fase 16 | P14 (PWA + Service Worker) | #118 |
+| — | Fix: CSP cloudflare + SW caching + ErrorBoundary wrapper + ScoresPage estimateSize | — |
+| — | Fix: MotionDiv → motion.div (22 páginas invisibles) | — |
+| — | Fix: AdminPage table → CSS Grid | — |
+| — | Fix: FinancePage table → CSS Grid | — |
