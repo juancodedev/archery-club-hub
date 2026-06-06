@@ -26,14 +26,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from "@/components/ui/table";
+
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -325,48 +318,46 @@ export default function FinancePage() {
                     </div>
                 </div>
 
-                {/* Desktop Table View (lg+) */}
+                {/* Desktop Grid View (lg+) — CSS Grid instead of table for virtual scroll compat */}
                 <div className="hidden lg:block">
                     <div ref={financeDesktopRef} style={{ height: 'calc(100vh - 350px)', minHeight: '400px', overflowY: 'auto' }}>
-                        <Table>
-                            <TableHeader className="bg-muted/30">
-                                <TableRow>
-                                    <TableHead className="w-[120px] font-bold">Fecha</TableHead>
-                                    <TableHead className="font-bold">Categoría / Miembro</TableHead>
-                                    <TableHead className="font-bold">Descripción</TableHead>
-                                    <TableHead className="font-bold text-right">Monto</TableHead>
-                                    <TableHead className="w-[150px] text-center font-bold">Acciones</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody style={{ display: 'block', position: 'relative', height: `${desktopFinanceVirtualizer.getTotalSize()}px` }}>
-                                {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground animate-pulse font-medium italic" style={{ display: 'block' }}>Sincronizando con el banco central de Quiver...</TableCell>
-                                    </TableRow>
-                                ) : entries?.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-20 text-muted-foreground font-medium italic" style={{ display: 'block' }}>No hay transacciones registradas.</TableCell>
-                                    </TableRow>
-                                ) : desktopFinanceVirtualizer.getVirtualItems().map((virtualItem) => {
+                        {/* Header */}
+                        <div className="bg-muted/30 sticky top-0 z-10 grid items-center text-sm font-bold text-foreground border-b border-border/50"
+                            style={{ gridTemplateColumns: '1.5fr 2fr 2.5fr 1.5fr 1.5fr', padding: '12px 16px' }}>
+                            <div>Fecha</div>
+                            <div>Categoría / Miembro</div>
+                            <div>Descripción</div>
+                            <div className="text-right">Monto</div>
+                            <div className="text-center">Acciones</div>
+                        </div>
+                        {isLoading ? (
+                            <div className="text-center py-20 text-muted-foreground animate-pulse font-medium italic">Sincronizando con el banco central de Quiver...</div>
+                        ) : entries?.length === 0 ? (
+                            <div className="text-center py-20 text-muted-foreground font-medium italic">No hay transacciones registradas.</div>
+                        ) : (
+                            <div style={{ position: 'relative', height: `${desktopFinanceVirtualizer.getTotalSize()}px` }}>
+                                {desktopFinanceVirtualizer.getVirtualItems().map((virtualItem) => {
                                     const entry = entries![virtualItem.index];
                                     return (
-                                        <TableRow
+                                        <div
                                             key={entry.id}
-                                            className="hover:bg-muted/20 transition-colors border-border/30"
+                                            className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                                             style={{
-                                                display: 'flex',
-                                                width: '100%',
                                                 position: 'absolute',
                                                 top: 0,
                                                 left: 0,
+                                                right: 0,
                                                 height: `${virtualItem.size}px`,
                                                 transform: `translateY(${virtualItem.start}px)`,
+                                                display: 'grid',
+                                                gridTemplateColumns: '1.5fr 2fr 2.5fr 1.5fr 1.5fr',
+                                                alignItems: 'center',
+                                                padding: '12px 16px',
+                                                fontSize: '0.875rem',
                                             }}
                                         >
-                                            <TableCell className="font-bold text-xs" style={{ flex: '1.5', minWidth: 0 }}>
-                                                {new Date(entry.entry_date).toLocaleDateString("es-CL")}
-                                            </TableCell>
-                                            <TableCell style={{ flex: '2', minWidth: 0 }}>
+                                            <div className="font-bold text-xs truncate pr-2">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</div>
+                                            <div className="truncate pr-2">
                                                 <div className="flex flex-col gap-1">
                                                     <Badge variant="outline" className="capitalize w-fit text-[10px] font-bold border-primary/30">
                                                         {entry.category}
@@ -378,41 +369,34 @@ export default function FinancePage() {
                                                         </span>
                                                     )}
                                                 </div>
-                                            </TableCell>
-                                            <TableCell className="max-w-[250px] truncate text-xs text-muted-foreground" style={{ flex: '2.5', minWidth: 0 }}>
-                                                {entry.description || "-"}
-                                            </TableCell>
-                                            <TableCell className={cn(
-                                                "text-right font-black tabular-nums",
-                                                entry.type === "income" ? "text-emerald-600" : "text-rose-600"
-                                            )} style={{ flex: '1.5', minWidth: 0 }}>
+                                            </div>
+                                            <div className="truncate text-xs text-muted-foreground pr-2">{entry.description || "-"}</div>
+                                            <div className={cn("text-right font-black tabular-nums truncate pr-2", entry.type === "income" ? "text-emerald-600" : "text-rose-600")}>
                                                 {entry.type === "income" ? "+" : "-"} {formatCurrency(entry.amount)}
-                                            </TableCell>
-                                            <TableCell style={{ flex: '1.5', minWidth: 0 }}>
-                                                <div className="flex items-center justify-center gap-1">
-                                                    {(entry.receipt_urls?.length ?? 0) > 0 ? (
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
-                                                            <Receipt className="h-4 w-4" />
-                                                            {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
-                                                        </Button>
-                                                    ) : entry.receipt_url && (
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
-                                                            <Receipt className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
-                                                        <Pencil className="h-4 w-4" />
+                                            </div>
+                                            <div className="flex items-center justify-center gap-1">
+                                                {(entry.receipt_urls?.length ?? 0) > 0 ? (
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                                        <Receipt className="h-4 w-4" />
+                                                        {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
-                                                        <Trash2 className="h-4 w-4" />
+                                                ) : entry.receipt_url && (
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
+                                                        <Receipt className="h-4 w-4" />
                                                     </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
+                                                )}
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
                                     );
                                 })}
-                            </TableBody>
-                        </Table>
+                            </div>
+                        )}
                     </div>
                 </div>
 
