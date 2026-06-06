@@ -80,6 +80,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     ...(showAttendanceMenu ? [{ to: "/training", icon: Calendar, label: "Asistencia" }] : [])
   ];
 
+  // Bottom navigation items (mobile) — pick top 4 most important + "Más"
+  const bottomNavItems = (() => {
+    const items = [
+      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+      ...(showEntrenamientoYPuntaje ? [{ to: "/scores", icon: Target, label: "Puntaje" }] : []),
+      { to: "/birthdays", icon: Cake, label: "Cumpleaños" },
+      { to: "/profile", icon: User, label: "Perfil" },
+    ];
+    // Max 4 items + "Más" button that opens sidebar
+    return items.slice(0, 4);
+  })();
+
 
   const renderLink = ({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) => (
 
@@ -177,27 +189,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0">
-        <header className="flex h-14 items-center justify-between border-b border-border px-4 bg-card sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-              <Menu className="h-6 w-6 text-foreground" />
+        <header className="flex h-12 md:h-14 items-center justify-between border-b border-border px-3 md:px-4 bg-card sticky top-0 z-30">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="h-9 w-9 md:h-10 md:w-10">
+              <Menu className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
             </Button>
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              <span className="font-display font-bold text-foreground truncate max-w-[150px] sm:max-w-none">
+              <Target className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <span className="text-sm md:text-base font-display font-bold text-foreground truncate max-w-[120px] sm:max-w-none">
                 {isSuperAdminSubdomain ? "Archery Central" : "QuiverApp"}
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
+          <div className="flex items-center gap-1 md:gap-2">
+            <div className="hidden md:block">
+              <DivisionChangeNotifications />
+            </div>
+            {/* Notification bell always visible on mobile as icon */}
+            <div className="md:hidden">
               <DivisionChangeNotifications />
             </div>
             {member?.id && (
               <Link to="/profile">
-                <Avatar className="h-8 w-8 border border-primary/20 hover:scale-105 transition-transform">
+                <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-primary/20 hover:scale-105 transition-transform">
                   <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                  <AvatarFallback className="bg-primary/10 text-primary text-[9px] md:text-[10px] font-bold">
                     {member?.full_name?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -206,7 +222,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-auto relative">
+        <main className="flex-1 p-3 sm:p-4 md:p-8 overflow-auto relative pb-16 md:pb-8">
           {member?.club_status === 'bloqueado' && (member?.block_type === 'total' || member?.block_type === null) && !isSuperAdmin ? (
             <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-6">
               <div className="max-w-md w-full glass p-8 rounded-[2rem] text-center space-y-6 shadow-2xl border-destructive/20 animate-in fade-in zoom-in duration-300">
@@ -248,6 +264,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </>
           )}
         </main>
+
+        {/* Bottom Navigation — mobile only */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around bg-card border-t border-border px-2 pb-safe-or-2 pt-1 safe-area-bottom">
+          {bottomNavItems.map(({ to, icon: Icon, label }) => {
+            const isActive = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
+            return (
+              <Link
+                key={to}
+                to={to}
+                className="flex flex-col items-center gap-0.5 py-1 px-2 min-w-0 flex-1"
+              >
+                <div className={cn(
+                  "flex items-center justify-center h-8 w-8 rounded-lg transition-colors",
+                  isActive ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                )}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-semibold truncate w-full text-center",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
+          {/* More button — opens sidebar drawer */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-1 px-2 min-w-0 flex-1"
+          >
+            <div className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground">
+              <Menu className="h-5 w-5" />
+            </div>
+            <span className="text-[10px] font-semibold text-muted-foreground truncate w-full text-center">Más</span>
+          </button>
+        </nav>
       </div>
     </div>
   );
