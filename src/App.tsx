@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { MotionConfig } from "framer-motion";
 import AppLayout from "@/components/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -65,6 +66,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <MotionConfig reducedMotion="user">
         <AuthProvider>
           <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
@@ -146,6 +148,7 @@ const App = () => (
           </Suspense>
           </ErrorBoundary>
         </AuthProvider>
+        </MotionConfig>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
