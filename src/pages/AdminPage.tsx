@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AddMemberDialog from "@/components/admin/AddMemberDialog";
@@ -217,49 +216,46 @@ export default function AdminPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Desktop Table View (lg+) */}
+          {/* Desktop Grid View (lg+) — CSS Grid instead of table for virtual scroll compat */}
           <div className="hidden lg:block glass rounded-2xl overflow-hidden border border-border/50">
             <div ref={desktopListRef} style={{ height: 'calc(100vh - 300px)', minHeight: '400px', overflowY: 'auto' }}>
-              <Table>
-                <TableHeader className="bg-muted/30">
-                  <TableRow className="hover:bg-transparent border-border/50">
-                    <TableHead className="font-bold text-foreground">Nombre</TableHead>
-                    <TableHead className="font-bold text-foreground">Identificación</TableHead>
-                    <TableHead className="font-bold text-foreground">Correo</TableHead>
-                    <TableHead className="font-bold text-foreground">Rol</TableHead>
-                    <TableHead className="font-bold text-foreground">Estado</TableHead>
-                    <TableHead className="font-bold text-foreground">Ingreso</TableHead>
-                    <TableHead className="text-right font-bold text-foreground">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody style={{ display: 'block', position: 'relative', height: `${desktopVirtualizer.getTotalSize()}px` }}>
+              {/* Header row */}
+              <div className="bg-muted/30 sticky top-0 z-10 grid items-center text-sm font-bold text-foreground border-b border-border/50"
+                style={{ gridTemplateColumns: '2fr 1.5fr 2fr 2fr 1.5fr 1.5fr 1fr', padding: '12px 16px' }}>
+                <div>Nombre</div>
+                <div>Identificación</div>
+                <div>Correo</div>
+                <div>Rol</div>
+                <div>Estado</div>
+                <div>Ingreso</div>
+                <div className="text-right">Acciones</div>
+              </div>
+              <div style={{ position: 'relative', height: `${desktopVirtualizer.getTotalSize()}px` }}>
                   {desktopVirtualizer.getVirtualItems().map((virtualItem) => {
                     const m = filtered![virtualItem.index];
                     const roles = m.member_roles?.map((r: { role: string }) => r.role) || [];
                     return (
-                      <TableRow
+                      <div
                         key={m.id}
-                        className="hover:bg-muted/20 border-border/30 transition-colors"
+                        className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                         style={{
-                          display: 'flex',
-                          width: '100%',
                           position: 'absolute',
                           top: 0,
                           left: 0,
+                          right: 0,
                           height: `${virtualItem.size}px`,
                           transform: `translateY(${virtualItem.start}px)`,
+                          display: 'grid',
+                          gridTemplateColumns: '2fr 1.5fr 2fr 2fr 1.5fr 1.5fr 1fr',
+                          alignItems: 'center',
+                          padding: '12px 16px',
+                          fontSize: '0.875rem',
                         }}
                       >
-                        <TableCell className="font-bold text-foreground whitespace-nowrap" style={{ flex: '2', minWidth: 0 }}>
-                          {m.full_name}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-nowrap" style={{ flex: '1.5', minWidth: 0 }}>
-                          {m.identification || "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs" style={{ flex: '2', minWidth: 0 }}>
-                          {m.email || "Sin email"}
-                        </TableCell>
-                        <TableCell style={{ flex: '2', minWidth: 0 }}>
+                        <div className="font-bold text-foreground truncate pr-2">{m.full_name}</div>
+                        <div className="text-muted-foreground truncate pr-2">{m.identification || "\u2014"}</div>
+                        <div className="text-muted-foreground text-xs truncate pr-2">{m.email || "Sin email"}</div>
+                        <div className="truncate pr-2">
                           <div className="flex flex-wrap gap-1">
                             {roles.map((role: string) => (
                               <Badge key={role} variant="outline" className="capitalize text-[9px] px-1.5 py-0 h-4 border-primary/20">
@@ -267,8 +263,8 @@ export default function AdminPage() {
                               </Badge>
                             ))}
                           </div>
-                        </TableCell>
-                        <TableCell style={{ flex: '1.5', minWidth: 0 }}>
+                        </div>
+                        <div className="truncate pr-2">
                           <div className="flex flex-col gap-1">
                             <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-[9px] h-4">
                               {m.status}
@@ -279,11 +275,11 @@ export default function AdminPage() {
                               </Badge>
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-xs whitespace-nowrap" style={{ flex: '1.5', minWidth: 0 }}>
-                          {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
-                        </TableCell>
-                        <TableCell className="text-right" style={{ flex: '1', minWidth: 0 }}>
+                        </div>
+                        <div className="text-muted-foreground text-xs truncate pr-2">
+                          {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "\u2014"}
+                        </div>
+                        <div className="text-right">
                           <div className="flex justify-end gap-2">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -323,12 +319,11 @@ export default function AdminPage() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </div>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </div>
             </div>
           </div>
 
