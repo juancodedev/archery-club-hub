@@ -376,19 +376,19 @@ export default function FinancePage() {
                                             </div>
                                             <div className="flex items-center justify-center gap-1">
                                                 {(entry.receipt_urls?.length ?? 0) > 0 ? (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
                                                         <Receipt className="h-4 w-4" />
                                                         {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
                                                     </Button>
                                                 ) : entry.receipt_url && (
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
-                                                        <Receipt className="h-4 w-4" />
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
+                                                            <Receipt className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
+                                                        <Pencil className="h-4 w-4" />
                                                     </Button>
-                                                )}
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTargetId(entry.id)} disabled={isReadOnlyMode(member)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>

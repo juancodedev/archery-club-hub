@@ -296,11 +296,11 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8"
+                                                className="h-9 w-9"
                                                 onClick={() => handleEdit(division)}
                                                 title={division.is_system && !isSuperAdmin ? "Ver detalles" : "Editar"}
                                             >
-                                                <Pencil className="h-3.5 w-3.5" />
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
 
                                             {(isSuperAdmin || !division.is_system) && (
@@ -308,7 +308,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8"
+                                                        className="h-9 w-9"
                                                         onClick={() => toggleActiveMutation.mutate({ id: division.id, active: division.active })}
                                                         title={division.active ? "Desactivar" : "Activar"}
                                                     >
@@ -317,11 +317,11 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="h-8 w-8"
+                                                        className="h-9 w-9"
                                                         onClick={() => handleDelete(division)}
                                                         title="Eliminar"
                                                     >
-                                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </>
                                             )}

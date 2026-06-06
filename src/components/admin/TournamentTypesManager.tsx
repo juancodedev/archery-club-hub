@@ -267,17 +267,17 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(type)} title={type.is_system && !isSuperAdmin ? "Ver detalles" : "Editar"}>
-                                                <Pencil className="h-3.5 w-3.5" />
+                                            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => handleEdit(type)} title={type.is_system && !isSuperAdmin ? "Ver detalles" : "Editar"}>
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
 
                                             {(isSuperAdmin || !type.is_system) && (
                                                 <>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toggleActiveMutation.mutate({ id: type.id, active: type.active })} title={type.active ? "Desactivar" : "Activar"}>
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => toggleActiveMutation.mutate({ id: type.id, active: type.active })} title={type.active ? "Desactivar" : "Activar"}>
                                                         {type.active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedType(type); setDeleteDialogOpen(true); }} title="Eliminar">
-                                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                                    <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => { setSelectedType(type); setDeleteDialogOpen(true); }} title="Eliminar">
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button>
                                                 </>
                                             )}
