@@ -89,6 +89,61 @@ describe("ProtectedRoute", () => {
         expect(navigate.getAttribute("data-to")).toBe("/dashboard");
     });
 
+    it("should redirect a regular member away from a superAdmin-only route in produccion mode", () => {
+        mockUseAuth.mockReturnValue({
+            session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "2", is_super_admin: false, roles: ["socio"], status: "activo", club_status: "activo", subscription_end_date: null } as unknown as ReturnType<typeof mockUseAuth>["member"],
+            loading: false,
+            signOut: vi.fn(),
+            systemMode: "produccion",
+        } as unknown as ReturnType<typeof mockUseAuth>);
+
+        renderProtectedRoute(true);
+        expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        expect(screen.queryByTestId("protected-content")).toBeNull();
+    });
+
+    it("should redirect a club admin away from a superAdmin-only route in produccion mode", () => {
+        mockUseAuth.mockReturnValue({
+            session: { user: { id: "admin-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "6", is_super_admin: false, roles: ["administrador"], status: "activo", club_status: "activo", subscription_end_date: null } as unknown as ReturnType<typeof mockUseAuth>["member"],
+            loading: false,
+            signOut: vi.fn(),
+            systemMode: "produccion",
+        } as unknown as ReturnType<typeof mockUseAuth>);
+
+        renderProtectedRoute(true);
+        expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        expect(screen.queryByTestId("protected-content")).toBeNull();
+    });
+
+    it("should redirect a session with no member away from a superAdmin-only route in produccion mode", () => {
+        mockUseAuth.mockReturnValue({
+            session: { user: { id: "no-member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: null,
+            loading: false,
+            signOut: vi.fn(),
+            systemMode: "produccion",
+        } as unknown as ReturnType<typeof mockUseAuth>);
+
+        renderProtectedRoute(true);
+        expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        expect(screen.queryByTestId("protected-content")).toBeNull();
+    });
+
+    it("should render a superAdmin-only route for a super admin in produccion mode", () => {
+        mockUseAuth.mockReturnValue({
+            session: { user: { id: "super-admin-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+            member: { id: "1", is_super_admin: true, roles: [] } as unknown as ReturnType<typeof mockUseAuth>["member"],
+            loading: false,
+            signOut: vi.fn(),
+            systemMode: "produccion",
+        } as unknown as ReturnType<typeof mockUseAuth>);
+
+        renderProtectedRoute(true);
+        expect(screen.getByTestId("protected-content")).toBeDefined();
+    });
+
     it("should block access for inactive member in produccion mode", () => {
         mockUseAuth.mockReturnValue({
             session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
