@@ -29,6 +29,10 @@ export default function ProtectedRoute({
     return <>{children}</>;
   }
 
+  if (requireSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (requireArquero) {
     const isArquero = member?.roles?.includes("arquero");
     if (!isArquero) {
@@ -38,9 +42,6 @@ export default function ProtectedRoute({
 
   // If we are in "pruebas" mode, we don't apply access restrictions based on club status
   if (systemMode === 'pruebas') {
-    if (requireSuperAdmin && !member?.is_super_admin) {
-      return <Navigate to="/dashboard" replace />;
-    }
     return <>{children}</>;
   }
 
