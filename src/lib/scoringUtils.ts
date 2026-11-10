@@ -9,18 +9,38 @@ export interface ScoreResult {
 }
 
 /**
+ * Valor de la X según la ronda.
+ * En la ronda IFAA Indoor la X está dentro del 5, vale 5 y solo sirve para desempatar.
+ * En el resto vale 10.
+ * @param ifaaRound - Ronda IFAA del tipo de torneo, o null si no es IFAA
+ */
+export function xValueForRound(ifaaRound?: string | null): number {
+    return ifaaRound === "indoor_standard" ? 5 : 10;
+}
+
+/**
+ * Valores del teclado para las rondas IFAA de anillos (Field, Hunter, Indoor).
+ * @param ifaaRound - Ronda IFAA del tipo de torneo
+ */
+export function ifaaRingKeypad(ifaaRound?: string | null): string[] {
+    if (ifaaRound === "indoor_standard") {
+        return ["X", "5", "4", "3", "2", "1", "M"];
+    }
+    return ["5", "4", "3", "M"];
+}
+
+/**
  * Calcula el valor numérico de una flecha
- * @param value - Valor de la flecha ('X', 'M', '0'-'10')
- * @param isIndoor - Si es torneo indoor (afecta el conteo de X para desempates)
+ * @param value - Valor de la flecha ('X', 'M', '0'-'20')
+ * @param isIndoor - Sin uso, se mantiene por compatibilidad
+ * @param xValue - Puntos de la X (ver xValueForRound)
  * @returns El valor numérico de la flecha
  */
-export function arrowValue(value: string, _isIndoor: boolean = false): number {
+export function arrowValue(value: string, _isIndoor: boolean = false, xValue: number = 10): number {
     const v = value.toUpperCase().trim();
 
     if (v === "X") {
-        // X siempre suma 10 puntos (tanto en Indoor como Outdoor)
-        // La diferencia es solo para efectos de desempate
-        return 10;
+        return xValue;
     }
 
     if (v === "M" || v === "" || v === "-") {
@@ -39,11 +59,13 @@ export function arrowValue(value: string, _isIndoor: boolean = false): number {
  * Calcula el puntaje total de una serie (end)
  * @param arrows - Array de valores de flechas
  * @param isIndoor - Si es torneo indoor
+ * @param xValue - Puntos de la X (ver xValueForRound)
  * @returns Objeto con score total y conteo de X's
  */
 export function calculateEndScore(
     arrows: string[],
-    isIndoor: boolean = false
+    isIndoor: boolean = false,
+    xValue: number = 10
 ): ScoreResult {
     let score = 0;
     let xCount = 0;
@@ -51,7 +73,7 @@ export function calculateEndScore(
 
     arrows.forEach((arrow) => {
         const v = arrow.toUpperCase().trim();
-        score += arrowValue(v, isIndoor);
+        score += arrowValue(v, isIndoor, xValue);
 
         if (v === "X") {
             xCount++;
@@ -68,18 +90,20 @@ export function calculateEndScore(
  * Calcula el puntaje total de todas las series
  * @param ends - Array de arrays de valores de flechas
  * @param isIndoor - Si es torneo indoor
+ * @param xValue - Puntos de la X (ver xValueForRound)
  * @returns Resultado total con score y conteos
  */
 export function calculateTotalScore(
     ends: string[][],
-    isIndoor: boolean = false
+    isIndoor: boolean = false,
+    xValue: number = 10
 ): ScoreResult {
     let totalScore = 0;
     let totalXCount = 0;
     let totalTensCount = 0;
 
     ends.forEach((end) => {
-        const endResult = calculateEndScore(end, isIndoor);
+        const endResult = calculateEndScore(end, isIndoor, xValue);
         totalScore += endResult.score;
         totalXCount += endResult.xCount;
         totalTensCount += endResult.tensCount;
