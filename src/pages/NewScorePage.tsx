@@ -14,7 +14,7 @@ import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as User
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
-import { calculateTotalScore, validateArrowValue } from "@/lib/scoringUtils";
+import { calculateTotalScore, ifaaRingKeypad, validateArrowValue, xValueForRound } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
 import type { TournamentType, MemberBasic } from "@/types/archery";
 import { TRAINING_PRESETS } from "@/lib/archeryConstants";
@@ -275,17 +275,18 @@ export default function NewScorePage() {
   };
 
   // Calculate score using new utilities
-  const scoreResult = calculateTotalScore(ends, isIndoor);
+  const xValue = xValueForRound(ifaaRound);
+  const scoreResult = calculateTotalScore(ends, isIndoor, xValue);
   const grandTotal = scoreResult.score;
   const xCount = scoreResult.xCount;
 
   const endTotal = (end: string[]) => {
-    const result = calculateTotalScore([end], isIndoor);
+    const result = calculateTotalScore([end], isIndoor, xValue);
     return result.score;
   };
 
   const runningTotal = (upTo: number) => {
-    const result = calculateTotalScore(ends.slice(0, upTo + 1), isIndoor);
+    const result = calculateTotalScore(ends.slice(0, upTo + 1), isIndoor, xValue);
     return result.score;
   };
 
@@ -697,7 +698,7 @@ export default function NewScorePage() {
                         Toca el valor de la flecha {activeArrowIdx + 1}:
                       </Label>
                       <div className="grid grid-cols-4 gap-3">
-                        {["5", "4", "3", "M"].map(val => (
+                        {ifaaRingKeypad(ifaaRound).map(val => (
                           <button
                             key={val}
                             type="button"

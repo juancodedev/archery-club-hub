@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { arrowValue, xValueForRound } from "@/lib/scoringUtils";
 import type { MemberBasic } from "@/types/archery";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -401,8 +402,8 @@ export default function ScoresPage() {
                         </thead>
                         <tbody className="divide-y divide-white/5">
                           {(score.ends as string[][])?.map((end: string[], endIdx: number) => {
-                            const arrowVal = (v: string) => v === "X" ? 10 : v === "M" || v === "" ? 0 : Number(v);
-                            const total = end.reduce((s, a) => s + arrowVal(a), 0);
+                            const xValue = xValueForRound(score.tournament_types?.ifaa_round);
+                            const total = end.reduce((s, a) => s + arrowValue(a, false, xValue), 0);
                             return (
                               <tr key={endIdx} className="hover:bg-white/5 transition-colors">
                                 <td className="py-3 px-2 text-muted-foreground font-black text-[10px]">#{endIdx + 1}</td>
@@ -641,11 +642,8 @@ export default function ScoresPage() {
                     const ends = activeExportScore.ends as string[][];
                     if (!ends || ends.length === 0) return null;
 
-                    const arrowVal = (v: string) => {
-                      if (v === "X") return 10;
-                      if (v === "M" || v === "" || v === "0") return 0;
-                      return Number(v) || 0;
-                    };
+                    const xValue = xValueForRound(activeExportScore.tournament_types?.ifaa_round);
+                    const arrowVal = (v: string) => arrowValue(v, false, xValue);
 
                     let cumulativeScore = 0;
                     const endTotals = ends.map((end: string[]) => {

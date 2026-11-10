@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { arrowValue, calculateEndScore, validateArrowValue } from "../scoringUtils";
+import {
+    arrowValue,
+    calculateEndScore,
+    calculateTotalScore,
+    ifaaRingKeypad,
+    validateArrowValue,
+    xValueForRound,
+} from "../scoringUtils";
 
 describe("scoringUtils", () => {
     describe("arrowValue", () => {
@@ -45,6 +52,31 @@ describe("scoringUtils", () => {
             const animalEnd = ["20", "M", "M"];
             const result = calculateEndScore(animalEnd);
             expect(result.score).toBe(20);
+        });
+    });
+
+    describe("IFAA indoor round", () => {
+        it("scores X as 5 and still counts it for ties", () => {
+            const end = ["X", "5", "4", "2", "1"];
+            const result = calculateTotalScore([end], false, xValueForRound("indoor_standard"));
+            expect(result.score).toBe(17);
+            expect(result.xCount).toBe(1);
+        });
+
+        it("keeps X worth 10 outside the indoor round", () => {
+            for (const round of [null, undefined, "field", "hunter"]) {
+                expect(calculateTotalScore([["X", "9"]], false, xValueForRound(round)).score).toBe(19);
+            }
+        });
+
+        it("offers X and 5 down to 1 on the indoor keypad", () => {
+            expect(ifaaRingKeypad("indoor_standard")).toEqual(["X", "5", "4", "3", "2", "1", "M"]);
+        });
+
+        it("keeps 5, 4, 3 and M on the field and hunter keypads", () => {
+            for (const round of ["field", "hunter", "field_expert", "flint_indoor"]) {
+                expect(ifaaRingKeypad(round)).toEqual(["5", "4", "3", "M"]);
+            }
         });
     });
 

@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
+import { arrowValue, xValueForRound } from "@/lib/scoringUtils";
 
 interface MemberScoreHistoryDialogProps {
   memberId: string | null;
@@ -31,7 +32,7 @@ export default function MemberScoreHistoryDialog({
       if (!memberId) return [];
       const { data, error } = await supabase
         .from("scores")
-        .select("*")
+        .select("*, tournament_types(ifaa_round)")
         .eq("member_id", memberId)
         .order("score_date", { ascending: false });
       
@@ -107,8 +108,8 @@ export default function MemberScoreHistoryDialog({
                         </thead>
                         <tbody>
                           {(score.ends as string[][])?.map((end: string[], endIdx: number) => {
-                            const arrowVal = (v: string) => v === "X" ? 10 : v === "M" || v === "" ? 0 : Number(v);
-                            const total = end.reduce((s, a) => s + arrowVal(a), 0);
+                            const xValue = xValueForRound(score.tournament_types?.ifaa_round);
+                            const total = end.reduce((s, a) => s + arrowValue(a, false, xValue), 0);
                             return (
                               <tr key={endIdx} className="border-b border-border/30">
                                 <td className="py-1 px-2 text-foreground font-medium">End {endIdx + 1}</td>
