@@ -23,7 +23,7 @@ function renderPage(member: ReturnType<typeof mockUseAuth>["member"] = mockAdmin
         memberships: [{ club_id: "club-1", club_name: "Club Alpha" }] as unknown as ReturnType<typeof mockUseAuth>["memberships"],
         setActiveMembership: vi.fn(),
         isSuperAdminSubdomain: false,
-    });
+    } as unknown as ReturnType<typeof mockUseAuth>);
 
     const queryClient = new QueryClient({
         defaultOptions: { queries: { retry: false } },

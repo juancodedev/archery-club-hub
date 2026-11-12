@@ -14,85 +14,23 @@ export type Database = {
   }
   public: {
     Tables: {
-      clubs: {
+      _migrations_log: {
         Row: {
-          allow_superadmin_finances: boolean | null
-          billing_cycle: string | null
-          city: string | null
-          contact_email: string | null
-          country: string | null
-          created_at: string | null
-          id: string
-          inscription_fee: number | null
-          logo_url: string | null
-          monthly_fee: number | null
-          monthly_price: number | null
-          name: string
-          plan_id: string | null
-          subscription_end_date: string | null
-          subscription_status: Database["public"]["Enums"]["subscription_status"]
-          financial_support_expires_at: string | null
-          block_type: string | null
-          grace_period_days: number | null
-          last_payment_date: string | null
-          next_payment_due_date: string | null
-          student_limit_override: number | null
+          applied_at: string
+          filename: string
+          id: number
         }
         Insert: {
-          allow_superadmin_finances?: boolean | null
-          billing_cycle?: string | null
-          city?: string | null
-          contact_email?: string | null
-          country?: string | null
-          created_at?: string | null
-          id?: string
-          inscription_fee?: number | null
-          logo_url?: string | null
-          monthly_fee?: number | null
-          monthly_price?: number | null
-          name: string
-          plan_id?: string | null
-          subscription_end_date?: string | null
-          subscription_status?: Database["public"]["Enums"]["subscription_status"]
-          financial_support_expires_at?: string | null
-          block_type?: string | null
-          grace_period_days?: number | null
-          last_payment_date?: string | null
-          next_payment_due_date?: string | null
-          student_limit_override?: number | null
+          applied_at?: string
+          filename: string
+          id?: number
         }
         Update: {
-          allow_superadmin_finances?: boolean | null
-          billing_cycle?: string | null
-          city?: string | null
-          contact_email?: string | null
-          country?: string | null
-          created_at?: string | null
-          id?: string
-          inscription_fee?: number | null
-          logo_url?: string | null
-          monthly_fee?: number | null
-          monthly_price?: number | null
-          name?: string
-          plan_id?: string | null
-          subscription_end_date?: string | null
-          subscription_status?: Database["public"]["Enums"]["subscription_status"]
-          financial_support_expires_at?: string | null
-          block_type?: string | null
-          grace_period_days?: number | null
-          last_payment_date?: string | null
-          next_payment_due_date?: string | null
-          student_limit_override?: number | null
+          applied_at?: string
+          filename?: string
+          id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "clubs_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       club_invoices: {
         Row: {
@@ -134,6 +72,106 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "club_invoices_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          allow_superadmin_finances: boolean | null
+          billing_cycle: string | null
+          block_type: string | null
+          city: string | null
+          contact_email: string | null
+          country: string | null
+          coupon_id: string | null
+          created_at: string
+          financial_support_expires_at: string | null
+          grace_period_days: number | null
+          id: string
+          inscription_fee: number | null
+          last_payment_date: string | null
+          logo_url: string | null
+          monthly_fee: number | null
+          monthly_price: number | null
+          name: string
+          next_payment_due_date: string | null
+          plan_id: string | null
+          student_limit_override: number | null
+          subscription_end_date: string | null
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+        }
+        Insert: {
+          allow_superadmin_finances?: boolean | null
+          billing_cycle?: string | null
+          block_type?: string | null
+          city?: string | null
+          contact_email?: string | null
+          country?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          financial_support_expires_at?: string | null
+          grace_period_days?: number | null
+          id?: string
+          inscription_fee?: number | null
+          last_payment_date?: string | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          monthly_price?: number | null
+          name: string
+          next_payment_due_date?: string | null
+          plan_id?: string | null
+          student_limit_override?: number | null
+          subscription_end_date?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+        }
+        Update: {
+          allow_superadmin_finances?: boolean | null
+          billing_cycle?: string | null
+          block_type?: string | null
+          city?: string | null
+          contact_email?: string | null
+          country?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          financial_support_expires_at?: string | null
+          grace_period_days?: number | null
+          id?: string
+          inscription_fee?: number | null
+          last_payment_date?: string | null
+          logo_url?: string | null
+          monthly_fee?: number | null
+          monthly_price?: number | null
+          name?: string
+          next_payment_due_date?: string | null
+          plan_id?: string | null
+          student_limit_override?: number | null
+          subscription_end_date?: string | null
+          subscription_status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clubs_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clubs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -186,6 +224,78 @@ export type Database = {
             columns: ["member_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          discount_amount: number | null
+          discount_percent: number | null
+          id: string
+          max_uses: number | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          max_uses?: number | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          id?: string
+          max_uses?: number | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      custom_roles: {
+        Row: {
+          club_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          club_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          club_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_roles_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_roles_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
             referencedColumns: ["id"]
           },
         ]
@@ -308,25 +418,28 @@ export type Database = {
       extra_charges: {
         Row: {
           amount: number
-          charge_date: string | null
+          charge_date: string
           club_id: string
           created_at: string | null
+          description: string | null
           id: string
           name: string
         }
         Insert: {
           amount: number
-          charge_date?: string | null
+          charge_date?: string
           club_id: string
           created_at?: string | null
+          description?: string | null
           id?: string
           name: string
         }
         Update: {
           amount?: number
-          charge_date?: string | null
+          charge_date?: string
           club_id?: string
           created_at?: string | null
+          description?: string | null
           id?: string
           name?: string
         }
@@ -340,6 +453,45 @@ export type Database = {
           },
           {
             foreignKeyName: "extra_charges_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_categories: {
+        Row: {
+          club_id: string
+          created_at: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_categories_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_categories_club_id_fkey"
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "public_clubs_view"
@@ -361,6 +513,7 @@ export type Database = {
           payment_month: number | null
           payment_year: number | null
           receipt_url: string | null
+          receipt_urls: Json | null
           type: string
         }
         Insert: {
@@ -376,6 +529,7 @@ export type Database = {
           payment_month?: number | null
           payment_year?: number | null
           receipt_url?: string | null
+          receipt_urls?: Json | null
           type: string
         }
         Update: {
@@ -391,6 +545,7 @@ export type Database = {
           payment_month?: number | null
           payment_year?: number | null
           receipt_url?: string | null
+          receipt_urls?: Json | null
           type?: string
         }
         Relationships: [
@@ -470,11 +625,11 @@ export type Database = {
           email: string | null
           expires_at: string
           id: string
+          invitation_type: string | null
+          max_uses: number | null
+          title: string | null
           token: string
           used_at: string | null
-          max_uses: number | null
-          invitation_type: string | null
-          title: string | null
         }
         Insert: {
           club_id: string
@@ -483,11 +638,11 @@ export type Database = {
           email?: string | null
           expires_at?: string
           id?: string
+          invitation_type?: string | null
+          max_uses?: number | null
+          title?: string | null
           token?: string
           used_at?: string | null
-          max_uses?: number | null
-          invitation_type?: string | null
-          title?: string | null
         }
         Update: {
           club_id?: string
@@ -496,11 +651,11 @@ export type Database = {
           email?: string | null
           expires_at?: string
           id?: string
+          invitation_type?: string | null
+          max_uses?: number | null
+          title?: string | null
           token?: string
           used_at?: string | null
-          max_uses?: number | null
-          invitation_type?: string | null
-          title?: string | null
         }
         Relationships: [
           {
@@ -529,21 +684,21 @@ export type Database = {
       member_roles: {
         Row: {
           club_id: string
-          created_at: string | null
+          created_at: string
           id: string
           member_id: string
           role: Database["public"]["Enums"]["club_role"]
         }
         Insert: {
           club_id: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           member_id: string
           role: Database["public"]["Enums"]["club_role"]
         }
         Update: {
           club_id?: string
-          created_at?: string | null
+          created_at?: string
           id?: string
           member_id?: string
           role?: Database["public"]["Enums"]["club_role"]
@@ -577,14 +732,14 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           billing_day: number | null
-          club_id: string | null
-          created_at: string | null
+          club_id: string
+          created_at: string
           date_of_birth: string | null
           display_name: string | null
           email: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
-          enrollment_date: string | null
+          enrollment_date: string
           full_name: string
           grace_days: number | null
           guardian_email: string | null
@@ -593,29 +748,31 @@ export type Database = {
           id: string
           identification: string | null
           ifaa_number: string | null
-          is_super_admin: boolean | null
+          invitation_id: string | null
+          is_super_admin: boolean
           medical_history: string | null
+          member_type: string | null
           observations: string | null
           phone: string | null
           shirt_gender: string | null
           shirt_size: string | null
-          status: Database["public"]["Enums"]["member_status"] | null
+          status: Database["public"]["Enums"]["member_status"]
+          updated_at: string
           user_id: string | null
           windbreaker_size: string | null
-          invitation_id: string | null
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
           billing_day?: number | null
-          club_id?: string | null
-          created_at?: string | null
+          club_id: string
+          created_at?: string
           date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
-          enrollment_date?: string | null
+          enrollment_date?: string
           full_name: string
           grace_days?: number | null
           guardian_email?: string | null
@@ -624,13 +781,16 @@ export type Database = {
           id?: string
           identification?: string | null
           ifaa_number?: string | null
-          is_super_admin?: boolean | null
+          invitation_id?: string | null
+          is_super_admin?: boolean
           medical_history?: string | null
+          member_type?: string | null
           observations?: string | null
           phone?: string | null
           shirt_gender?: string | null
           shirt_size?: string | null
-          status?: Database["public"]["Enums"]["member_status"] | null
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
           user_id?: string | null
           windbreaker_size?: string | null
         }
@@ -638,14 +798,14 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           billing_day?: number | null
-          club_id?: string | null
-          created_at?: string | null
+          club_id?: string
+          created_at?: string
           date_of_birth?: string | null
           display_name?: string | null
           email?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
-          enrollment_date?: string | null
+          enrollment_date?: string
           full_name?: string
           grace_days?: number | null
           guardian_email?: string | null
@@ -654,13 +814,16 @@ export type Database = {
           id?: string
           identification?: string | null
           ifaa_number?: string | null
-          is_super_admin?: boolean | null
+          invitation_id?: string | null
+          is_super_admin?: boolean
           medical_history?: string | null
+          member_type?: string | null
           observations?: string | null
           phone?: string | null
           shirt_gender?: string | null
           shirt_size?: string | null
-          status?: Database["public"]["Enums"]["member_status"] | null
+          status?: Database["public"]["Enums"]["member_status"]
+          updated_at?: string
           user_id?: string | null
           windbreaker_size?: string | null
         }
@@ -679,6 +842,13 @@ export type Database = {
             referencedRelation: "public_clubs_view"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "members_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "member_invitations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       plans: {
@@ -688,6 +858,7 @@ export type Database = {
           display_order: number | null
           features: Json | null
           id: string
+          interval: string
           is_active: boolean | null
           name: string
           price: number
@@ -700,6 +871,7 @@ export type Database = {
           display_order?: number | null
           features?: Json | null
           id?: string
+          interval?: string
           is_active?: boolean | null
           name: string
           price: number
@@ -712,6 +884,7 @@ export type Database = {
           display_order?: number | null
           features?: Json | null
           id?: string
+          interval?: string
           is_active?: boolean | null
           name?: string
           price?: number
@@ -730,6 +903,7 @@ export type Database = {
           ends: Json
           event_name: string | null
           id: string
+          ifaa_class: string | null
           member_id: string
           old_division: string | null
           old_target_type: string | null
@@ -739,7 +913,6 @@ export type Database = {
           tournament_type_id: string | null
           training_session_id: string | null
           x_count: number | null
-          ifaa_class: string | null
         }
         Insert: {
           club_id: string
@@ -750,6 +923,7 @@ export type Database = {
           ends?: Json
           event_name?: string | null
           id?: string
+          ifaa_class?: string | null
           member_id: string
           old_division?: string | null
           old_target_type?: string | null
@@ -759,7 +933,6 @@ export type Database = {
           tournament_type_id?: string | null
           training_session_id?: string | null
           x_count?: number | null
-          ifaa_class?: string | null
         }
         Update: {
           club_id?: string
@@ -770,6 +943,7 @@ export type Database = {
           ends?: Json
           event_name?: string | null
           id?: string
+          ifaa_class?: string | null
           member_id?: string
           old_division?: string | null
           old_target_type?: string | null
@@ -779,7 +953,6 @@ export type Database = {
           tournament_type_id?: string | null
           training_session_id?: string | null
           x_count?: number | null
-          ifaa_class?: string | null
         }
         Relationships: [
           {
@@ -826,24 +999,6 @@ export type Database = {
           },
         ]
       }
-      super_admins: {
-        Row: {
-          created_at: string | null
-          id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       system_settings: {
         Row: {
           annual_discount_percentage: number | null
@@ -871,6 +1026,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tournament_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          member_id: string
+          notes: string | null
+          status: string
+          tournament_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          status?: string
+          tournament_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          status?: string
+          tournament_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_registrations_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_registrations_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tournament_types: {
         Row: {
           active: boolean
@@ -884,13 +1084,13 @@ export type Database = {
           distance_yards: number | null
           ends_per_round: number
           id: string
+          ifaa_round: Database["public"]["Enums"]["ifaa_round_type"] | null
           is_indoor: boolean
           is_system: boolean
           name: string
           scoring_zones: Json | null
           target_size_cm: number | null
           tournament_format: string | null
-          ifaa_round: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Insert: {
           active?: boolean
@@ -904,13 +1104,13 @@ export type Database = {
           distance_yards?: number | null
           ends_per_round?: number
           id?: string
+          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
           is_indoor?: boolean
           is_system?: boolean
           name: string
           scoring_zones?: Json | null
           target_size_cm?: number | null
           tournament_format?: string | null
-          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Update: {
           active?: boolean
@@ -924,13 +1124,13 @@ export type Database = {
           distance_yards?: number | null
           ends_per_round?: number
           id?: string
+          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
           is_indoor?: boolean
           is_system?: boolean
           name?: string
           scoring_zones?: Json | null
           target_size_cm?: number | null
           tournament_format?: string | null
-          ifaa_round?: Database["public"]["Enums"]["ifaa_round_type"] | null
         }
         Relationships: [
           {
@@ -945,6 +1145,138 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tournaments: {
+        Row: {
+          club_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string
+          id: string
+          location: string | null
+          name: string
+          start_date: string
+          tournament_type_id: string | null
+        }
+        Insert: {
+          club_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          location?: string | null
+          name: string
+          start_date: string
+          tournament_type_id?: string | null
+        }
+        Update: {
+          club_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          location?: string | null
+          name?: string
+          start_date?: string
+          tournament_type_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournaments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournaments_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournaments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournaments_tournament_type_id_fkey"
+            columns: ["tournament_type_id"]
+            isOneToOne: false
+            referencedRelation: "tournament_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_attendance: {
+        Row: {
+          attended_at: string
+          club_id: string
+          created_at: string
+          distance_meters: number | null
+          id: string
+          ip_address: string | null
+          latitude: number | null
+          longitude: number | null
+          training_id: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attended_at?: string
+          club_id: string
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          training_id: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attended_at?: string
+          club_id?: string
+          created_at?: string
+          distance_meters?: number | null
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          training_id?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_attendance_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_attendance_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_attendance_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
             referencedColumns: ["id"]
           },
         ]
@@ -1102,6 +1434,57 @@ export type Database = {
           },
         ]
       }
+      trainings: {
+        Row: {
+          allowed_radius_meters: number
+          club_id: string
+          created_at: string
+          ends_at: string
+          id: string
+          location_lat: number
+          location_lng: number
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          allowed_radius_meters?: number
+          club_id: string
+          created_at?: string
+          ends_at: string
+          id?: string
+          location_lat: number
+          location_lng: number
+          starts_at: string
+          title: string
+        }
+        Update: {
+          allowed_radius_meters?: number
+          club_id?: string
+          created_at?: string
+          ends_at?: string
+          id?: string
+          location_lat?: number
+          location_lng?: number
+          starts_at?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "public_clubs_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_clubs_view: {
@@ -1164,7 +1547,7 @@ export type Database = {
         Returns: undefined
       }
       admin_reset_user_password: {
-        Args: { p_user_id: string; p_club_id: string; p_new_password?: string }
+        Args: { p_club_id: string; p_new_password?: string; p_user_id: string }
         Returns: string
       }
       auto_update_member_divisions: {
@@ -1175,13 +1558,31 @@ export type Database = {
           old_division_name: string
         }[]
       }
+      calculate_distance: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
       calculate_division_by_age: {
         Args: { p_birth_date: string; p_bow_type?: string; p_gender?: string }
         Returns: string
       }
+      can_access_financials: {
+        Args: { p_club_id: string; p_user_id: string }
+        Returns: boolean
+      }
       can_view_club_finances: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
+      }
+      check_in_attendance: {
+        Args: {
+          p_ip_address: string
+          p_latitude: number
+          p_longitude: number
+          p_training_id: string
+          p_user_agent: string
+        }
+        Returns: Json
       }
       create_member_account_by_admin: {
         Args: {
@@ -1217,19 +1618,43 @@ export type Database = {
           used_at: string
         }[]
       }
+      get_member_for_user: {
+        Args: { p_user_id: string }
+        Returns: {
+          member_club_id: string
+          member_id: string
+          member_status: Database["public"]["Enums"]["member_status"]
+        }[]
+      }
+      get_member_id_by_user: { Args: { p_user_id: string }; Returns: string }
+      get_todays_birthdays: {
+        Args: { p_club_id: string }
+        Returns: {
+          avatar_url: string
+          date_of_birth: string
+          full_name: string
+          id: string
+        }[]
+      }
+      get_user_clubs: {
+        Args: { p_user_id: string }
+        Returns: {
+          club_id: string
+        }[]
+      }
       has_club_role:
-      | {
-        Args: {
-          p_club_id: string
-          p_role: Database["public"]["Enums"]["club_role"]
-          p_user_id: string
-        }
-        Returns: boolean
-      }
-      | {
-        Args: { p_club_id: string; p_role: string; p_user_id: string }
-        Returns: boolean
-      }
+        | {
+            Args: {
+              p_club_id: string
+              p_role: Database["public"]["Enums"]["club_role"]
+              p_user_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: { p_club_id: string; p_role: string; p_user_id: string }
+            Returns: boolean
+          }
       is_active_member: {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
@@ -1238,50 +1663,59 @@ export type Database = {
         Args: { p_club_id: string; p_user_id: string }
         Returns: boolean
       }
+      is_club_overdue: { Args: { p_club_id: string }; Returns: boolean }
       is_member_paid_current_month: {
         Args: { p_member_id: string }
         Returns: boolean
       }
       is_super_admin: { Args: { p_user_id: string }; Returns: boolean }
       register_club:
-      | {
+        | {
+            Args: {
+              p_admin_name: string
+              p_city: string
+              p_club_name: string
+              p_contact_email: string
+              p_country: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_admin_name: string
+              p_city: string
+              p_club_name: string
+              p_contact_email: string
+              p_country: string
+              p_monthly_price?: number
+              p_plan_id?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+      update_club_subscription_after_payment: {
         Args: {
-          p_admin_name: string
-          p_city: string
-          p_club_name: string
-          p_contact_email: string
-          p_country: string
-          p_user_id: string
+          p_club_id: string
+          p_last_payment_date: string
+          p_next_payment_due_date: string
+          p_plan_id: string
+          p_subscription_end_date: string
         }
-        Returns: string
-      }
-      | {
-        Args: {
-          p_admin_name: string
-          p_city: string
-          p_club_name: string
-          p_contact_email: string
-          p_country: string
-          p_monthly_price?: number
-          p_plan_id?: string
-          p_user_id: string
-        }
-        Returns: string
+        Returns: undefined
       }
     }
     Enums: {
       club_role:
-        | "administrador"
-        | "presidente"
-        | "entrenador"
         | "arquero"
         | "socio"
+        | "entrenador"
+        | "presidente"
+        | "administrador"
         | "secretaria"
         | "tesorero"
-        | "alumno";
-      member_status: "activo" | "inactivo";
-      subscription_status: "activo" | "pendiente" | "bloqueado";
-      training_type: "libre" | "estandar"
+        | "alumno"
+        | "gestor_torneos"
       ifaa_round_type:
         | "field"
         | "hunter"
@@ -1292,6 +1726,9 @@ export type Database = {
         | "field_expert"
         | "indoor_standard"
         | "flint_indoor"
+      member_status: "activo" | "inactivo"
+      subscription_status: "activo" | "pendiente" | "bloqueado"
+      training_type: "libre" | "estandar"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1305,132 +1742,145 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
     Enums: {
       club_role: [
-        "administrador",
-        "presidente",
-        "entrenador",
         "arquero",
         "socio",
+        "entrenador",
+        "presidente",
+        "administrador",
         "secretaria",
         "tesorero",
         "alumno",
+        "gestor_torneos",
+      ],
+      ifaa_round_type: [
+        "field",
+        "hunter",
+        "animal_2d",
+        "animal_3d",
+        "3d_hunting",
+        "3d_standard",
+        "field_expert",
+        "indoor_standard",
+        "flint_indoor",
       ],
       member_status: ["activo", "inactivo"],
       subscription_status: ["activo", "pendiente", "bloqueado"],
+      training_type: ["libre", "estandar"],
     },
   },
 } as const
