@@ -61,7 +61,7 @@ function Probe() {
   if (loading) return <p>loading</p>;
   return (
     <p data-testid="member">
-      {member ? `${member.full_name} (${memberships.length})` : "no member"}
+      {member ? `${member.full_name} (${memberships.length})` : `no member (${memberships.length})`}
     </p>
   );
 }
@@ -104,7 +104,7 @@ describe("AuthProvider member loading", () => {
       state.authCallback?.("USER_UPDATED", { user: { id: "user-1", email: "ana@club.test" } });
     });
 
-    expect(screen.getByTestId("member").textContent).toBe("no member");
+    expect(screen.getByTestId("member").textContent).toBe("no member (0)");
   });
 
   it("keeps the loaded member when a later refresh throws", async () => {
@@ -130,12 +130,27 @@ describe("AuthProvider member loading", () => {
     });
 
     expect(state.membersResults).toHaveLength(0);
-    expect(screen.getByTestId("member").textContent).toBe("no member");
+    expect(screen.getByTestId("member").textContent).toBe("no member (0)");
   });
 
   it("finishes loading without a member when the first query fails", async () => {
     state.membersResults = [failed];
     render(<AuthProvider><Probe /></AuthProvider>);
-    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("no member"));
+    // Probe renders the member line only once loading is over.
+    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("no member (0)"));
+    expect(state.membersResults).toHaveLength(0);
+  });
+
+  it("does not keep another user's member when the query throws after an account switch", async () => {
+    state.membersResults = [ok([MEMBER_ROW]), "throw"];
+    render(<AuthProvider><Probe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("Ana Arquera (1)"));
+
+    await act(async () => {
+      state.authCallback?.("SIGNED_IN", { user: { id: "user-2", email: "bruno@club.test" } });
+    });
+
+    expect(state.membersResults).toHaveLength(0);
+    expect(screen.getByTestId("member").textContent).toBe("no member (0)");
   });
 });
