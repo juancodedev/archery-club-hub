@@ -29,7 +29,7 @@ vi.mock("@/hooks/use-toast", () => ({
 const renderPage = (token = "test-token") => {
     window.history.pushState({}, "Test page", `/join?token=${token}`);
     return render(
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BrowserRouter>
             <InvitationRegisterPage />
         </BrowserRouter>
     );
