@@ -2,9 +2,11 @@ import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import roundsMigration from "../../supabase/migrations/20260518221000_add_ifaa_rounds.sql?raw";
 import migration from "../../supabase/migrations/20261109140000_ifaa_indoor_scoring.sql?raw";
+import fieldExpertMigration from "../../supabase/migrations/20261111120000_ifaa_field_expert_scoring.sql?raw";
 
 const INDOOR = "dddddddd-0000-4000-8000-000000000001";
 const FIELD = "dddddddd-0000-4000-8000-000000000002";
+const FIELD_EXPERT = "dddddddd-0000-4000-8000-000000000004";
 const LEGACY_INDOOR = "dddddddd-0000-4000-8000-000000000003";
 const MEMBER = "eeeeeeee-0000-4000-8000-000000000001";
 
@@ -53,10 +55,12 @@ describe("IFAA score validation trigger", () => {
       `INSERT INTO public.tournament_types (id, name, arrows_per_end, ifaa_round) VALUES
         ($1, 'IFAA Indoor Round', 5, 'indoor_standard'),
         ($2, 'IFAA Field Round', 4, 'field'),
-        ($3, 'IFAA Indoor Standard Round', 4, 'indoor_standard')`,
-      [INDOOR, FIELD, LEGACY_INDOOR],
+        ($3, 'IFAA Indoor Standard Round', 4, 'indoor_standard'),
+        ($4, 'IFAA Field Expert Round', 4, 'field_expert')`,
+      [INDOOR, FIELD, LEGACY_INDOOR, FIELD_EXPERT],
     );
     await db.exec(migration);
+    await db.exec(fieldExpertMigration);
     await db.exec(TRIGGER);
   }, 60_000);
 
@@ -104,6 +108,30 @@ describe("IFAA score validation trigger", () => {
 
     it("leaves field types at four arrows per end", async () => {
       expect(await arrowsPerEnd(FIELD)).toBe(4);
+    });
+  });
+
+  describe("field expert round", () => {
+    it("accepts an end of four arrows scored from 5 down to 1, with X and misses", async () => {
+      await insertScore(FIELD_EXPERT, [
+        ["X", "5", "4", "3"],
+        ["2", "1", "M", ""],
+      ]);
+      expect(await scoreCount()).toBe(1);
+    });
+
+    it("rejects an end of five arrows", async () => {
+      await expect(insertScore(FIELD_EXPERT, [["5", "4", "3", "2", "1"]])).rejects.toThrow(
+        "En ronda Field Experto, el blanco 1 debe tener exactamente 4 flechas.",
+      );
+      expect(await scoreCount()).toBe(0);
+    });
+
+    it("rejects a value outside the field expert face", async () => {
+      await expect(insertScore(FIELD_EXPERT, [["6", "5", "4", "3"]])).rejects.toThrow(
+        "Valor de flecha inválido (6 en blanco 1, flecha 1). Valores válidos: X, 5, 4, 3, 2, 1, M.",
+      );
+      expect(await scoreCount()).toBe(0);
     });
   });
 
