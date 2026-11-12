@@ -250,7 +250,7 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <Send className="h-3 w-3 text-emerald-400" />
+                                                                    <Send className="h-3 w-3 text-primary" />
                                                                     {inv.email || "Invitación directa"}
                                                                 </>
                                                             )}

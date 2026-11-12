@@ -269,7 +269,7 @@ export default function ReportsPage() {
       {/* Tabs Selector */}
       <div className="flex justify-center sm:justify-start">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
-          <TabsList className="glass border-white/5 p-1 h-12">
+          <TabsList className="glass border-border p-1 h-12">
             <TabsTrigger value="performance" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground gap-2 h-10 px-6 rounded-lg transition-all">
               <Target className="h-4 w-4" /> Rendimiento
             </TabsTrigger>
@@ -281,10 +281,10 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters Panel */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-white/5 overflow-hidden shadow-xl">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-2xl border-border overflow-hidden shadow-xl">
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full p-4 flex items-center justify-between text-sm font-bold bg-white/5 hover:bg-white/10 transition-colors"
+          className="w-full p-4 flex items-center justify-between text-sm font-bold bg-muted/50 hover:bg-muted transition-colors"
         >
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-primary" /> Parámetros de Análisis
@@ -293,7 +293,7 @@ export default function ReportsPage() {
         </button>
 
         {isFiltersOpen && (
-          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/5">
+          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-border">
             {isSuperAdmin && (
               <div className="space-y-2">
                 <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Club</Label>
@@ -342,9 +342,9 @@ export default function ReportsPage() {
                 { icon: Users, label: "Miembros", value: totalMembers, color: "text-primary" },
                 { icon: Target, label: "Registros", value: totalScores, color: "text-amber-500" },
                 { icon: TrendingUp, label: "Promedio", value: avgScore, color: "text-emerald-500" },
-                { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-400" },
+                { icon: BarChart3, label: "Record", value: bestScore, color: "text-indigo-600 dark:text-indigo-400" },
               ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
+                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-border relative overflow-hidden shadow-lg">
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>
                     <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
@@ -356,7 +356,7 @@ export default function ReportsPage() {
 
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {/* Bar: member performance */}
-              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+              <div className="glass rounded-3xl p-5 border-border shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
                   <BarChart3 className="h-5 w-5 text-primary" />
                   <h3 className="font-display font-bold text-foreground">Top 10 Rendimiento</h3>
@@ -382,7 +382,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Line: progress trend */}
-              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+              <div className="glass rounded-3xl p-5 border-border shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp className="h-5 w-5 text-primary" />
                   <h3 className="font-display font-bold text-foreground">Tendencia de Progreso</h3>
@@ -406,7 +406,7 @@ export default function ReportsPage() {
 
               {/* Status & Role Distribution */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
-                <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="glass rounded-3xl p-5 border-border shadow-xl">
                   <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Estado de Miembros</h3>
                   <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -419,7 +419,7 @@ export default function ReportsPage() {
                     </ResponsiveContainer>
                   </div>
                 </div>
-                <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+                <div className="glass rounded-3xl p-5 border-border shadow-xl">
                   <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Distribución de Roles</h3>
                   <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
@@ -451,7 +451,7 @@ export default function ReportsPage() {
                 { icon: Calendar, label: "Total Sesiones", value: attendanceRaw?.length || 0, color: "text-primary" },
                 { icon: Users, label: "Presentes", value: attendanceStats.count, color: "text-amber-500" },
               ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-white/5 relative overflow-hidden shadow-lg">
+                <div key={label} className="glass rounded-2xl p-4 sm:p-5 flex flex-col justify-between h-28 sm:h-32 border-border relative overflow-hidden shadow-lg">
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>
                     <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
@@ -463,7 +463,7 @@ export default function ReportsPage() {
 
             <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {/* Member Attendance Bar */}
-              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+              <div className="glass rounded-3xl p-5 border-border shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
                   <Users className="h-5 w-5 text-amber-500" />
                   <h3 className="font-display font-bold text-foreground">Ranking de Asistencia (%)</h3>
@@ -492,7 +492,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Attendance Trend Line */}
-              <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
+              <div className="glass rounded-3xl p-5 border-border shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp className="h-5 w-5 text-emerald-500" />
                   <h3 className="font-display font-bold text-foreground">Evolución de Asistencia (%)</h3>
@@ -515,9 +515,9 @@ export default function ReportsPage() {
               </div>
 
               {/* Attendance by Division */}
-              <div className="lg:col-span-2 glass rounded-3xl p-5 border-white/5 shadow-xl">
+              <div className="lg:col-span-2 glass rounded-3xl p-5 border-border shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
-                  <PieChartIcon className="h-5 w-5 text-indigo-400" />
+                  <PieChartIcon className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                   <h3 className="font-display font-bold text-foreground font-display">Asistencia por División (%)</h3>
                 </div>
                 <div className="h-[250px] w-full">

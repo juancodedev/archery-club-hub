@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const statCards = [
     { icon: Target, label: "Mis Puntajes", value: totalScores || 0, color: "text-primary", to: "/scores" },
     { icon: TrendingUp, label: "Record Personal", value: bestScore, color: "text-amber-500", to: "/scores" },
-    { icon: Calendar, label: "Sesiones Club", value: sessionCount || 0, color: "text-indigo-400", to: "/training" },
+    { icon: Calendar, label: "Sesiones Club", value: sessionCount || 0, color: "text-indigo-600 dark:text-indigo-400", to: "/training" },
     { icon: Award, label: "Rol Actual", value: member?.roles[0] || "Arquero", color: "text-emerald-500", to: "/profile" },
   ];
 
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Link to={to} className="glass rounded-[2rem] p-5 sm:p-6 block hover:bg-muted/30 transition-all active:scale-[0.97] shadow-xl shadow-black/5 border-white/5 relative overflow-hidden group">
+            <Link to={to} className="glass rounded-[2rem] p-5 sm:p-6 block hover:bg-muted/30 transition-all active:scale-[0.97] shadow-xl shadow-black/5 border-border relative overflow-hidden group">
               <div className={cn("absolute -top-6 -right-6 h-20 w-20 rounded-full opacity-5 transition-opacity group-hover:opacity-10 bg-current", color.replace('text-', 'bg-'))} />
               <Icon className={cn("h-6 w-6 mb-4", color)} />
               <p className="text-2xl sm:text-3xl font-display font-black text-foreground truncate tabular-nums">{value}</p>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="glass rounded-2xl p-4 sm:p-5 flex items-center justify-between border-white/5 shadow-sm hover:border-primary/20 transition-colors cursor-default"
+                className="glass rounded-2xl p-4 sm:p-5 flex items-center justify-between border-border shadow-sm hover:border-primary/20 transition-colors cursor-default"
               >
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/10">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="glass rounded-3xl p-12 text-center border-dashed border-2 border-white/5">
+          <div className="glass rounded-3xl p-12 text-center border-dashed border-2 border-border">
             <Target className="h-12 w-12 mx-auto mb-4 text-muted-foreground/20 animate-pulse" />
             <p className="text-sm text-muted-foreground font-medium">Aún no hay actividad de rendimiento en tu servidor.</p>
             <Link to="/scores/new">

@@ -271,7 +271,7 @@ export default function AttendanceCheckinPage() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -15, scale: 0.98 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="glass max-w-sm w-full p-8 rounded-3xl text-center space-y-6 border border-white/10 shadow-2xl relative z-10"
+          className="glass max-w-sm w-full p-8 rounded-3xl text-center space-y-6 border border-border shadow-2xl relative z-10"
         >
           {/* Header Branding */}
           <div className="flex flex-col items-center gap-1.5">
@@ -286,7 +286,7 @@ export default function AttendanceCheckinPage() {
             </p>
           </div>
 
-          <div className="border-t border-white/5 my-4" />
+          <div className="border-t border-border my-4" />
 
           {/* 1. STATE: Checking Auth */}
           {status === "checking_auth" && (
@@ -362,7 +362,7 @@ export default function AttendanceCheckinPage() {
               </div>
 
               {userLat !== null && userLng !== null && (
-                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                <div className="w-full rounded-2xl overflow-hidden border border-border shadow-lg h-36 relative mt-1">
                   <iframe
                     title="Ubicación de Check-in"
                     width="100%"
@@ -406,7 +406,7 @@ export default function AttendanceCheckinPage() {
               </div>
 
               {activeTraining?.location_lat && activeTraining?.location_lng && (
-                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                <div className="w-full rounded-2xl overflow-hidden border border-border shadow-lg h-36 relative mt-1">
                   <iframe
                     title="Ubicación del Entrenamiento"
                     width="100%"
@@ -454,7 +454,7 @@ export default function AttendanceCheckinPage() {
               </div>
 
               {userLat !== null && userLng !== null && (
-                <div className="w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg h-36 relative mt-1">
+                <div className="w-full rounded-2xl overflow-hidden border border-border shadow-lg h-36 relative mt-1">
                   <iframe
                     title="Tu Ubicación actual"
                     width="100%"
@@ -472,7 +472,7 @@ export default function AttendanceCheckinPage() {
               <div className="flex gap-3">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-11 font-bold rounded-xl border-white/10 hover:bg-white/5" 
+                  className="flex-1 h-11 font-bold rounded-xl border-border hover:bg-muted" 
                   onClick={() => startCheckinFlow()}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" /> Reintentar
@@ -523,7 +523,7 @@ export default function AttendanceCheckinPage() {
                 {errorMessage || "No pudimos acceder a tu ubicación física para el check-in."}
               </p>
 
-              <div className="border-t border-white/5 pt-4 space-y-3">
+              <div className="border-t border-border pt-4 space-y-3">
                 <Button 
                   className="w-full h-11 font-bold rounded-xl"
                   onClick={() => {

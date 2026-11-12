@@ -250,7 +250,7 @@ export default function TrainingSessionList({
         return (
           <div
             key={session.id}
-            className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-white/5 active:scale-[0.99] transition-transform"
+            className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-border active:scale-[0.99] transition-transform"
           >
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="space-y-2 flex-1">
@@ -347,7 +347,7 @@ export default function TrainingSessionList({
                     return null;
                   return (
                     <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
-                      <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
+                      <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20 font-mono font-bold">
                         🏠{" "}
                         {rc.indoorTargetType === "5spots"
                           ? "5 Spots"
@@ -396,7 +396,7 @@ export default function TrainingSessionList({
                         ) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-white/5 text-xs"
+                            className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-border text-xs"
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-black text-primary">

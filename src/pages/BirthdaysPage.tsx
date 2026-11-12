@@ -144,7 +144,7 @@ export default function BirthdaysPage() {
                             </motion.div>
                         ))
                     ) : (
-                        <div className="sm:col-span-2 lg:col-span-3 glass rounded-[2rem] p-12 text-center border-dashed border-2 border-white/5">
+                        <div className="sm:col-span-2 lg:col-span-3 glass rounded-[2rem] p-12 text-center border-dashed border-2 border-border">
                             <Cake className="h-12 w-12 mx-auto mb-4 text-muted-foreground/20" />
                             <p className="text-sm text-muted-foreground font-medium">No hay cumpleaños registrados para hoy.</p>
                         </div>
@@ -184,8 +184,8 @@ export default function BirthdaysPage() {
                 )}
             </div>
 
-            <div className="glass rounded-[2rem] overflow-hidden border-white/5">
-                <div className="p-6 flex items-center justify-between bg-muted/20 border-b border-white/5">
+            <div className="glass rounded-[2rem] overflow-hidden border-border">
+                <div className="p-6 flex items-center justify-between bg-muted/20 border-b border-border">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-display font-bold text-foreground">
                             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -204,7 +204,7 @@ export default function BirthdaysPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-7 border-b border-white/5 bg-muted/10">
+                <div className="grid grid-cols-7 border-b border-border bg-muted/10">
                     {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map(day => (
                         <div key={day} className="py-3 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">
                             {day}
@@ -214,7 +214,7 @@ export default function BirthdaysPage() {
 
                 <div className="grid grid-cols-7">
                     {Array.from({ length: daysInMonth[0].getDay() }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-32 sm:h-40 border-r border-b border-white/5 bg-muted/5 opacity-50" />
+                        <div key={`empty-${i}`} className="h-32 sm:h-40 border-r border-b border-border bg-muted/5 opacity-50" />
                     ))}
                     {daysInMonth.map(date => {
                         const day = date.getDate();
@@ -225,7 +225,7 @@ export default function BirthdaysPage() {
                             <div
                                 key={day}
                                 className={cn(
-                                    "h-32 sm:h-40 border-r border-b border-white/5 p-2 transition-colors relative group",
+                                    "h-32 sm:h-40 border-r border-b border-border p-2 transition-colors relative group",
                                     active ? "bg-primary/5" : "hover:bg-muted/10"
                                 )}
                             >
@@ -243,7 +243,7 @@ export default function BirthdaysPage() {
                                             initial={{ opacity: 0, x: -5 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.05 }}
-                                            className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-white/5 hover:border-primary/30 transition-colors"
+                                            className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-border hover:border-primary/30 transition-colors"
                                         >
                                             <Avatar className="h-5 w-5 border border-primary/20">
                                                 <AvatarImage src={getAvatarUrl(m.avatar_url)} />
