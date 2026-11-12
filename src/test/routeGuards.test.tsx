@@ -51,6 +51,8 @@ const GUARDED = [
   { path: "/admin/divisions", page: "DivisionsAdminPage", allowed: "entrenador", denied: "tesorero" },
   { path: "/admin/tournament-types", page: "TournamentTypesAdminPage", allowed: "entrenador", denied: "tesorero" },
   { path: "/admin/tournaments", page: "TournamentsPage", allowed: "entrenador", denied: "tesorero" },
+  { path: "/admin/tournaments", page: "TournamentsPage", allowed: "gestor_torneos", denied: "tesorero" },
+  { path: "/admin/divisions", page: "DivisionsAdminPage", allowed: "entrenador", denied: "gestor_torneos" },
 ];
 
 describe("admin route guards", () => {

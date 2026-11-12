@@ -18,7 +18,7 @@ import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
-import { isAdmin, isPresidente, isSecretaria, isTesorero } from "@/lib/permissions";
+import { canOpenTournaments, isAdmin, isPresidente, isSecretaria, isTesorero } from "@/lib/permissions";
 
 // Lazy-loaded protected routes — split by access level
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -134,7 +134,7 @@ const App = () => (
             />
             <Route
               path="/admin/tournaments"
-              element={<ProtectedRoute allow={isAdmin}><AppLayout><ErrorBoundary><TournamentsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={canOpenTournaments}><AppLayout><ErrorBoundary><TournamentsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/birthdays"

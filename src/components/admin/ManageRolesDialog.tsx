@@ -10,7 +10,7 @@ import { Database } from "@/integrations/supabase/types";
 
 type ClubRole = Database["public"]["Enums"]["club_role"];
 
-const ALL_ROLES: ClubRole[] = ["arquero", "socio", "entrenador", "presidente", "administrador", "secretaria", "tesorero", "alumno"];
+const ALL_ROLES: ClubRole[] = ["arquero", "socio", "entrenador", "presidente", "administrador", "secretaria", "tesorero", "gestor_torneos", "alumno"];
 const ROLE_LABELS: Record<ClubRole, string> = {
   arquero: "Arquero",
   socio: "Socio",

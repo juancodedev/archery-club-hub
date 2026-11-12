@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { isTournamentManager } from "@/lib/permissions";
 
 interface Tournament {
     id: string;
@@ -103,8 +104,8 @@ export default function TournamentsPage() {
     const clubId = isSuperAdmin ? selectedClubId : (member?.club_id ?? null);
     const memberId = member?.id;
     const roles = member?.roles || [];
-    const isAdmin = isSuperAdmin || roles.some(r => ["administrador", "presidente", "entrenador"].includes(r));
-    const isManager = isSuperAdmin || roles.some(r => ["gestor_torneos", "administrador", "presidente"].includes(r));
+    const isManager = isTournamentManager(roles, isSuperAdmin);
+    const isAdmin = isManager || roles.includes("entrenador");
 
     // --- Clubs list (superadmin only) ---
     const { data: allClubs } = useClubs();
