@@ -1,10 +1,10 @@
 import { useAuth } from "@/contexts/AuthContextCore";
 import { Link, useLocation } from "react-router-dom";
-import { Target, LayoutDashboard, User, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Cake, type LucideIcon } from "lucide-react";
+import { Target, LayoutDashboard, User, History, Shield, LogOut, BarChart3, Calendar, Settings, Users, Building2, CreditCard, DollarSign, Lock, Menu, X as CloseIcon, Wallet, Cake, Trophy, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { cn, getAvatarUrl } from "@/lib/utils";
-import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente, isTesorero as checkIsTesorero, isSecretaria as checkIsSecretaria } from "@/lib/permissions";
+import { canOpenTournaments, isPresidente as checkIsPresidente, isTesorero as checkIsTesorero, isSecretaria as checkIsSecretaria } from "@/lib/permissions";
 import DivisionChangeNotifications from "./notifications/DivisionChangeNotifications";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +22,7 @@ const superAdminItems = [
   { to: "/super-admin/plans", icon: CreditCard, label: "Planes y alumnos" },
   { to: "/super-admin/settings", icon: Settings, label: "Configuración" },
   { to: "/super-admin/reports", icon: BarChart3, label: "Reportes" },
+  { to: "/admin/tournaments", icon: Trophy, label: "Torneos" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -45,7 +46,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
 
   const roles = member?.roles || [];
-  const isAdmin = checkIsAdmin(roles, isSuperAdmin);
   const isPresidente = checkIsPresidente(roles, isSuperAdmin);
   const isTesorero = checkIsTesorero(roles, isSuperAdmin);
   const isSecretaria = checkIsSecretaria(roles, isSuperAdmin);
@@ -61,10 +61,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ] : []),
       ...(isPresidente ? [{ to: "/settings", icon: Settings, label: "Configuración" }] : []),
       ...(isPresidente ? presidenteItems : []),
+      ...(canOpenTournaments(roles) ? [{ to: "/admin/tournaments", icon: Trophy, label: "Torneos" }] : []),
     ];
 
   // Remove duplicates and ensure order
   const uniqueItems = Array.from(new Map(allAdminItems.map(item => [item.to, item])).values());
+  // Show the section to anyone with at least one admin page, treasurers included.
+  const showAdminSection = uniqueItems.length > 0;
 
   const isClubAdmin = member?.roles?.includes("administrador");
   const showAttendanceMenu = isSuperAdmin || isClubAdmin;
@@ -150,7 +153,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {visibleNavItems.map(renderLink)}
-          {isAdmin && (
+          {showAdminSection && (
             <>
               <div className="my-3 border-t border-border" />
               <p className="px-3 mb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">Administración</p>

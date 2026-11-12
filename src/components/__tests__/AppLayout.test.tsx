@@ -7,13 +7,13 @@ import { useAuth } from "@/contexts/AuthContextCore";
 
 const mockUseAuth = vi.mocked(useAuth);
 
-function renderReadOnlyClub(roles: string[]) {
+function renderReadOnlyClub(roles: string[], isSuperAdmin = false) {
   mockUseAuth.mockReturnValue({
     member: {
       id: "m1",
       full_name: "Ana Arquera",
       club_id: "club-1",
-      is_super_admin: false,
+      is_super_admin: isSuperAdmin,
       roles,
       club_status: "bloqueado",
       block_type: "partial",
@@ -43,5 +43,43 @@ describe("AppLayout read-only banner", () => {
     renderReadOnlyClub(["arquero"]);
     expect(screen.getByText("Modo Lectura - Suscripción Vencida")).toBeDefined();
     expect(screen.queryByRole("link", { name: "Pagar ahora" })).toBeNull();
+  });
+});
+
+describe("AppLayout tournaments menu entry", () => {
+  it.each(["gestor_torneos", "administrador", "presidente", "secretaria", "entrenador"])(
+    "links %s to the tournaments page",
+    (role) => {
+      renderReadOnlyClub([role]);
+      expect(screen.getByRole("link", { name: "Torneos" }).getAttribute("href")).toBe("/admin/tournaments");
+    },
+  );
+
+  it("links a super admin to the tournaments page", () => {
+    renderReadOnlyClub([], true);
+    expect(screen.getByRole("link", { name: "Torneos" }).getAttribute("href")).toBe("/admin/tournaments");
+  });
+
+  it.each(["tesorero", "arquero", "socio"])("does not show the tournaments page to %s, who cannot open it", (role) => {
+    renderReadOnlyClub([role]);
+    expect(screen.queryByRole("link", { name: "Torneos" })).toBeNull();
+  });
+});
+
+describe("AppLayout admin section", () => {
+  it("shows a treasurer the section with their pages", () => {
+    renderReadOnlyClub(["tesorero"]);
+    expect(screen.getByText("Administración")).toBeDefined();
+    for (const [name, href] of [["Membresías", "/admin/memberships"], ["Finanzas", "/admin/finances"], ["Planes y alumnos", "/billing"]]) {
+      expect(screen.getByRole("link", { name }).getAttribute("href")).toBe(href);
+    }
+  });
+
+  it("hides the section from a member with no admin page", () => {
+    for (const role of ["arquero", "socio"]) {
+      const { unmount } = renderReadOnlyClub([role]);
+      expect(screen.queryByText("Administración")).toBeNull();
+      unmount();
+    }
   });
 });
