@@ -46,6 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_extra_charges_club_id ON public.extra_charges(clu
 -- -----------------------------------------------------------
 -- training_enrollments: NO policies existed
 -- -----------------------------------------------------------
+DROP POLICY IF EXISTS "Members view own enrollments" ON public.training_enrollments;
 CREATE POLICY "Members view own enrollments" ON public.training_enrollments
   FOR SELECT TO authenticated
   USING (
@@ -55,12 +56,14 @@ CREATE POLICY "Members view own enrollments" ON public.training_enrollments
     OR public.is_super_admin(auth.uid())
   );
 
+DROP POLICY IF EXISTS "Members enroll themselves" ON public.training_enrollments;
 CREATE POLICY "Members enroll themselves" ON public.training_enrollments
   FOR INSERT TO authenticated
   WITH CHECK (
     member_id IN (SELECT id FROM public.members WHERE user_id = auth.uid() AND status = 'activo')
   );
 
+DROP POLICY IF EXISTS "Admin manages enrollments" ON public.training_enrollments;
 CREATE POLICY "Admin manages enrollments" ON public.training_enrollments
   FOR DELETE TO authenticated
   USING (
@@ -72,6 +75,7 @@ CREATE POLICY "Admin manages enrollments" ON public.training_enrollments
 -- -----------------------------------------------------------
 -- custom_roles: NO policies existed
 -- -----------------------------------------------------------
+DROP POLICY IF EXISTS "Club members view custom roles" ON public.custom_roles;
 CREATE POLICY "Club members view custom roles" ON public.custom_roles
   FOR SELECT TO authenticated
   USING (
@@ -79,6 +83,7 @@ CREATE POLICY "Club members view custom roles" ON public.custom_roles
     OR public.is_super_admin(auth.uid())
   );
 
+DROP POLICY IF EXISTS "Admin manages custom roles" ON public.custom_roles;
 CREATE POLICY "Admin manages custom roles" ON public.custom_roles
   FOR ALL TO authenticated
   USING (
@@ -89,6 +94,7 @@ CREATE POLICY "Admin manages custom roles" ON public.custom_roles
 -- -----------------------------------------------------------
 -- extra_charges: NO policies existed
 -- -----------------------------------------------------------
+DROP POLICY IF EXISTS "Financial access for extra charges" ON public.extra_charges;
 CREATE POLICY "Financial access for extra charges" ON public.extra_charges
   FOR ALL TO authenticated
   USING (
@@ -98,12 +104,14 @@ CREATE POLICY "Financial access for extra charges" ON public.extra_charges
 -- -----------------------------------------------------------
 -- coupons: NO policies existed (admin-managed)
 -- -----------------------------------------------------------
+DROP POLICY IF EXISTS "Super admin manage coupons" ON public.coupons;
 CREATE POLICY "Super admin manage coupons" ON public.coupons
   FOR ALL TO authenticated
   USING (
     public.is_super_admin(auth.uid())
   );
 
+DROP POLICY IF EXISTS "Authenticated can read coupons" ON public.coupons;
 CREATE POLICY "Authenticated can read coupons" ON public.coupons
   FOR SELECT TO authenticated
   USING (true);
@@ -111,6 +119,7 @@ CREATE POLICY "Authenticated can read coupons" ON public.coupons
 -- -----------------------------------------------------------
 -- contact_requests: NO policies existed
 -- -----------------------------------------------------------
+DROP POLICY IF EXISTS "Members view own contact requests" ON public.contact_requests;
 CREATE POLICY "Members view own contact requests" ON public.contact_requests
   FOR SELECT TO authenticated
   USING (
@@ -119,6 +128,7 @@ CREATE POLICY "Members view own contact requests" ON public.contact_requests
     OR public.is_super_admin(auth.uid())
   );
 
+DROP POLICY IF EXISTS "Members create contact requests" ON public.contact_requests;
 CREATE POLICY "Members create contact requests" ON public.contact_requests
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -133,6 +143,7 @@ CREATE POLICY "Members create contact requests" ON public.contact_requests
 DROP POLICY IF EXISTS "Manage invites" ON public.member_invitations;
 DROP POLICY IF EXISTS "View invite token" ON public.member_invitations;
 
+DROP POLICY IF EXISTS "Admin manage invitations" ON public.member_invitations;
 CREATE POLICY "Admin manage invitations" ON public.member_invitations
   FOR ALL TO authenticated
   USING (
@@ -140,6 +151,7 @@ CREATE POLICY "Admin manage invitations" ON public.member_invitations
     OR public.is_super_admin(auth.uid())
   );
 
+DROP POLICY IF EXISTS "Anyone can view invitation by token" ON public.member_invitations;
 CREATE POLICY "Anyone can view invitation by token" ON public.member_invitations
   FOR SELECT TO anon, authenticated
   USING (true);
@@ -149,6 +161,7 @@ CREATE POLICY "Anyone can view invitation by token" ON public.member_invitations
 -- -----------------------------------------------------------
 -- Existing policies: SELECT (Score visibility), INSERT (Insert own scores)
 -- Missing: DELETE (admin/coach should be able to delete scores)
+DROP POLICY IF EXISTS "Admin delete scores" ON public.scores;
 CREATE POLICY "Admin delete scores" ON public.scores
   FOR DELETE TO authenticated
   USING (

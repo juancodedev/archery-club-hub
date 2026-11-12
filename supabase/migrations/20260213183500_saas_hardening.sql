@@ -43,14 +43,20 @@ CREATE POLICY "Club admin manage their roles" ON public.custom_roles FOR ALL TO 
 ALTER TABLE public.plans ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
 
 -- 4. Harden is_super_admin to check for specific email as backup/primary
+-- Replay note: public.super_admins is never created by any migration, so a
+-- LANGUAGE sql body (validated at creation) breaks a fresh database. plpgsql
+-- defers the check to call time. 20260306200001_baseline_security replaces
+-- this function before anything calls it.
 CREATE OR REPLACE FUNCTION public.is_super_admin(p_user_id UUID)
 RETURNS BOOLEAN
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT EXISTS (
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN EXISTS (
     SELECT 1 FROM public.super_admins WHERE user_id = p_user_id
   ) OR EXISTS (
     SELECT 1 FROM auth.users WHERE id = p_user_id AND email = 'cl.jmunoz@gmail.com'
   );
+END;
 $$;
 
 -- 5. Insert default roles for new clubs trigger or logic

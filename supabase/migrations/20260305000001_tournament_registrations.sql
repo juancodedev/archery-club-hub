@@ -52,7 +52,9 @@ CREATE POLICY "Managers can update registration status" ON public.tournament_reg
             AND EXISTS (
                 SELECT 1 FROM public.member_roles mr
                 WHERE mr.member_id = m.id
-                AND mr.role IN ('gestor_torneos', 'administrador', 'presidente')
+                -- Compare as text: a value added by ALTER TYPE in this same
+                -- transaction cannot be used as an enum literal (SQLSTATE 55P04).
+                AND mr.role::text IN ('gestor_torneos', 'administrador', 'presidente')
             )
         )
     );
