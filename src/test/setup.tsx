@@ -182,6 +182,7 @@ vi.mock('framer-motion', () => {
             h3: createEl('h3'),
         },
         AnimatePresence: ({ children }: { children?: React.ReactNode }) => children,
+        MotionConfig: ({ children }: { children?: React.ReactNode }) => children,
         useAnimation: () => ({ start: vi.fn(), stop: vi.fn(), set: vi.fn() }),
         useInView: () => true,
         useMotionValue: (v: number) => ({ get: () => v, set: vi.fn(), onChange: vi.fn() }),
