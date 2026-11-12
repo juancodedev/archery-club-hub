@@ -194,7 +194,7 @@ export default function ClubSettingsPage() {
           {/* Fees */}
           <div className="glass rounded-xl p-4 sm:p-5 space-y-4">
             <h3 className="font-display font-semibold text-foreground flex items-center gap-2 text-left">
-              <Settings className="h-4 w-4 text-accent" />
+              <Settings className="h-4 w-4 text-primary" />
               Configuración General del Club
             </h3>
             <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 text-left">

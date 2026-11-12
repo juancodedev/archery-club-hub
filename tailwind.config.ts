@@ -15,8 +15,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Space Grotesk", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        display: ["Barlow Condensed", "system-ui", "sans-serif"],
+        body: ["Barlow", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

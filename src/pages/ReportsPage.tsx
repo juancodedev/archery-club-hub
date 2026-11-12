@@ -384,7 +384,7 @@ export default function ReportsPage() {
               {/* Line: progress trend */}
               <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
                 <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="h-5 w-5 text-accent" />
+                  <TrendingUp className="h-5 w-5 text-primary" />
                   <h3 className="font-display font-bold text-foreground">Tendencia de Progreso</h3>
                 </div>
                 <div className="h-[300px] w-full mt-4">
