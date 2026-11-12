@@ -36,14 +36,17 @@ export function ifaaRingKeypad(ifaaRound?: string | null): string[] {
 
 /**
  * Color del anillo del blanco IFAA donde pegó una flecha, para pintar la celda.
- * "neutral" se usa en rondas sin anillos (Animal, 3D, no IFAA) y en Field Experto
- * y Flint, cuyos colores de zona todavía no están confirmados contra el manual.
+ * "neutral" se usa en rondas sin anillos (Animal, 3D, no IFAA).
+ * Field Experto divide en dos cada zona del blanco Field, con la X blanca al centro;
+ * Flint se tira sobre blancos Field y puntúa igual (Manual del Arquero IFAA 2021).
  */
 export type RingFace = "black" | "white" | "navy" | "miss" | "neutral" | "empty";
 
 const RING_FACES: Record<string, Record<string, RingFace>> = {
     field: { "5": "black", "4": "white", "3": "black" },
     hunter: { "5": "white", "4": "black", "3": "black" },
+    field_expert: { X: "white", "5": "black", "4": "white", "3": "white", "2": "black", "1": "black" },
+    flint_indoor: { "5": "black", "4": "white", "3": "black" },
     indoor_standard: { X: "white", "5": "white", "4": "navy", "3": "navy", "2": "navy", "1": "navy" },
 };
 

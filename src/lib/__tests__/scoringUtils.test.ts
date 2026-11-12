@@ -131,10 +131,14 @@ describe("scoringUtils", () => {
             ]);
         });
 
-        it("keeps field expert and flint neutral until their face colors are confirmed", () => {
-            for (const round of ["field_expert", "flint_indoor"]) {
-                expect(["X", "5", "4", "3", "2", "1"].map((v) => ringFace(round, v))).toEqual(Array(6).fill("neutral"));
-            }
+        it("paints field expert like the field face split in two: white X, black 5, white 4 and 3, black 2 and 1", () => {
+            expect(["X", "5", "4", "3", "2", "1"].map((v) => ringFace("field_expert", v))).toEqual([
+                "white", "black", "white", "white", "black", "black",
+            ]);
+        });
+
+        it("paints flint like the field face it is shot on", () => {
+            expect(["5", "4", "3"].map((v) => ringFace("flint_indoor", v))).toEqual(["black", "white", "black"]);
         });
 
         it("keeps animal, 3D and non-IFAA values neutral", () => {
