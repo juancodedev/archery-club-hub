@@ -18,6 +18,7 @@ import InvitationRegisterPage from "./pages/InvitationRegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import NotFound from "./pages/NotFound";
+import { isAdmin, isPresidente, isSecretaria, isTesorero } from "@/lib/permissions";
 
 // Lazy-loaded protected routes — split by access level
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -101,39 +102,39 @@ const App = () => (
             />
             <Route
               path="/admin"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><AdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isSecretaria}><AppLayout><ErrorBoundary><AdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/reports"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><ReportsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isPresidente}><AppLayout><ErrorBoundary><ReportsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/divisions"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><DivisionsAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isAdmin}><AppLayout><ErrorBoundary><DivisionsAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/tournament-types"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><TournamentTypesAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isAdmin}><AppLayout><ErrorBoundary><TournamentTypesAdminPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/settings"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><ClubSettingsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isPresidente}><AppLayout><ErrorBoundary><ClubSettingsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/billing"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><BillingPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isTesorero}><AppLayout><ErrorBoundary><BillingPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/finances"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><FinancePage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isTesorero}><AppLayout><ErrorBoundary><FinancePage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/memberships"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><MembershipsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isTesorero}><AppLayout><ErrorBoundary><MembershipsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/admin/tournaments"
-              element={<ProtectedRoute><AppLayout><ErrorBoundary><TournamentsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
+              element={<ProtectedRoute allow={isAdmin}><AppLayout><ErrorBoundary><TournamentsPage /></ErrorBoundary></AppLayout></ProtectedRoute>}
             />
             <Route
               path="/birthdays"

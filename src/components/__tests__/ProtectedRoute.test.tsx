@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContextCore";
+import { isTesorero } from "@/lib/permissions";
 
 // useAuth is mocked in setup.ts but we can override per test
 const mockUseAuth = vi.mocked(useAuth);
@@ -202,5 +203,77 @@ describe("ProtectedRoute", () => {
 
         renderProtectedRoute();
         expect(screen.getByTestId("protected-content")).toBeDefined();
+    });
+
+    describe("role guard", () => {
+        function mockMember(roles: string[], systemMode = "produccion") {
+            mockUseAuth.mockReturnValue({
+                session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+                member: {
+                    id: "6",
+                    is_super_admin: false,
+                    roles,
+                    status: "activo",
+                    club_status: "activo",
+                    subscription_end_date: null,
+                } as unknown as ReturnType<typeof mockUseAuth>["member"],
+                loading: false,
+                signOut: vi.fn(),
+                systemMode,
+            } as unknown as ReturnType<typeof mockUseAuth>);
+        }
+
+        function renderGuarded() {
+            return render(
+                <MemoryRouter>
+                    <ProtectedRoute allow={isTesorero}>
+                        <div data-testid="protected-content">Contenido Protegido</div>
+                    </ProtectedRoute>
+                </MemoryRouter>
+            );
+        }
+
+        it("redirects a member without the required role to /dashboard", () => {
+            mockMember(["arquero", "socio"]);
+            renderGuarded();
+            expect(screen.queryByTestId("protected-content")).toBeNull();
+            expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        });
+
+        it("redirects a member without the required role in pruebas mode too", () => {
+            mockMember(["arquero"], "pruebas");
+            renderGuarded();
+            expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        });
+
+        it("renders the page for a member with the required role", () => {
+            mockMember(["tesorero"]);
+            renderGuarded();
+            expect(screen.getByTestId("protected-content")).toBeDefined();
+        });
+
+        it("renders the page for a super admin without club roles", () => {
+            mockUseAuth.mockReturnValue({
+                session: { user: { id: "super-admin-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+                member: { id: "1", is_super_admin: true, roles: [] } as unknown as ReturnType<typeof mockUseAuth>["member"],
+                loading: false,
+                signOut: vi.fn(),
+                systemMode: "produccion",
+            } as unknown as ReturnType<typeof mockUseAuth>);
+            renderGuarded();
+            expect(screen.getByTestId("protected-content")).toBeDefined();
+        });
+
+        it("redirects a session whose member failed to load", () => {
+            mockUseAuth.mockReturnValue({
+                session: { user: { id: "member-id" } } as unknown as ReturnType<typeof mockUseAuth>["session"],
+                member: null,
+                loading: false,
+                signOut: vi.fn(),
+                systemMode: "produccion",
+            } as unknown as ReturnType<typeof mockUseAuth>);
+            renderGuarded();
+            expect(screen.getByTestId("navigate").getAttribute("data-to")).toBe("/dashboard");
+        });
     });
 });

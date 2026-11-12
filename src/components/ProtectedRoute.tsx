@@ -4,11 +4,14 @@ import { Navigate } from "react-router-dom";
 export default function ProtectedRoute({
   children,
   requireSuperAdmin = false,
-  requireArquero = false
+  requireArquero = false,
+  allow,
 }: {
   children: React.ReactNode;
   requireSuperAdmin?: boolean;
   requireArquero?: boolean;
+  /** Role check for the page, e.g. isTesorero. Applies in every system mode. */
+  allow?: (roles: string[]) => boolean;
 }) {
   const { session, member, loading, signOut, systemMode } = useAuth();
 
@@ -38,6 +41,10 @@ export default function ProtectedRoute({
     if (!isArquero) {
       return <Navigate to="/dashboard" replace />;
     }
+  }
+
+  if (allow && !allow(member?.roles ?? [])) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // If we are in "pruebas" mode, we don't apply access restrictions based on club status

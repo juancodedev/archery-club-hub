@@ -255,9 +255,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <p className="text-sm font-bold text-yellow-500">Modo Lectura - Suscripción Vencida</p>
                     <p className="text-xs text-yellow-500/70">Tu club tiene pagos pendientes. Puedes ver tus datos, pero las funciones de edición están deshabilitadas.</p>
                   </div>
-                  <Button variant="outline" size="sm" className="bg-yellow-500/10 border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/20" asChild>
-                    <Link to="/billing">Pagar ahora</Link>
-                  </Button>
+                  {isTesorero && (
+                    <Button variant="outline" size="sm" className="bg-yellow-500/10 border-yellow-500/20 text-yellow-500 hover:bg-yellow-500/20" asChild>
+                      <Link to="/billing">Pagar ahora</Link>
+                    </Button>
+                  )}
                 </div>
               )}
               {children}
