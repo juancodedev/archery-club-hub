@@ -5,6 +5,44 @@ import { Target, Users, TrendingUp, Shield, ArrowRight, LayoutDashboard, Check }
 import { useAuth } from "@/contexts/AuthContextCore";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import RingCell from "@/components/scores/RingCell";
+import { arrowValue } from "@/lib/scoringUtils";
+
+// Sample ends for the hero card: an IFAA Field round, four arrows per target.
+const SAMPLE_FIELD_ENDS = [
+  ["5", "5", "4", "3"],
+  ["4", "4", "5", "M"],
+  ["5", "4", "4", "4"],
+  ["3", "5", "5", "4"],
+  ["5", "5", "5", "4"],
+];
+const endTotal = (end: string[]) => end.reduce((sum, arrow) => sum + arrowValue(arrow), 0);
+const SAMPLE_TOTAL = SAMPLE_FIELD_ENDS.reduce((sum, end) => sum + endTotal(end), 0);
+
+function SampleScoreCard() {
+  return (
+    <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 text-left shadow-sm">
+      <div className="flex items-baseline justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ejemplo</p>
+          <p className="font-display text-2xl font-semibold text-foreground">Ronda IFAA Field</p>
+        </div>
+        <p className="font-display text-3xl font-bold text-primary tabular-nums">{SAMPLE_TOTAL}</p>
+      </div>
+      <ul className="mt-3 divide-y divide-border">
+        {SAMPLE_FIELD_ENDS.map((end, idx) => (
+          <li key={idx} className="flex items-center gap-2 py-2">
+            <span className="w-8 text-sm font-semibold text-muted-foreground">#{idx + 1}</span>
+            {end.map((arrow, j) => (
+              <RingCell key={j} ifaaRound="field" value={arrow} className="h-9 w-10 text-lg" />
+            ))}
+            <span className="ml-auto font-display text-xl font-bold text-foreground tabular-nums">{endTotal(end)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 interface Plan { id: string; name: string; description: string | null; price: number; features: string[] | null; }
 function PricingPlans() {
@@ -67,24 +105,23 @@ export default function Index() {
   const dashboardPath = isSuperAdmin ? "/super-admin" : "/dashboard";
 
   const features = [
+    { icon: Target, title: "Un teclado por ronda", desc: "Solo los valores que existen en ese blanco. Indoor y Field Experto suman el 2, el 1 y la X de desempate." },
+    { icon: Shield, title: "Reglas IFAA al guardar", desc: "Flechas por blanco y valores válidos se controlan en la base de datos, no solo en la pantalla." },
     { icon: Users, title: "Gestión de Miembros", desc: "Registra y administra los miembros de tu club con fichas completas." },
-    { icon: Target, title: "Registro de Puntajes", desc: "Tarjeta de puntuación con 6 ends y 5 flechas por end." },
     { icon: TrendingUp, title: "Historial de Entrenamientos", desc: "Seguimiento completo del progreso de cada arquero." },
-    { icon: Shield, title: "Multi-tenant", desc: "Cada club tiene su espacio independiente y seguro." },
   ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <header className="relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-dark)" }} />
-        <div className="relative container mx-auto px-4 py-6">
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4">
           <nav className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                 <Target className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-display font-bold text-lg text-foreground">QuiverApp</span>
+              <span className="font-display font-bold text-2xl text-foreground">QuiverApp</span>
             </div>
             <div className="flex items-center gap-3">
               {session ? (
@@ -107,24 +144,24 @@ export default function Index() {
             </div>
           </nav>
         </div>
+      </header>
 
-        <div className="relative container mx-auto px-4 pt-20 pb-28 text-center">
+      <section className="container mx-auto px-4 pt-16 pb-20 md:pt-20 md:pb-24">
+        <div className="flex flex-wrap items-center gap-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
+            className="min-w-0 flex-[999_1_420px]"
           >
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glow-primary">
-              <Target className="h-8 w-8 text-primary" />
-            </div>
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">
-              Gestiona tu club de{" "}
-              <span className="text-gradient">Arquería</span>
+            <p className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Para clubes de arquería IFAA</p>
+            <h1 className="text-5xl md:text-6xl font-display font-bold leading-none text-foreground mb-5">
+              Cada flecha, anotada como manda la ronda.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              La plataforma SaaS diseñada para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar.
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mb-8">
+              Field, Hunter, Animal, 3D e Indoor, cada ronda con su teclado y sus reglas. Tus arqueros anotan en la cancha y el club ve el progreso de toda la temporada.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap gap-4">
               {session ? (
                 <Link to={dashboardPath}>
                   <Button size="lg" className="gap-2">
@@ -147,8 +184,11 @@ export default function Index() {
               )}
             </div>
           </motion.div>
+          <div className="flex min-w-0 flex-[1_1_340px] justify-center">
+            <SampleScoreCard />
+          </div>
         </div>
-      </header>
+      </section>
 
       {/* Features */}
       <section className="container mx-auto px-4 py-20">
@@ -216,14 +256,14 @@ export default function Index() {
           className="rounded-2xl p-8 md:p-12 text-center"
           style={{ background: "var(--gradient-dark)" }}
         >
-          <h2 className="text-2xl md:text-3xl font-display font-bold text-primary-foreground mb-3">
+          <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
             ¿Listo para empezar?
           </h2>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          <p className="text-sidebar-foreground mb-6 max-w-md mx-auto">
             Registra tu club en minutos y comienza a gestionar tu equipo hoy.
           </p>
           <Link to="/register-club">
-            <Button size="lg" className="gap-2">
+            <Button size="lg" className="gap-2 bg-white text-primary hover:bg-white/90">
               Registrar mi Club
             <ArrowRight className="h-4 w-4" />
               </Button>
