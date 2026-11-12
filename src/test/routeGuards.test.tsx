@@ -24,10 +24,10 @@ vi.mock("@/pages/TournamentsPage", () => page("TournamentsPage"));
 
 const mockUseAuth = vi.mocked(useAuth);
 
-function visit(path: string, roles: string[]) {
+function visit(path: string, roles: string[], isSuperAdmin = false) {
   mockUseAuth.mockReturnValue({
     session: { user: { id: "u1" } },
-    member: { id: "m1", club_id: "c1", full_name: "Ana", is_super_admin: false, roles, club_status: "activo" },
+    member: { id: "m1", club_id: "c1", full_name: "Ana", is_super_admin: isSuperAdmin, roles, club_status: "activo" },
     loading: false,
     signOut: vi.fn(),
     systemMode: "produccion",
@@ -36,7 +36,7 @@ function visit(path: string, roles: string[]) {
     isSuperAdminSubdomain: false,
   } as unknown as ReturnType<typeof mockUseAuth>);
   window.history.pushState({}, "", path);
-  render(<App />);
+  return render(<App />);
 }
 
 // Each admin page is guarded by the same permission that shows it in the AppLayout menu.
@@ -70,6 +70,14 @@ describe("admin route guards", () => {
       expect(screen.queryByTestId("page")).toBeNull();
     });
   }
+
+  it("opens every guarded page for a super admin without club roles", async () => {
+    for (const { path, page: name } of GUARDED) {
+      const { unmount } = visit(path, [], true);
+      expect((await screen.findByTestId("page")).textContent).toBe(name);
+      unmount();
+    }
+  });
 
   for (const [path, name] of [["/dashboard", "DashboardPage"], ["/profile", "ProfilePage"], ["/birthdays", "BirthdaysPage"]]) {
     it(`opens ${path} for any club member`, async () => {
