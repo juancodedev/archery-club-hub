@@ -67,8 +67,19 @@ describe("AppLayout tournaments menu entry", () => {
 });
 
 describe("AppLayout admin section", () => {
-  it("keeps the section hidden from a treasurer, as before", () => {
+  it("shows a treasurer the section with their pages", () => {
     renderReadOnlyClub(["tesorero"]);
-    expect(screen.queryByText("Administración")).toBeNull();
+    expect(screen.getByText("Administración")).toBeDefined();
+    for (const [name, href] of [["Membresías", "/admin/memberships"], ["Finanzas", "/admin/finances"], ["Planes y alumnos", "/billing"]]) {
+      expect(screen.getByRole("link", { name }).getAttribute("href")).toBe(href);
+    }
+  });
+
+  it("hides the section from a member with no admin page", () => {
+    for (const role of ["arquero", "socio"]) {
+      const { unmount } = renderReadOnlyClub([role]);
+      expect(screen.queryByText("Administración")).toBeNull();
+      unmount();
+    }
   });
 });
