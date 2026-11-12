@@ -69,6 +69,16 @@ describe("DashboardPage", () => {
         expect(screen.getByText("ADMINISTRACIÓN")).toBeDefined();
     });
 
+    it("should not show admin button for a coach, who cannot open the members page", () => {
+        renderPage({ ...mockMemberRegular, roles: ["entrenador"] } as unknown as ReturnType<typeof mockUseAuth>["member"]);
+        expect(screen.queryByText("ADMINISTRACIÓN")).toBeNull();
+    });
+
+    it("should show admin button for a secretary", () => {
+        renderPage({ ...mockMemberRegular, roles: ["secretaria"] } as unknown as ReturnType<typeof mockUseAuth>["member"]);
+        expect(screen.getByText("ADMINISTRACIÓN")).toBeDefined();
+    });
+
     it("should not show admin button for regular member", () => {
         renderPage(mockMemberRegular);
         expect(screen.queryByText("ADMINISTRACIÓN")).toBeNull();

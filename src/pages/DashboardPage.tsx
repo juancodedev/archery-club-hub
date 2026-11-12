@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, getAvatarUrl } from "@/lib/utils";
-import { isAdmin as checkIsAdmin, isPresidente as checkIsPresidente } from "@/lib/permissions";
+import { isPresidente as checkIsPresidente, isSecretaria as checkIsSecretaria } from "@/lib/permissions";
 
 export default function DashboardPage() {
   const { member, memberships, setActiveMembership, isSuperAdminSubdomain } = useAuth();
   const isSuperAdmin = member?.is_super_admin || isSuperAdminSubdomain;
-  const isAdmin = checkIsAdmin(member?.roles || [], isSuperAdmin);
+  // Same permission that guards /admin, so the button never leads to a redirect.
+  const canManageMembers = checkIsSecretaria(member?.roles || [], isSuperAdmin);
   const isPresidente = checkIsPresidente(member?.roles || [], isSuperAdmin);
 
   const { data: scores } = useQuery({
@@ -186,7 +187,7 @@ export default function DashboardPage() {
               </Button>
             </Link>
           )}
-          {isAdmin && (
+          {canManageMembers && (
             <Link to="/admin" className="w-full md:w-auto">
               <Button variant="outline" className="w-full h-12 gap-2 rounded-2xl font-bold bg-card/50 hover:bg-card border-primary/20">
                 <Shield className="h-5 w-5" />
