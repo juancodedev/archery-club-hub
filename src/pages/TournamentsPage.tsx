@@ -71,7 +71,7 @@ const STATUS_CONFIG = {
 
 function MemberAvatar({ name, avatarUrl, size = "sm" }: { name: string; avatarUrl?: string | null; size?: "sm" | "md" }) {
     const initials = name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
-    const sizeClass = size === "sm" ? "h-7 w-7 text-[10px]" : "h-9 w-9 text-xs";
+    const sizeClass = size === "sm" ? "h-7 w-7 text-xs" : "h-9 w-9 text-xs";
     return (
         <div className={cn("rounded-full flex items-center justify-center font-bold border-2 border-background bg-primary/20 text-primary shrink-0", sizeClass)}>
             {avatarUrl ? (
@@ -364,7 +364,7 @@ export default function TournamentsPage() {
                                         </div>
                                         {confirmed.length > 0 && (
                                             <div>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Users className="h-3 w-3" /> Inscritos confirmados</p>
+                                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mb-2 flex items-center gap-1"><Users className="h-3 w-3" /> Inscritos confirmados</p>
                                                 <div className="flex flex-wrap gap-1">
                                                     {confirmed.slice(0, 8).map(r => r.members && (
                                                         <div key={r.id} title={r.members.full_name}>
@@ -372,7 +372,7 @@ export default function TournamentsPage() {
                                                         </div>
                                                     ))}
                                                     {confirmed.length > 8 && (
-                                                        <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground border-2 border-background">
+                                                        <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground border-2 border-background">
                                                             +{confirmed.length - 8}
                                                         </div>
                                                     )}
@@ -422,7 +422,7 @@ export default function TournamentsPage() {
                                 <motion.div key={t.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.04 }}>
                                     <Card className="glass border-primary/5 hover:border-primary/20 transition-all rounded-[2rem] flex flex-col">
                                         <CardHeader className="pb-2">
-                                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
+                                            <p className="text-xs font-black text-primary uppercase tracking-[0.2em]">
                                                 {format(new Date(t.start_date + "T12:00:00"), "MMM d", { locale: es })}
                                                 {t.start_date !== t.end_date && ` – ${format(new Date(t.end_date + "T12:00:00"), "MMM d", { locale: es })}`}
                                             </p>
@@ -438,7 +438,7 @@ export default function TournamentsPage() {
                                             {/* Avatar stack of confirmed attendees */}
                                             {confirmed.length > 0 && (
                                                 <div>
-                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1.5">{confirmed.length} Confirmado{confirmed.length !== 1 ? "s" : ""}</p>
+                                                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mb-1.5">{confirmed.length} Confirmado{confirmed.length !== 1 ? "s" : ""}</p>
                                                     <div className="flex">
                                                         {confirmed.slice(0, 6).map((r, idx) => r.members && (
                                                             <div key={r.id} style={{ marginLeft: idx > 0 ? "-8px" : 0 }} title={r.members.full_name}>
@@ -446,7 +446,7 @@ export default function TournamentsPage() {
                                                             </div>
                                                         ))}
                                                         {confirmed.length > 6 && (
-                                                            <div style={{ marginLeft: "-8px" }} className="h-7 w-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                                                            <div style={{ marginLeft: "-8px" }} className="h-7 w-7 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-bold text-muted-foreground">
                                                                 +{confirmed.length - 6}
                                                             </div>
                                                         )}
@@ -459,13 +459,13 @@ export default function TournamentsPage() {
                                                 <div className="pt-1">
                                                     {myRegistration ? (
                                                         <div className="flex items-center justify-between">
-                                                            <Badge variant="outline" className={cn("rounded-lg border text-[10px] uppercase font-black tracking-widest px-3 h-6 gap-1", statusConfig?.color)}>
+                                                            <Badge variant="outline" className={cn("rounded-lg border text-xs uppercase font-black tracking-widest px-3 h-6 gap-1", statusConfig?.color)}>
                                                                 {StatusIcon && <StatusIcon className="h-3 w-3" />}
                                                                 {statusConfig?.label}
                                                             </Badge>
                                                             {myRegistration.status === "pendiente" && (
                                                                 <Button variant="ghost" size="sm" onClick={() => cancelMutation.mutate(myRegistration.id)}
-                                                                    className="text-[10px] h-7 text-destructive hover:bg-destructive/10 font-bold uppercase tracking-wide">
+                                                                    className="text-xs h-7 text-destructive hover:bg-destructive/10 font-bold uppercase tracking-wide">
                                                                     Cancelar
                                                                 </Button>
                                                             )}
@@ -487,7 +487,7 @@ export default function TournamentsPage() {
                                                 <div className="border-t border-border pt-3">
                                                     <button
                                                         onClick={() => setExpandedManager(isExpanded ? null : t.id)}
-                                                        className="flex items-center justify-between w-full text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
+                                                        className="flex items-center justify-between w-full text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
                                                         <span className="flex items-center gap-1.5">
                                                             <Clock className="h-3 w-3" />
                                                             {pending.length} Pendiente{pending.length !== 1 ? "s" : ""}

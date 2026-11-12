@@ -406,7 +406,7 @@ export default function TrainingSessionsPage() {
   if (!hasAccess) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-4">
-        <div className="glass max-w-md w-full p-8 rounded-3xl text-center space-y-6 border border-white/10 shadow-2xl relative z-10">
+        <div className="glass max-w-md w-full p-8 rounded-3xl text-center space-y-6 border border-border shadow-2xl relative z-10">
           <div className="h-16 w-16 bg-destructive/10 border border-destructive/20 rounded-full flex items-center justify-center mx-auto">
             <Shield className="h-8 w-8 text-destructive animate-pulse" />
           </div>
@@ -494,9 +494,9 @@ export default function TrainingSessionsPage() {
           className="space-y-6 animate-in fade-in-50 duration-300"
         >
           {/* 1. Club Permanent QR Code Section */}
-          <div className="glass rounded-3xl p-6 border border-white/5">
+          <div className="glass rounded-3xl p-6 border border-border">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-              <div className="md:col-span-4 flex flex-col items-center justify-center gap-3 bg-black/10 p-5 rounded-2xl border border-white/5">
+              <div className="md:col-span-4 flex flex-col items-center justify-center gap-3 bg-muted/60 p-5 rounded-2xl border border-border">
                 <QRCodeCanvas
                   value={`${window.location.origin}/attendance/checkin?club_id=${selectedClubId}`}
                   size={160}
@@ -505,7 +505,7 @@ export default function TrainingSessionsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-border hover:bg-muted"
                     onClick={() => {
                       navigator.clipboard.writeText(
                         `${window.location.origin}/attendance/checkin?club_id=${selectedClubId}`
@@ -522,7 +522,7 @@ export default function TrainingSessionsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                    className="flex-1 rounded-xl h-9 text-xs font-bold gap-1.5 border-border hover:bg-muted"
                     onClick={() => window.print()}
                   >
                     <Printer className="h-3.5 w-3.5" /> Imprimir QR
@@ -532,7 +532,7 @@ export default function TrainingSessionsPage() {
 
               <div className="md:col-span-8 space-y-4 text-left">
                 <div>
-                  <span className="text-[10px] text-primary uppercase font-black tracking-widest leading-none">
+                  <span className="text-xs text-primary uppercase font-black tracking-widest leading-none">
                     Módulo de Asistencia
                   </span>
                   <h3 className="text-xl font-bold text-foreground mt-0.5">
@@ -546,25 +546,25 @@ export default function TrainingSessionsPage() {
                   registrar asistencia de forma inmediata.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                  <div className="flex gap-2.5 items-start bg-white/5 p-3 rounded-xl border border-white/5">
+                  <div className="flex gap-2.5 items-start bg-muted/50 p-3 rounded-xl border border-border">
                     <Smartphone className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <h4 className="font-bold text-foreground">
                         Escaneo Móvil Fijo
                       </h4>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      <p className="text-muted-foreground text-xs leading-relaxed">
                         No es necesario generar nuevos códigos QR dinámicos
                         cada día.
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-2.5 items-start bg-white/5 p-3 rounded-xl border border-white/5">
+                  <div className="flex gap-2.5 items-start bg-muted/50 p-3 rounded-xl border border-border">
                     <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                     <div>
                       <h4 className="font-bold text-foreground">
                         Validación GPS Cruzada
                       </h4>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed">
+                      <p className="text-muted-foreground text-xs leading-relaxed">
                         Evita marcas de asistencia fraudulentas desde fuera
                         de las instalaciones.
                       </p>
@@ -621,7 +621,7 @@ export default function TrainingSessionsPage() {
                   return (
                     <div
                       key={t.id}
-                      className="glass rounded-2xl p-5 border border-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-white/10 transition-colors"
+                      className="glass rounded-2xl p-5 border border-border flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-primary/30 transition-colors"
                     >
                       <div className="space-y-2 text-left">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -629,23 +629,23 @@ export default function TrainingSessionsPage() {
                             {t.title}
                           </h4>
                           {isCurrentActive && (
-                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 h-5 px-2 text-[9px] uppercase font-bold animate-pulse">
+                            <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 h-5 px-2 text-xs uppercase font-bold animate-pulse">
                               Activo Ahora
                             </span>
                           )}
                           {isUpcoming && (
-                            <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 h-5 px-2 text-[9px] uppercase font-bold">
+                            <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 h-5 px-2 text-xs uppercase font-bold">
                               Programado
                             </span>
                           )}
                           {isFinished && (
-                            <span className="inline-flex items-center rounded-full bg-muted-foreground/10 border border-white/5 text-muted-foreground h-5 px-2 text-[9px] uppercase font-bold">
+                            <span className="inline-flex items-center rounded-full bg-muted-foreground/10 border border-border text-muted-foreground h-5 px-2 text-xs uppercase font-bold">
                               Finalizado
                             </span>
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground font-medium">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-medium">
                           <span className="flex items-center gap-1.5 bg-muted/30 px-2 py-1 rounded-lg">
                             <Calendar className="h-3 w-3" />
                             {new Date(t.starts_at).toLocaleDateString("es-CL", {
@@ -679,7 +679,7 @@ export default function TrainingSessionsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="rounded-xl h-9 text-xs font-bold gap-1.5 border-white/10 hover:bg-white/5"
+                          className="rounded-xl h-9 text-xs font-bold gap-1.5 border-border hover:bg-muted"
                           onClick={() => setSelectedGpsTraining(t)}
                         >
                           <Users className="h-3.5 w-3.5 text-primary" />{" "}
@@ -819,7 +819,7 @@ export default function TrainingSessionsPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 rounded-lg text-[10px] font-bold gap-1 border-primary/20 hover:bg-primary/10"
+                  className="h-8 rounded-lg text-xs font-bold gap-1 border-primary/20 hover:bg-primary/10"
                   onClick={fetchCurrentCoordinates}
                   disabled={fetchingMyGps}
                 >
@@ -834,7 +834,7 @@ export default function TrainingSessionsPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                  <Label className="text-xs text-muted-foreground uppercase font-black tracking-widest">
                     Latitud
                   </Label>
                   <Input
@@ -848,7 +848,7 @@ export default function TrainingSessionsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+                  <Label className="text-xs text-muted-foreground uppercase font-black tracking-widest">
                     Longitud
                   </Label>
                   <Input
@@ -864,7 +864,7 @@ export default function TrainingSessionsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex justify-between text-[10px] uppercase font-black tracking-widest text-muted-foreground font-medium">
+                <div className="flex justify-between text-xs uppercase font-black tracking-widest text-muted-foreground font-medium">
                   <span>Radio de Tolerancia:</span>
                   <span className="text-primary font-bold">
                     {gpsRadius} metros
@@ -879,9 +879,9 @@ export default function TrainingSessionsPage() {
                   onChange={(e) =>
                     setGpsRadius(parseInt(e.target.value))
                   }
-                  className="h-6 accent-primary cursor-pointer w-full bg-white/5 rounded-lg appearance-none"
+                  className="h-6 accent-primary cursor-pointer w-full bg-muted/50 rounded-lg appearance-none"
                 />
-                <p className="text-[9px] text-muted-foreground leading-none mt-1 font-medium">
+                <p className="text-xs text-muted-foreground leading-none mt-1 font-medium">
                   Los arqueros deberán encontrarse a menos de{" "}
                   {gpsRadius}m de este punto para que se apruebe su
                   asistencia.
@@ -890,20 +890,20 @@ export default function TrainingSessionsPage() {
 
               {/* Interactive Location Picker Map */}
               <div className="space-y-1 mt-2.5">
-                <Label className="text-[10px] text-muted-foreground uppercase font-black tracking-widest font-medium">
+                <Label className="text-xs text-muted-foreground uppercase font-black tracking-widest font-medium">
                   Ajustar Ubicación en el Mapa
                 </Label>
                 <div
                   id="admin-map"
-                  className="w-full h-40 rounded-2xl overflow-hidden border border-white/10 shadow-lg relative bg-muted/10"
+                  className="w-full h-40 rounded-2xl overflow-hidden border border-border shadow-lg relative bg-muted/10"
                 >
                   {!leafletLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse font-medium bg-black/20">
+                    <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground animate-pulse font-medium bg-muted/60">
                       Cargando mapa interactivo...
                     </div>
                   )}
                 </div>
-                <p className="text-[9px] text-muted-foreground leading-relaxed mt-1 font-medium italic opacity-70">
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1 font-medium italic opacity-70">
                   💡 Puedes hacer clic en el mapa o arrastrar el marcador
                   para fijar las coordenadas manualmente.
                 </p>
@@ -970,7 +970,7 @@ export default function TrainingSessionsPage() {
                   return (
                     <div
                       key={att.id}
-                      className="bg-white/5 p-3.5 rounded-2xl border border-white/5 flex flex-col justify-between gap-3 text-left hover:bg-white/10 transition-colors"
+                      className="bg-muted/50 p-3.5 rounded-2xl border border-border flex flex-col justify-between gap-3 text-left hover:bg-muted transition-colors"
                     >
                       <div className="flex flex-col sm:flex-row justify-between gap-3">
                         <div className="space-y-1">
@@ -980,7 +980,7 @@ export default function TrainingSessionsPage() {
                               {archerName}
                             </h4>
                           </div>
-                          <div className="flex flex-wrap items-center gap-2.5 text-[10px] text-muted-foreground font-medium">
+                          <div className="flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground font-medium">
                             <span>
                               📅{" "}
                               {new Date(
@@ -1006,7 +1006,7 @@ export default function TrainingSessionsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-5 px-1.5 text-[9px] rounded-md border border-white/5 bg-white/5 text-primary hover:bg-primary/20 hover:text-primary font-bold gap-1 font-sans"
+                                className="h-5 px-1.5 text-xs rounded-md border border-border bg-muted/50 text-primary hover:bg-primary/20 hover:text-primary font-bold gap-1 font-sans"
                                 onClick={() =>
                                   setActiveMapId(
                                     activeMapId === att.id
@@ -1024,7 +1024,7 @@ export default function TrainingSessionsPage() {
                           </div>
                         </div>
 
-                        <div className="flex flex-col sm:items-end justify-center text-[9px] text-muted-foreground shrink-0 border-t sm:border-t-0 sm:border-l border-white/5 pt-2 sm:pt-0 sm:pl-3">
+                        <div className="flex flex-col sm:items-end justify-center text-xs text-muted-foreground shrink-0 border-t sm:border-t-0 sm:border-l border-border pt-2 sm:pt-0 sm:pl-3">
                           <span className="flex items-center gap-1">
                             🌐 IP:{" "}
                             <b className="text-foreground font-mono">
@@ -1046,7 +1046,7 @@ export default function TrainingSessionsPage() {
                       {activeMapId === att.id &&
                         att.latitude &&
                         att.longitude && (
-                          <div className="w-full mt-1 rounded-2xl overflow-hidden border border-white/10 shadow-lg h-44 relative animate-in slide-in-from-top-3 duration-300">
+                          <div className="w-full mt-1 rounded-2xl overflow-hidden border border-border shadow-lg h-44 relative animate-in slide-in-from-top-3 duration-300">
                             <iframe
                               title={`Mapa de ${archerName}`}
                               width="100%"
@@ -1074,7 +1074,7 @@ export default function TrainingSessionsPage() {
 
             <Button
               variant="outline"
-              className="w-full h-11 font-bold rounded-xl border-white/10 hover:bg-white/5 mt-2"
+              className="w-full h-11 font-bold rounded-xl border-border hover:bg-muted mt-2"
               onClick={() => setSelectedGpsTraining(null)}
             >
               Cerrar Detalle

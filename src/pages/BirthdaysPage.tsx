@@ -139,12 +139,12 @@ export default function BirthdaysPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-display font-bold text-foreground">{m.full_name}</h3>
-                                    <Badge variant="secondary" className="mt-2 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 border-primary/20">¡FELIZ CUMPLEAÑOS!</Badge>
+                                    <Badge variant="secondary" className="mt-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border-primary/20">¡FELIZ CUMPLEAÑOS!</Badge>
                                 </div>
                             </motion.div>
                         ))
                     ) : (
-                        <div className="sm:col-span-2 lg:col-span-3 glass rounded-[2rem] p-12 text-center border-dashed border-2 border-white/5">
+                        <div className="sm:col-span-2 lg:col-span-3 glass rounded-[2rem] p-12 text-center border-dashed border-2 border-border">
                             <Cake className="h-12 w-12 mx-auto mb-4 text-muted-foreground/20" />
                             <p className="text-sm text-muted-foreground font-medium">No hay cumpleaños registrados para hoy.</p>
                         </div>
@@ -167,7 +167,7 @@ export default function BirthdaysPage() {
 
                 {isSuperAdmin && clubs && (
                     <div className="w-full sm:w-[300px] glass p-3 rounded-2xl border-indigo-500/20">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Súper Admin: Revisar Club</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Súper Admin: Revisar Club</label>
                         <Select value={selectedClubId || ""} onValueChange={setSelectedClubId}>
                             <SelectTrigger className="h-10 bg-background/50 border-none shadow-none">
                                 <SelectValue placeholder="Seleccionar Club" />
@@ -184,8 +184,8 @@ export default function BirthdaysPage() {
                 )}
             </div>
 
-            <div className="glass rounded-[2rem] overflow-hidden border-white/5">
-                <div className="p-6 flex items-center justify-between bg-muted/20 border-b border-white/5">
+            <div className="glass rounded-[2rem] overflow-hidden border-border">
+                <div className="p-6 flex items-center justify-between bg-muted/20 border-b border-border">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-display font-bold text-foreground">
                             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
@@ -204,9 +204,9 @@ export default function BirthdaysPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-7 border-b border-white/5 bg-muted/10">
+                <div className="grid grid-cols-7 border-b border-border bg-muted/10">
                     {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map(day => (
-                        <div key={day} className="py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <div key={day} className="py-3 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">
                             {day}
                         </div>
                     ))}
@@ -214,7 +214,7 @@ export default function BirthdaysPage() {
 
                 <div className="grid grid-cols-7">
                     {Array.from({ length: daysInMonth[0].getDay() }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-32 sm:h-40 border-r border-b border-white/5 bg-muted/5 opacity-50" />
+                        <div key={`empty-${i}`} className="h-32 sm:h-40 border-r border-b border-border bg-muted/5 opacity-50" />
                     ))}
                     {daysInMonth.map(date => {
                         const day = date.getDate();
@@ -225,7 +225,7 @@ export default function BirthdaysPage() {
                             <div
                                 key={day}
                                 className={cn(
-                                    "h-32 sm:h-40 border-r border-b border-white/5 p-2 transition-colors relative group",
+                                    "h-32 sm:h-40 border-r border-b border-border p-2 transition-colors relative group",
                                     active ? "bg-primary/5" : "hover:bg-muted/10"
                                 )}
                             >
@@ -243,15 +243,15 @@ export default function BirthdaysPage() {
                                             initial={{ opacity: 0, x: -5 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.05 }}
-                                            className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-white/5 hover:border-primary/30 transition-colors"
+                                            className="flex items-center gap-2 p-1 rounded-lg bg-background/50 border border-border hover:border-primary/30 transition-colors"
                                         >
                                             <Avatar className="h-5 w-5 border border-primary/20">
                                                 <AvatarImage src={getAvatarUrl(m.avatar_url)} />
-                                                <AvatarFallback className="text-[8px] font-bold">
+                                                <AvatarFallback className="text-xs font-bold">
                                                     {m.full_name?.substring(0, 2).toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            <span className="text-[9px] font-bold truncate text-foreground">{m.full_name.split(' ')[0]}</span>
+                                            <span className="text-xs font-bold truncate text-foreground">{m.full_name.split(' ')[0]}</span>
                                         </motion.div>
                                     ))}
                                 </div>

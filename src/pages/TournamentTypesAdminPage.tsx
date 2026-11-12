@@ -328,14 +328,14 @@ export default function TournamentTypesAdminPage() {
                                                 <div>
                                                     <p className="font-semibold leading-tight">{type.name}</p>
                                                     {type.description && (
-                                                        <p className="text-[10px] text-muted-foreground leading-tight line-clamp-1 max-w-[200px]">{type.description}</p>
+                                                        <p className="text-xs text-muted-foreground leading-tight line-clamp-1 max-w-[200px]">{type.description}</p>
                                                     )}
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>
                                             {type.discipline ? (
-                                                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${DISCIPLINE_BADGE_COLORS[type.discipline] || "bg-muted/30"}`}>
+                                                <span className={`inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${DISCIPLINE_BADGE_COLORS[type.discipline] || "bg-muted/30"}`}>
                                                     {DISCIPLINE_ICONS[type.discipline]} {type.discipline}
                                                 </span>
                                             ) : "—"}
@@ -526,7 +526,7 @@ export default function TournamentTypesAdminPage() {
                                     placeholder="Ej: 20, 55, 76"
                                 />
                                 {formData.distance_yards && (
-                                    <p className="text-[10px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         ≈ {Math.round(parseFloat(formData.distance_yards) / 1.09361)} metros
                                     </p>
                                 )}

@@ -373,7 +373,7 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground">{formData.display_name ? `"${formData.display_name}"` : ""}</p>
               <div className="mt-4 flex flex-wrap justify-center gap-1">
                 {formData.roles?.map((r: string) => (
-                  <Badge key={r} variant="secondary" className="capitalize text-[10px] px-2 py-0">
+                  <Badge key={r} variant="secondary" className="capitalize text-xs px-2 py-0">
                     {r}
                   </Badge>
                 ))}
@@ -384,7 +384,7 @@ export default function ProfilePage() {
           {/* Club info */}
           {club && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-5 border-l-4 border-primary">
-              <p className="text-[10px] uppercase font-bold text-primary mb-1">Mi Club</p>
+              <p className="text-xs uppercase font-bold text-primary mb-1">Mi Club</p>
               <h3 className="font-display font-bold text-foreground text-lg">{club.name}</h3>
               <p className="text-xs text-muted-foreground mt-1">
                 {[club.city, club.country].filter(Boolean).join(", ")}
@@ -396,7 +396,7 @@ export default function ProfilePage() {
           {fullMember && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-xl p-5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Estado de membresía</span>
+                <span className="text-xs uppercase font-bold text-muted-foreground">Estado de membresía</span>
                 <div className="flex gap-2">
                   <Badge variant={fullMember.status === "activo" ? "default" : "destructive"} className="h-5 px-2">
                     {fullMember.status}
@@ -532,7 +532,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {infoItems.map(({ icon: Icon, label, value }) => (
                   <div key={label} className="space-y-1">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1">
+                    <p className="text-xs uppercase font-bold text-muted-foreground flex items-center gap-1">
                       <Icon className="h-3 w-3" /> {label}
                     </p>
                     <p className="text-sm font-medium text-foreground">{value}</p>
@@ -541,18 +541,18 @@ export default function ProfilePage() {
 
                 <div className="sm:col-span-2 border-t border-border/50 pt-4 grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Polera</p>
+                    <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Talla Polera</p>
                     <Badge variant="outline" className="font-mono">{formData.shirt_size || "—"}</Badge>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Talla Cortavientos</p>
+                    <p className="text-xs uppercase font-bold text-muted-foreground mb-1">Talla Cortavientos</p>
                     <Badge variant="outline" className="font-mono">{formData.windbreaker_size || "—"}</Badge>
                   </div>
                 </div>
 
                 {fullMember?.medical_history && (
                   <div className="sm:col-span-2 bg-rose-500/5 p-4 rounded-xl border border-rose-500/10">
-                    <p className="text-[10px] uppercase font-bold text-rose-600 mb-1">Información Médica</p>
+                    <p className="text-xs uppercase font-bold text-rose-600 mb-1">Información Médica</p>
                     <p className="text-sm text-foreground italic">"{fullMember.medical_history}"</p>
                   </div>
                 )}
@@ -596,7 +596,7 @@ export default function ProfilePage() {
                         "p-2 rounded-xl border text-center transition-all",
                         p ? "bg-emerald-500/10 border-emerald-500/30" : "bg-muted/50 border-border/50 opacity-60"
                       )}>
-                        <p className="text-[9px] uppercase font-bold text-muted-foreground">{date.toLocaleString('es-ES', { month: 'short' })}</p>
+                        <p className="text-xs uppercase font-bold text-muted-foreground">{date.toLocaleString('es-ES', { month: 'short' })}</p>
                         <p className="text-xs font-bold">{year}</p>
                         <div className="mt-1 flex justify-center">
                           {p ? (
@@ -612,7 +612,7 @@ export default function ProfilePage() {
 
                 {/* Listado de movimientos */}
                 <div className="space-y-2">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] px-1">Últimos movimientos</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] px-1">Últimos movimientos</p>
                   {payments.slice(0, 3).map((p) => (
                     <div key={p.id} className="flex items-center justify-between p-3 bg-card/40 rounded-xl border border-border/30 hover:bg-card/60 transition-colors">
                       <div className="flex items-center gap-3">
@@ -624,7 +624,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <p className="text-xs font-bold capitalize">{p.category}</p>
-                          <p className="text-[9px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {new Date(p.entry_date).toLocaleDateString("es-CL")} {p.description ? `• ${p.description}` : ""}
                           </p>
                         </div>

@@ -329,7 +329,7 @@ export default function AddMemberDialog({ clubId: initialClubId, disabled }: Pro
                   onChange={(e) => setBillingDay(e.target.value)}
                   placeholder="Día del mes..."
                 />
-                <p className="text-[10px] text-muted-foreground">Vencimiento mensual. Por defecto: hoy.</p>
+                <p className="text-xs text-muted-foreground">Vencimiento mensual. Por defecto: hoy.</p>
               </div>
               <div className="space-y-2">
                 <Label>Días de Gracia</Label>
@@ -339,7 +339,7 @@ export default function AddMemberDialog({ clubId: initialClubId, disabled }: Pro
                   value={graceDays}
                   onChange={(e) => setGraceDays(e.target.value)}
                 />
-                <p className="text-[10px] text-muted-foreground">Días extra antes de marcar atrasado.</p>
+                <p className="text-xs text-muted-foreground">Días extra antes de marcar atrasado.</p>
               </div>
             </div>
           </div>

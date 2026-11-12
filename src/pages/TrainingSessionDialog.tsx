@@ -467,7 +467,7 @@ export default function TrainingSessionDialog({
                       "flex items-center justify-center gap-2 h-11 rounded-xl border font-bold text-sm transition-all",
                       sessionMode === m.value
                         ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
-                        : "glass border-white/10 text-muted-foreground hover:border-primary/30"
+                        : "glass border-border text-muted-foreground hover:border-primary/30"
                     )}
                   >
                     {m.value === "tournament" ? (
@@ -484,7 +484,7 @@ export default function TrainingSessionDialog({
               {sessionMode === "tournament" && (
                 <div className="space-y-3 p-3 glass rounded-2xl border-primary/10 border">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                       Nombre del Torneo
                     </Label>
                     <Input
@@ -495,7 +495,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                    <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                       Ciudad
                     </Label>
                     <div className="relative">
@@ -513,7 +513,7 @@ export default function TrainingSessionDialog({
 
               {/* 3. Disciplina NFAA/IFAA */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                   Disciplina
                 </Label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -527,10 +527,10 @@ export default function TrainingSessionDialog({
                         setIndoorTargetType("");
                       }}
                       className={cn(
-                        "flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-[10px] font-bold transition-all",
+                        "flex flex-col items-center gap-1 py-2 px-1 rounded-xl border text-xs font-bold transition-all",
                         nfaaDiscipline === d.value
                           ? "bg-primary/10 border-primary/50 text-primary"
-                          : "glass border-white/5 text-muted-foreground hover:border-primary/20"
+                          : "glass border-border text-muted-foreground hover:border-primary/20"
                       )}
                     >
                       <span className="text-lg">{d.icon}</span>
@@ -544,7 +544,7 @@ export default function TrainingSessionDialog({
 
               {/* 4. División */}
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">
+                <Label className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                   División
                 </Label>
                 <div className="relative">
@@ -568,12 +568,12 @@ export default function TrainingSessionDialog({
                           setBowStyle(div.bowStyle);
                           setDivisionSearch("");
                         }}
-                        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-primary/5 transition-colors border-b border-white/5 last:border-none"
+                        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-primary/5 transition-colors border-b border-border last:border-none"
                       >
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {div.label}
                         </span>
-                        <span className="text-[10px] font-black font-mono text-primary">
+                        <span className="text-xs font-black font-mono text-primary">
                           {div.code}
                         </span>
                       </button>
@@ -582,7 +582,7 @@ export default function TrainingSessionDialog({
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Edad
                     </Label>
                     <Select
@@ -603,7 +603,7 @@ export default function TrainingSessionDialog({
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Género
                     </Label>
                     <Select value={gender} onValueChange={setGender}>
@@ -620,7 +620,7 @@ export default function TrainingSessionDialog({
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Estilo
                     </Label>
                     <Select value={bowStyle} onValueChange={setBowStyle}>
@@ -639,13 +639,13 @@ export default function TrainingSessionDialog({
                 </div>
                 {divisionCode && (
                   <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-3 py-2">
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       División:
                     </span>
                     <Badge className="bg-primary text-primary-foreground font-mono text-xs tracking-wider px-2">
                       {divisionCode}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       {
                         NFAA_ALL_DIVISIONS.find(
                           (d) => d.code === divisionCode
@@ -660,7 +660,7 @@ export default function TrainingSessionDialog({
               {nfaaDiscipline === "indoor" && (
                 <div className="space-y-3 p-3 glass rounded-2xl border-blue-500/20 border">
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] uppercase font-black tracking-widest text-blue-400">
+                    <Label className="text-xs uppercase font-black tracking-widest text-primary">
                       🏠 Puntuación Indoor
                     </Label>
                     <div className="flex gap-1.5">
@@ -670,10 +670,10 @@ export default function TrainingSessionDialog({
                           type="button"
                           onClick={() => setIndoorTargetType(t.value)}
                           className={cn(
-                            "px-3 py-1 rounded-lg text-[10px] font-black border transition-all",
+                            "px-3 py-1 rounded-lg text-xs font-black border transition-all",
                             indoorTargetType === t.value
-                              ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
-                              : "glass border-white/10 text-muted-foreground"
+                              ? "bg-primary/10 border-primary text-primary"
+                              : "glass border-border text-muted-foreground"
                           )}
                         >
                           {t.label}
@@ -682,13 +682,13 @@ export default function TrainingSessionDialog({
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="glass p-3 rounded-xl border-white/5 space-y-2">
-                      <p className="text-[10px] font-black uppercase text-muted-foreground text-center">
+                    <div className="glass p-3 rounded-xl border-border space-y-2">
+                      <p className="text-xs font-black uppercase text-muted-foreground text-center">
                         1er Standard
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-muted-foreground">
+                          <Label className="text-xs font-bold text-muted-foreground">
                             Puntuación
                           </Label>
                           <Input
@@ -702,7 +702,7 @@ export default function TrainingSessionDialog({
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-muted-foreground">
+                          <Label className="text-xs font-bold text-muted-foreground">
                             # de X
                           </Label>
                           <Input
@@ -716,13 +716,13 @@ export default function TrainingSessionDialog({
                         </div>
                       </div>
                     </div>
-                    <div className="glass p-3 rounded-xl border-white/5 space-y-2">
-                      <p className="text-[10px] font-black uppercase text-muted-foreground text-center">
+                    <div className="glass p-3 rounded-xl border-border space-y-2">
+                      <p className="text-xs font-black uppercase text-muted-foreground text-center">
                         2do Standard
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-muted-foreground">
+                          <Label className="text-xs font-bold text-muted-foreground">
                             Puntuación
                           </Label>
                           <Input
@@ -736,7 +736,7 @@ export default function TrainingSessionDialog({
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold text-muted-foreground">
+                          <Label className="text-xs font-bold text-muted-foreground">
                             # de X
                           </Label>
                           <Input
@@ -753,7 +753,7 @@ export default function TrainingSessionDialog({
                   </div>
                   <div className="flex items-center justify-center gap-6 bg-primary/5 rounded-xl py-2 border border-primary/10">
                     <div className="text-center">
-                      <p className="text-[9px] uppercase font-black text-muted-foreground">
+                      <p className="text-xs uppercase font-black text-muted-foreground">
                         Total Puntos
                       </p>
                       <p className="text-xl font-black text-primary tabular-nums">
@@ -762,10 +762,10 @@ export default function TrainingSessionDialog({
                     </div>
                     <div className="w-px h-8 bg-border" />
                     <div className="text-center">
-                      <p className="text-[9px] uppercase font-black text-muted-foreground">
+                      <p className="text-xs uppercase font-black text-muted-foreground">
                         Total X
                       </p>
-                      <p className="text-xl font-black text-amber-400 tabular-nums">
+                      <p className="text-xl font-black text-primary tabular-nums">
                         {indoorTotalX}
                       </p>
                     </div>
@@ -789,7 +789,7 @@ export default function TrainingSessionDialog({
                       type="button"
                       variant="outline"
                       className={cn(
-                        "h-auto py-3 px-3 flex flex-col items-start gap-1 glass border-white/10",
+                        "h-auto py-3 px-3 flex flex-col items-start gap-1 glass border-border",
                         rounds.length > 0 &&
                           rounds[0].presetId === p.id &&
                           "border-primary bg-primary/5"
@@ -801,10 +801,10 @@ export default function TrainingSessionDialog({
                         setName(`Serie: ${p.name}`);
                       }}
                     >
-                      <span className="font-bold text-[11px] leading-tight">
+                      <span className="font-bold text-xs leading-tight">
                         {p.name}
                       </span>
-                      <span className="text-[9px] text-muted-foreground leading-tight text-left">
+                      <span className="text-xs text-muted-foreground leading-tight text-left">
                         {p.description}
                       </span>
                     </Button>
@@ -821,7 +821,7 @@ export default function TrainingSessionDialog({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-[10px] font-black uppercase text-primary"
+                    className="h-7 text-xs font-black uppercase text-primary"
                     onClick={() =>
                       setRounds([
                         ...rounds,
@@ -841,7 +841,7 @@ export default function TrainingSessionDialog({
                   {rounds.map((round, idx) => (
                     <div
                       key={idx}
-                      className="glass p-3 rounded-2xl border-white/5 space-y-3 relative group"
+                      className="glass p-3 rounded-2xl border-border space-y-3 relative group"
                     >
                       <Button
                         type="button"
@@ -856,7 +856,7 @@ export default function TrainingSessionDialog({
                       </Button>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground">
                             Distancia (yd)
                           </Label>
                           <Input
@@ -873,7 +873,7 @@ export default function TrainingSessionDialog({
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground">
                             Diana
                           </Label>
                           <Input
@@ -889,7 +889,7 @@ export default function TrainingSessionDialog({
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground">
                             Ends
                           </Label>
                           <Input
@@ -904,7 +904,7 @@ export default function TrainingSessionDialog({
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                          <Label className="text-xs font-bold uppercase text-muted-foreground">
                             Flechas x End
                           </Label>
                           <Input
@@ -927,17 +927,17 @@ export default function TrainingSessionDialog({
           </Tabs>
 
           {/* Metadatos (Clima / Equipo) */}
-          <div className="space-y-4 pt-2 border-t border-white/5">
+          <div className="space-y-4 pt-2 border-t border-border">
             <div className="flex items-center gap-2 mb-1">
               <Settings2 className="h-3.5 w-3.5 text-primary" />
-              <Label className="text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">
+              <Label className="text-xs uppercase font-black tracking-[0.2em] text-muted-foreground">
                 Condiciones y Equipo
               </Label>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">
                   Clima
                 </Label>
                 <Select value={weather} onValueChange={setWeather}>
@@ -954,7 +954,7 @@ export default function TrainingSessionDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">
                   Ubicación
                 </Label>
                 <div className="relative">
@@ -979,7 +979,7 @@ export default function TrainingSessionDialog({
                   trainingType !== "torneo" ? "col-span-2" : ""
                 }`}
               >
-                <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                <Label className="text-xs font-bold uppercase text-muted-foreground">
                   Viento
                 </Label>
                 <div className="flex gap-2">
@@ -1008,7 +1008,7 @@ export default function TrainingSessionDialog({
               </div>
               {trainingType !== "torneo" && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">
                     Arco
                   </Label>
                   <Input
@@ -1024,12 +1024,12 @@ export default function TrainingSessionDialog({
             {/* Equipo detallado (para tab torneo activo) */}
             {trainingType === "torneo" && (
               <div className="space-y-3 pt-2">
-                <p className="text-[9px] uppercase font-black tracking-widest text-muted-foreground">
+                <p className="text-xs uppercase font-black tracking-widest text-muted-foreground">
                   Detalle de Equipo
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Marca/Modelo Arco
                     </Label>
                     <Input
@@ -1040,7 +1040,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Palas (marca, peso)
                     </Label>
                     <Input
@@ -1051,7 +1051,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Cuerda
                     </Label>
                     <Input
@@ -1062,7 +1062,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Tab / Dactilera / Guante
                     </Label>
                     <Input
@@ -1073,7 +1073,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Mira
                     </Label>
                     <Input
@@ -1084,7 +1084,7 @@ export default function TrainingSessionDialog({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">
                       Estabilizador
                     </Label>
                     <Input
@@ -1099,7 +1099,7 @@ export default function TrainingSessionDialog({
                     bowStyle === "FU" ||
                     bowStyle === "BB-C") && (
                     <div className="space-y-1 col-span-2">
-                      <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                      <Label className="text-xs font-bold uppercase text-muted-foreground">
                         Disparador
                       </Label>
                       <Input
@@ -1112,7 +1112,7 @@ export default function TrainingSessionDialog({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[9px] font-bold uppercase text-muted-foreground">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">
                     Notas de Equipo y Observaciones
                   </Label>
                   <Textarea
@@ -1125,12 +1125,12 @@ export default function TrainingSessionDialog({
               </div>
             )}
 
-            <div className="flex items-center justify-between glass p-3 rounded-2xl border-white/5 mt-2">
+            <div className="flex items-center justify-between glass p-3 rounded-2xl border-border mt-2">
               <div className="space-y-0.5">
-                <Label className="text-[11px] font-bold">
+                <Label className="text-xs font-bold">
                   Números de Flecha
                 </Label>
-                <p className="text-[9px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Registrar qué flecha cae dónde
                 </p>
               </div>

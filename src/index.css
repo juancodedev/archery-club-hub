@@ -119,12 +119,14 @@
 }
 
 @layer utilities {
+  /* Solid card surface. It used to blur what is behind it; the brand keeps
+     surfaces solid so text contrast does not depend on the page underneath. */
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    @apply bg-card border border-border;
   }
 
   .glass-dark {
-    @apply bg-background/60 backdrop-blur-xl border border-border/30;
+    @apply bg-background border border-border;
   }
 
   /* Kept for existing call sites; the brand uses solid navy, no gradient text. */

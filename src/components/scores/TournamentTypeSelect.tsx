@@ -138,7 +138,7 @@ export default function TournamentTypeSelect({
                             : "Otros";
                         return (
                             <div key={disc}>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-3 py-1.5 border-t border-border/30 mt-1">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground px-3 py-1.5 border-t border-border/30 mt-1">
                                     {icon} {discLabel}
                                 </p>
                                 {items.map((type) => {

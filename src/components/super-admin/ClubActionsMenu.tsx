@@ -52,7 +52,7 @@ export default function ClubActionsMenu({ club, onStatusToggle }: ClubActionsMen
                     </DropdownMenuItem>
 
                     <DropdownMenuItem onClick={() => setIsPlanOpen(true)}>
-                        <CreditCard className="mr-2 h-4 w-4 text-emerald-400" />
+                        <CreditCard className="mr-2 h-4 w-4 text-primary" />
                         <span>Gestionar Plan (Excepciones)</span>
                     </DropdownMenuItem>
 

@@ -250,12 +250,12 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <Send className="h-3 w-3 text-emerald-400" />
+                                                                    <Send className="h-3 w-3 text-primary" />
                                                                     {inv.email || "Invitación directa"}
                                                                 </>
                                                             )}
                                                         </div>
-                                                        <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                                        <div className="text-xs text-muted-foreground flex items-center gap-1">
                                                             <Calendar className="h-3 w-3" />
                                                             Expira: {new Date(inv.expires_at).toLocaleString('es-CL')}
                                                         </div>
@@ -292,19 +292,19 @@ export default function ClubConfigDialog({ clubId, clubName, isOpen, onOpenChang
 
                                                 {inv.invitation_type === 'generic' && (
                                                     <div className="flex items-center justify-between pt-2 border-t border-border/20">
-                                                        <div className="text-[10px] font-semibold text-muted-foreground">
+                                                        <div className="text-xs font-semibold text-muted-foreground">
                                                             USOS: {regs.length} / {inv.max_uses || '-'}
                                                         </div>
                                                         {regs.length > 0 && (
                                                             <Popover>
                                                                 <PopoverTrigger asChild>
-                                                                    <Button variant="link" className="h-auto p-0 text-[10px]">Ver inscritos</Button>
+                                                                    <Button variant="link" className="h-auto p-0 text-xs">Ver inscritos</Button>
                                                                 </PopoverTrigger>
                                                                 <PopoverContent className="w-64 glass">
                                                                     <div className="text-xs font-bold mb-2 border-b border-border/50 pb-1">Inscritos con este link</div>
                                                                     <div className="space-y-1 max-h-40 overflow-y-auto">
                                                                         {regs.map(r => (
-                                                                            <div key={r.id} className="flex justify-between items-center text-[10px]">
+                                                                            <div key={r.id} className="flex justify-between items-center text-xs">
                                                                                 <span className="font-medium">{r.full_name}</span>
                                                                                 <span className="text-muted-foreground">{new Date(r.created_at ?? '').toLocaleDateString()}</span>
                                                                             </div>

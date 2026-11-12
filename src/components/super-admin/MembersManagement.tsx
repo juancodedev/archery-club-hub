@@ -204,7 +204,7 @@ export default function MembersManagement() {
                                     <TableCell>
                                         <div className="flex flex-wrap gap-1">
                                             {m.member_roles?.map((r, i) => (
-                                                <Badge key={i} variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">
+                                                <Badge key={i} variant="secondary" className="text-xs px-1.5 py-0 capitalize">
                                                     {r.role}
                                                 </Badge>
                                             ))}

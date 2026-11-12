@@ -250,7 +250,7 @@ export default function TrainingSessionList({
         return (
           <div
             key={session.id}
-            className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-white/5 active:scale-[0.99] transition-transform"
+            className="glass rounded-2xl p-5 sm:p-6 space-y-5 border-border active:scale-[0.99] transition-transform"
           >
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
               <div className="space-y-2 flex-1">
@@ -259,7 +259,7 @@ export default function TrainingSessionList({
                     {session.name}
                   </h3>
                   {session.training_type === "estandar" && (
-                    <span className="inline-flex items-center rounded-full bg-primary/20 text-primary border border-primary/30 h-5 px-2.5 text-[9px] uppercase font-black">
+                    <span className="inline-flex items-center rounded-full bg-primary/20 text-primary border border-primary/30 h-5 px-2.5 text-xs uppercase font-black">
                       Serie Estándar
                     </span>
                   )}
@@ -275,7 +275,7 @@ export default function TrainingSessionList({
                   </span>
                   {disc && (
                     <span
-                      className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${getDisciplineBadge(disc)}`}
+                      className={`inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${getDisciplineBadge(disc)}`}
                     >
                       {getDisciplineIcon(disc)} {disc}
                     </span>
@@ -287,7 +287,7 @@ export default function TrainingSessionList({
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
+                <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
                   {session.distance_yards &&
                     !(
                       session.rounds_config as { length?: number } | null
@@ -321,7 +321,7 @@ export default function TrainingSessionList({
                 </div>
 
                 {(session.bow_info || session.arrow_info) && (
-                  <div className="flex flex-wrap items-center gap-3 mt-1 text-[10px] opacity-60">
+                  <div className="flex flex-wrap items-center gap-3 mt-1 text-xs opacity-60">
                     {session.bow_info && (
                       <span className="flex items-center gap-1">
                         <Shield className="h-2.5 w-2.5" /> {session.bow_info}
@@ -346,8 +346,8 @@ export default function TrainingSessionList({
                   if (rc?.nfaaDiscipline !== "indoor" || rc.totalScore == null)
                     return null;
                   return (
-                    <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]">
-                      <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-lg border border-blue-500/20 font-mono font-bold">
+                    <div className="flex flex-wrap items-center gap-3 mt-1 text-xs">
+                      <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-2 py-0.5 rounded-lg border border-primary/20 font-mono font-bold">
                         🏠{" "}
                         {rc.indoorTargetType === "5spots"
                           ? "5 Spots"
@@ -361,7 +361,7 @@ export default function TrainingSessionList({
                 {session.detail && (
                   <div className="flex items-start gap-2 bg-primary/5 p-3 rounded-xl border border-primary/10 mt-3">
                     <Info className="h-3.5 w-3.5 text-primary/40 mt-0.5" />
-                    <p className="text-[11px] leading-relaxed italic text-muted-foreground line-clamp-2">
+                    <p className="text-xs leading-relaxed italic text-muted-foreground line-clamp-2">
                       "{session.detail}"
                     </p>
                   </div>
@@ -396,7 +396,7 @@ export default function TrainingSessionList({
                         ) => (
                           <div
                             key={idx}
-                            className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-white/5 text-[10px]"
+                            className="flex items-center justify-between glass py-1.5 px-3 rounded-xl border-border text-xs"
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-black text-primary">
@@ -418,7 +418,7 @@ export default function TrainingSessionList({
 
               <div className="flex items-center justify-between sm:justify-end gap-3 pt-4 sm:pt-0 border-t sm:border-none border-border/50">
                 <div className="flex flex-col items-center sm:items-end mr-2 bg-muted/20 px-3 py-1.5 rounded-xl border border-border/50 min-w-[70px]">
-                  <span className="text-[8px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">
+                  <span className="text-xs text-muted-foreground uppercase font-black tracking-widest mb-0.5">
                     Asistencia
                   </span>
                   <span className="text-lg font-black text-primary tabular-nums">
