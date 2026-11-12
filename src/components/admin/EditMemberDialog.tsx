@@ -119,7 +119,8 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
           grace_days: graceDays ? Number(graceDays) : 7,
           ifaa_number: ifaaNumber || null,
           shirt_gender: shirtGender || null,
-          enrollment_date: enrollmentDate || null,
+          // NOT NULL column: leave it unchanged when the field is cleared.
+          enrollment_date: enrollmentDate || undefined,
         })
         .eq("id", member.id);
       if (error) throw error;
