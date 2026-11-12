@@ -110,14 +110,14 @@ export default function LoginPage() {
                     className="text-center"
                 >
                     <div className="mb-8 flex justify-center">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/20 glow-primary">
-                            <Target className="h-10 w-10 text-primary" />
+                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-sidebar-accent">
+                            <Target className="h-10 w-10 text-sidebar-primary" />
                         </div>
                     </div>
-                    <h1 className="mb-4 text-4xl font-display font-bold text-primary-foreground">
-                        Quiver<span className="text-primary">App</span>
+                    <h1 className="mb-4 text-4xl font-display font-bold text-white">
+                        Quiver<span className="text-sidebar-primary">App</span>
                     </h1>
-                    <p className="text-lg text-muted-foreground max-w-sm">
+                    <p className="text-lg text-sidebar-foreground max-w-sm">
                         {isSuperAdminSubdomain
                             ? "Panel de control maestro para la administración global de clubes de arquería."
                             : "La plataforma de gestión para clubes de arquería. Controla miembros, entrenamientos y puntajes en un solo lugar."}
