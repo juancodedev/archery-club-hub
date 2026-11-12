@@ -87,7 +87,7 @@ export default function ScoresPage() {
     }
   };
 
-  const generatePDF = (html2pdf: (el: HTMLElement, opts: Record<string, unknown>) => Promise<void>) => {
+  const generatePDF = (html2pdf: typeof import("html2pdf.js").default) => {
     const element = document.querySelector(".print-scorecard") as HTMLElement;
     if (!element) {
       toast.error("No se encontró el elemento de la ficha");
@@ -114,7 +114,7 @@ export default function ScoresPage() {
         logging: false
       },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-    };
+    } as const;
 
     toast.info("Generando PDF...");
 

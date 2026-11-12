@@ -242,7 +242,8 @@ export default function ProfilePage() {
           grace_days: formData.grace_days ? Number(formData.grace_days) : null,
           ifaa_number: formData.ifaa_number || null,
           shirt_gender: formData.shirt_gender || null,
-          enrollment_date: formData.enrollment_date || null,
+          // NOT NULL column: leave it unchanged when the field is cleared.
+          enrollment_date: formData.enrollment_date || undefined,
         })
         .eq("id", selectedMemberId);
       if (error) throw error;

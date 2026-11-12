@@ -20,6 +20,7 @@ const ROLE_LABELS: Record<ClubRole, string> = {
   secretaria: "Secretaria",
   tesorero: "Tesorero",
   alumno: "Alumno",
+  gestor_torneos: "Gestor de torneos",
 };
 
 interface Props {
