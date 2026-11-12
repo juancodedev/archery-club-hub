@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isAdmin, isPresidente } from "../permissions";
+import { isAdmin, isPresidente, isTournamentManager } from "../permissions";
 
 describe("permissions", () => {
     const adminRoles = ["administrador"];
@@ -28,6 +28,21 @@ describe("permissions", () => {
 
         it("should return false for others", () => {
             expect(isPresidente(memberRoles)).toBe(false);
+        });
+    });
+
+    describe("isTournamentManager", () => {
+        it("matches the roles the tournaments RLS lets manage tournaments", () => {
+            for (const role of ["gestor_torneos", "administrador", "presidente"]) {
+                expect(isTournamentManager([role])).toBe(true);
+            }
+            expect(isTournamentManager([], true)).toBe(true);
+        });
+
+        it("leaves out other club roles", () => {
+            for (const role of ["entrenador", "secretaria", "tesorero", "socio", "arquero"]) {
+                expect(isTournamentManager([role])).toBe(false);
+            }
         });
     });
 });
