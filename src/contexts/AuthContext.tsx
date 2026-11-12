@@ -17,6 +17,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [systemMode, setSystemMode] = useState<'produccion' | 'pruebas'>('pruebas');
 
     const fetchMember = async (userId: string, _userEmail?: string) => {
+        // On a failed members query, keep what is loaded only if it belongs to this user.
+        // Another account's member must never survive a sign-in that could not load its own.
+        const keepOnlyMembershipsOfThisUser = () => {
+            setMember(prev => (prev?.user_id === userId ? prev : null));
+            setMemberships(prev => prev.filter(m => m.user_id === userId));
+        };
+
         try {
             logger.log("Cargando membresías para userId: " + userId);
 
@@ -30,7 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq("user_id", userId);
 
             if (membersError) {
+                // A failed query is not "no memberships": keep whatever was loaded so a
+                // transient error (for example during a token refresh) does not sign the
+                // user out of their club mid-session.
                 logger.error("Error al obtener membresías:", membersError);
+                keepOnlyMembershipsOfThisUser();
+                return;
             }
 
             logger.log("Datos de membresía recibidos: " + JSON.stringify(membersData));
@@ -72,9 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             logger.log("fetchMember finalizado.");
         } catch (e) {
+            // Same as a query error: keep the current member instead of clearing it.
             logger.error("Error crítico en AuthContext:", e);
-            setMemberships([]);
-            setMember(null);
+            keepOnlyMembershipsOfThisUser();
         }
     };
 
