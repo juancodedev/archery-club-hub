@@ -327,10 +327,10 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                             />
                         </div>
                         {type === "income" && category === "Membresía" && (club?.monthly_fee ?? 0) > 0 && (
-                            <p className="text-[10px] text-emerald-600 font-medium">Cargando monto por defecto del club</p>
+                            <p className="text-xs text-emerald-600 font-medium">Cargando monto por defecto del club</p>
                         )}
                         {type === "income" && category === "Inscripción" && (club?.inscription_fee ?? 0) > 0 && (
-                            <p className="text-[10px] text-emerald-600 font-medium">Cargando monto por defecto del club</p>
+                            <p className="text-xs text-emerald-600 font-medium">Cargando monto por defecto del club</p>
                         )}
                     </div>
 
@@ -406,7 +406,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                     </div>
 
                     <div className="space-y-2 pt-2">
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <User className="h-3 w-3" />
                             Registrado por: <span className="font-bold text-foreground">{member?.full_name || "Usuario del sistema"}</span>
                         </p>
@@ -443,7 +443,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                                                         if (data?.signedUrl) window.open(data.signedUrl, "_blank");
                                                     });
                                                 }}
-                                                className="text-[10px] text-primary hover:underline"
+                                                className="text-xs text-primary hover:underline"
                                             >
                                                 Ver archivo
                                             </button>
@@ -491,7 +491,7 @@ export default function FinanceForm({ type, onSuccess, onCancel, initialData }: 
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/50 border border-border/50">
                     <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                     <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">Registrado por</p>
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">Registrado por</p>
                         <p className="text-sm font-semibold text-foreground truncate">{member?.full_name || "Usuario actual"}</p>
                     </div>
                 </div>

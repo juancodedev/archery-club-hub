@@ -296,7 +296,7 @@ export default function ReportsPage() {
           <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/5">
             {isSuperAdmin && (
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Club</Label>
+                <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Club</Label>
                 <Select value={selectedClubId} onValueChange={setSelectedClubId}>
                   <SelectTrigger className="glass h-10"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent className="glass">
@@ -306,7 +306,7 @@ export default function ReportsPage() {
               </div>
             )}
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Arquero</Label>
+              <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Arquero</Label>
               <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
                 <SelectTrigger className="glass h-10"><SelectValue placeholder="Todos" /></SelectTrigger>
                 <SelectContent className="glass">
@@ -316,11 +316,11 @@ export default function ReportsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Desde</Label>
+              <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Desde</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="glass h-10" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Hasta</Label>
+              <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Hasta</Label>
               <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="glass h-10" />
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function ReportsPage() {
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>
                     <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
+                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
                   </div>
                 </div>
               ))}
@@ -407,7 +407,7 @@ export default function ReportsPage() {
               {/* Status & Role Distribution */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-2 gap-4">
                 <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Estado de Miembros</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Estado de Miembros</h3>
                   <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -420,7 +420,7 @@ export default function ReportsPage() {
                   </div>
                 </div>
                 <div className="glass rounded-3xl p-5 border-white/5 shadow-xl">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Distribución de Roles</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-4 text-center">Distribución de Roles</h3>
                   <div className="h-[220px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -455,7 +455,7 @@ export default function ReportsPage() {
                   <Icon className={cn("h-5 w-5 mb-2", color)} />
                   <div>
                     <p className="text-2xl sm:text-3xl font-display font-black text-foreground tabular-nums">{value}</p>
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
+                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-wider">{label}</p>
                   </div>
                 </div>
               ))}

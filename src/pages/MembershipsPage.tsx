@@ -168,15 +168,15 @@ export default function MembershipsPage() {
                                 <div className="space-y-1">
                                     <h3 className="font-bold text-foreground text-lg">{m.full_name}</h3>
                                     <div className="flex items-center gap-2">
-                                        <Badge variant={m.overallStatus === "vigente" ? "secondary" : "destructive"} className="text-[10px] h-5">
+                                        <Badge variant={m.overallStatus === "vigente" ? "secondary" : "destructive"} className="text-xs h-5">
                                             {m.overallStatus.toUpperCase()}
                                         </Badge>
                                         {!m.hasPaidInscription && (
-                                            <Badge variant="outline" className="text-[10px] h-5 text-amber-600 border-amber-600/30">
+                                            <Badge variant="outline" className="text-xs h-5 text-amber-600 border-amber-600/30">
                                                 FALTA INSCRIPCIÓN
                                             </Badge>
                                         )}
-                                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
                                             <CalendarDays className="h-3 w-3" /> Cobro: día {m.billing_day || new Date(m.enrollment_date).getDate()}
                                         </span>
                                     </div>
@@ -193,7 +193,7 @@ export default function MembershipsPage() {
                                                         "bg-muted/50 border-border/50"
                                             )}
                                         >
-                                            <p className="text-[8px] uppercase font-bold text-muted-foreground">{ms.label}</p>
+                                            <p className="text-xs uppercase font-bold text-muted-foreground">{ms.label}</p>
                                             <div className="mt-1 flex justify-center">
                                                 {ms.status === "paid" ? (
                                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />

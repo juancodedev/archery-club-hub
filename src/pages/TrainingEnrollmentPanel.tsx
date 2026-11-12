@@ -50,7 +50,7 @@ export default function TrainingEnrollmentPanel({
 
   return (
     <div className="pt-4 border-t border-border/50">
-      <p className="text-[9px] uppercase font-black tracking-[0.2em] text-muted-foreground mb-3 px-1 flex items-center gap-2">
+      <p className="text-xs uppercase font-black tracking-[0.2em] text-muted-foreground mb-3 px-1 flex items-center gap-2">
         <Users className="h-3 w-3" /> Miembros Inscritos
       </p>
       <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 text-left">
@@ -91,7 +91,7 @@ export default function TrainingEnrollmentPanel({
             </div>
             <span
               className={cn(
-                "text-[10px] font-bold truncate w-full text-center px-1",
+                "text-xs font-bold truncate w-full text-center px-1",
                 e.attended ? "text-emerald-600" : "text-muted-foreground"
               )}
             >

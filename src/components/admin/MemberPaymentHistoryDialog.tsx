@@ -88,11 +88,11 @@ export default function MemberPaymentHistoryDialog({
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <Badge variant="outline" className="w-fit text-[10px] capitalize">
+                                                    <Badge variant="outline" className="w-fit text-xs capitalize">
                                                         {p.category}
                                                     </Badge>
                                                     {p.payment_month && p.payment_year && (
-                                                        <span className="text-[10px] font-bold text-foreground mt-1 flex items-center gap-1">
+                                                        <span className="text-xs font-bold text-foreground mt-1 flex items-center gap-1">
                                                             <CalendarDays className="h-3 w-3 text-primary" />
                                                             {new Date(2000, p.payment_month - 1).toLocaleString('es-ES', { month: 'long' })} {p.payment_year}
                                                         </span>

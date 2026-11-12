@@ -139,7 +139,7 @@ export default function BirthdaysPage() {
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-display font-bold text-foreground">{m.full_name}</h3>
-                                    <Badge variant="secondary" className="mt-2 text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 border-primary/20">¡FELIZ CUMPLEAÑOS!</Badge>
+                                    <Badge variant="secondary" className="mt-2 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 border-primary/20">¡FELIZ CUMPLEAÑOS!</Badge>
                                 </div>
                             </motion.div>
                         ))
@@ -167,7 +167,7 @@ export default function BirthdaysPage() {
 
                 {isSuperAdmin && clubs && (
                     <div className="w-full sm:w-[300px] glass p-3 rounded-2xl border-indigo-500/20">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Súper Admin: Revisar Club</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Súper Admin: Revisar Club</label>
                         <Select value={selectedClubId || ""} onValueChange={setSelectedClubId}>
                             <SelectTrigger className="h-10 bg-background/50 border-none shadow-none">
                                 <SelectValue placeholder="Seleccionar Club" />
@@ -206,7 +206,7 @@ export default function BirthdaysPage() {
 
                 <div className="grid grid-cols-7 border-b border-white/5 bg-muted/10">
                     {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map(day => (
-                        <div key={day} className="py-3 text-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        <div key={day} className="py-3 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">
                             {day}
                         </div>
                     ))}
@@ -247,11 +247,11 @@ export default function BirthdaysPage() {
                                         >
                                             <Avatar className="h-5 w-5 border border-primary/20">
                                                 <AvatarImage src={getAvatarUrl(m.avatar_url)} />
-                                                <AvatarFallback className="text-[8px] font-bold">
+                                                <AvatarFallback className="text-xs font-bold">
                                                     {m.full_name?.substring(0, 2).toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            <span className="text-[9px] font-bold truncate text-foreground">{m.full_name.split(' ')[0]}</span>
+                                            <span className="text-xs font-bold truncate text-foreground">{m.full_name.split(' ')[0]}</span>
                                         </motion.div>
                                     ))}
                                 </div>

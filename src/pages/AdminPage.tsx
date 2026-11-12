@@ -258,7 +258,7 @@ export default function AdminPage() {
                         <div className="truncate pr-2">
                           <div className="flex flex-wrap gap-1">
                             {roles.map((role: string) => (
-                              <Badge key={role} variant="outline" className="capitalize text-[9px] px-1.5 py-0 h-4 border-primary/20">
+                              <Badge key={role} variant="outline" className="capitalize text-xs px-1.5 py-0 h-4 border-primary/20">
                                 {role}
                               </Badge>
                             ))}
@@ -266,11 +266,11 @@ export default function AdminPage() {
                         </div>
                         <div className="truncate pr-2">
                           <div className="flex flex-col gap-1">
-                            <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-[9px] h-4">
+                            <Badge variant={m.status === "activo" ? "default" : "destructive"} className="capitalize w-fit text-xs h-4">
                               {m.status}
                             </Badge>
                             {m.status === "activo" && (
-                              <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="capitalize w-fit text-[9px] h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                              <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="capitalize w-fit text-xs h-4 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                                 {m.financialStatus}
                               </Badge>
                             )}
@@ -395,13 +395,13 @@ export default function AdminPage() {
 
                   <div className="grid grid-cols-2 gap-4 mb-4 bg-muted/20 p-3 rounded-xl border border-border/50">
                     <div className="space-y-1">
-                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Finanzas</p>
-                      <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="text-[10px] h-5 w-fit border-none bg-emerald-500/10 text-emerald-500">
+                      <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Finanzas</p>
+                      <Badge variant={m.financialStatus === "vigente" ? "secondary" : "destructive"} className="text-xs h-5 w-fit border-none bg-emerald-500/10 text-emerald-500">
                         {m.financialStatus.toUpperCase()}
                       </Badge>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">Ingreso</p>
+                      <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Ingreso</p>
                       <p className="text-xs font-bold flex items-center gap-1">
                         <CalendarDays className="h-3 w-3 text-primary" />
                         {m.enrollment_date ? new Date(m.enrollment_date).toLocaleDateString("es-CL") : "—"}
@@ -411,12 +411,12 @@ export default function AdminPage() {
 
                   <div className="flex flex-wrap gap-1.5">
                     {roles.map((role: string) => (
-                      <Badge key={role} variant="outline" className="capitalize text-[9px] px-2 py-0 h-4 border-primary/20 bg-background/50">
+                      <Badge key={role} variant="outline" className="capitalize text-xs px-2 py-0 h-4 border-primary/20 bg-background/50">
                         {role}
                       </Badge>
                     ))}
                     {m.status === 'inactivo' && (
-                      <Badge variant="destructive" className="text-[9px] px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
+                      <Badge variant="destructive" className="text-xs px-2 py-0 h-4 uppercase">Cuenta Inactiva</Badge>
                     )}
                   </div>
                   </motion.div>

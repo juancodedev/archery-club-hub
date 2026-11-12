@@ -245,7 +245,7 @@ export default function FinancePage() {
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                     <Card className="glass overflow-hidden border-emerald-500/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Ingresos</CardTitle>
+                            <CardTitle className="text-xs uppercase font-black tracking-widest text-muted-foreground">Ingresos</CardTitle>
                             <TrendingUp className="h-4 w-4 text-emerald-500" />
                         </CardHeader>
                         <CardContent>
@@ -257,7 +257,7 @@ export default function FinancePage() {
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
                     <Card className="glass overflow-hidden border-destructive/20 shadow-lg">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Gastos</CardTitle>
+                            <CardTitle className="text-xs uppercase font-black tracking-widest text-muted-foreground">Gastos</CardTitle>
                             <TrendingDown className="h-4 w-4 text-destructive" />
                         </CardHeader>
                         <CardContent>
@@ -273,7 +273,7 @@ export default function FinancePage() {
                             balance >= 0 ? "bg-primary" : "bg-destructive"
                         )} />
                         <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
-                            <CardTitle className="text-[10px] uppercase font-black tracking-widest text-muted-foreground">Balance</CardTitle>
+                            <CardTitle className="text-xs uppercase font-black tracking-widest text-muted-foreground">Balance</CardTitle>
                             <DollarSign className="h-4 w-4 text-primary" />
                         </CardHeader>
                         <CardContent className="relative">
@@ -359,11 +359,11 @@ export default function FinancePage() {
                                             <div className="font-bold text-xs truncate pr-2">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</div>
                                             <div className="truncate pr-2">
                                                 <div className="flex flex-col gap-1">
-                                                    <Badge variant="outline" className="capitalize w-fit text-[10px] font-bold border-primary/30">
+                                                    <Badge variant="outline" className="capitalize w-fit text-xs font-bold border-primary/30">
                                                         {entry.category}
                                                     </Badge>
                                                     {entry.members && (
-                                                        <span className="text-[10px] font-medium text-foreground mt-0.5 flex items-center gap-1">
+                                                        <span className="text-xs font-medium text-foreground mt-0.5 flex items-center gap-1">
                                                             <User className="h-3 w-3 text-primary/60" />
                                                             {entry.members.full_name}
                                                         </span>
@@ -378,7 +378,7 @@ export default function FinancePage() {
                                                 {(entry.receipt_urls?.length ?? 0) > 0 ? (
                                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-primary relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
                                                         <Receipt className="h-4 w-4" />
-                                                        {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">{entry.receipt_urls!.length}</span>}
+                                                        {entry.receipt_urls!.length > 1 && <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">{entry.receipt_urls!.length}</span>}
                                                     </Button>
                                                 ) : entry.receipt_url && (
                                                     <Button variant="ghost" size="icon" className="h-9 w-9 text-primary" onClick={() => handleViewReceipt(entry.receipt_url)}>
@@ -425,8 +425,8 @@ export default function FinancePage() {
                                         >
                             <div className="flex justify-between items-start">
                                 <div className="space-y-1.5">
-                                    <p className="text-[10px] font-black text-primary uppercase tracking-widest">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</p>
-                                    <Badge variant="outline" className="text-[9px] font-bold capitalize bg-primary/5 border-primary/20 h-5 px-2">
+                                    <p className="text-xs font-black text-primary uppercase tracking-widest">{new Date(entry.entry_date).toLocaleDateString("es-CL")}</p>
+                                    <Badge variant="outline" className="text-xs font-bold capitalize bg-primary/5 border-primary/20 h-5 px-2">
                                         {entry.category}
                                     </Badge>
                                 </div>
@@ -440,7 +440,7 @@ export default function FinancePage() {
 
                             <div className="flex flex-col gap-2">
                                 {entry.members && (
-                                    <div className="flex items-center gap-2 text-[10px] font-bold py-1.5 px-3 bg-muted rounded-xl w-fit border border-border/30">
+                                    <div className="flex items-center gap-2 text-xs font-bold py-1.5 px-3 bg-muted rounded-xl w-fit border border-border/30">
                                         <User className="h-3 w-3 text-primary" />
                                         {entry.members.full_name.toUpperCase()}
                                     </div>
@@ -453,24 +453,24 @@ export default function FinancePage() {
                             <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/30">
                                 <div className="flex gap-1">
                                     {(entry.receipt_urls?.length ?? 0) > 0 ? (
-                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20 relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
+                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-xs font-bold rounded-lg border-primary/20 relative" onClick={() => handleViewReceipt(null, entry.receipt_urls)}>
                                             <Receipt className="h-3.5 w-3.5" />
                                             RECIBO ({entry.receipt_urls!.length})
                                         </Button>
                                     ) : entry.receipt_url && (
-                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-[10px] font-bold rounded-lg border-primary/20" onClick={() => handleViewReceipt(entry.receipt_url)}>
+                                        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-primary text-xs font-bold rounded-lg border-primary/20" onClick={() => handleViewReceipt(entry.receipt_url)}>
                                             <Receipt className="h-3.5 w-3.5" /> RECIBO
                                         </Button>
                                     )}
                                 </div>
                                 <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-[10px] font-bold" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
+                                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground text-xs font-bold" onClick={() => openForm(entry.type as "expense" | "income", entry)} disabled={isReadOnlyMode(member)}>
                                         <Pencil className="h-3.5 w-3.5" /> EDITAR
                                     </Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-8 gap-1.5 text-destructive text-[10px] font-bold hover:bg-destructive/5"
+                                        className="h-8 gap-1.5 text-destructive text-xs font-bold hover:bg-destructive/5"
                                         disabled={isReadOnlyMode(member)}
                                         onClick={() => setDeleteTargetId(entry.id)}
                                     >

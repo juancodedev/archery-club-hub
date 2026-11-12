@@ -284,11 +284,11 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                                             : "Cualquiera"}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={division.is_system ? "default" : "secondary"} className="text-[10px]">
+                                        <Badge variant={division.is_system ? "default" : "secondary"} className="text-xs">
                                             {division.is_system ? "Sistema" : "Club"}
                                         </Badge>
                                         {!division.active && (
-                                            <Badge variant="destructive" className="ml-1 text-[10px]">Inactiva</Badge>
+                                            <Badge variant="destructive" className="ml-1 text-xs">Inactiva</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
@@ -327,7 +327,7 @@ export default function DivisionsManager({ clubId, isSuperAdmin = false }: Divis
                                             )}
 
                                             {division.is_system && !isSuperAdmin && (
-                                                <Badge variant="outline" className="text-[10px] opacity-50 ml-1">Sistema</Badge>
+                                                <Badge variant="outline" className="text-xs opacity-50 ml-1">Sistema</Badge>
                                             )}
                                         </div>
                                     </TableCell>

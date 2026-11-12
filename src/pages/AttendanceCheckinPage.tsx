@@ -281,7 +281,7 @@ export default function AttendanceCheckinPage() {
             <h1 className="text-xl font-display font-bold text-foreground">
               Quiver<span className="text-primary font-black">App</span>
             </h1>
-            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">
+            <p className="text-xs text-muted-foreground uppercase font-black tracking-widest">
               Control de Asistencia GPS
             </p>
           </div>
@@ -351,7 +351,7 @@ export default function AttendanceCheckinPage() {
               </div>
               
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-1.5 text-left">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none">Entrenamiento</p>
+                <p className="text-xs text-muted-foreground uppercase font-black tracking-widest leading-none">Entrenamiento</p>
                 <p className="font-bold text-foreground text-sm">{activeTraining?.title}</p>
                 {distance !== null && (
                   <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
@@ -395,7 +395,7 @@ export default function AttendanceCheckinPage() {
               </div>
               
               <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 space-y-1.5 text-left">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none">Entrenamiento</p>
+                <p className="text-xs text-muted-foreground uppercase font-black tracking-widest leading-none">Entrenamiento</p>
                 <p className="font-bold text-foreground text-sm">{activeTraining?.title}</p>
                 {distance !== null && (
                   <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">

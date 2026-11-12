@@ -260,10 +260,10 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                                         {type.distance_meters && ` (${type.distance_meters}m)`}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={type.is_system ? "default" : "secondary"} className="text-[10px]">
+                                        <Badge variant={type.is_system ? "default" : "secondary"} className="text-xs">
                                             {type.is_system ? "Sistema" : "Club"}
                                         </Badge>
-                                        {!type.active && <Badge variant="destructive" className="ml-1 text-[10px]">Inactivo</Badge>}
+                                        {!type.active && <Badge variant="destructive" className="ml-1 text-xs">Inactivo</Badge>}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
@@ -283,7 +283,7 @@ export default function TournamentTypesManager({ clubId, isSuperAdmin = false }:
                                             )}
 
                                             {type.is_system && !isSuperAdmin && (
-                                                <Badge variant="outline" className="text-[10px] opacity-50 ml-1">Sistema</Badge>
+                                                <Badge variant="outline" className="text-xs opacity-50 ml-1">Sistema</Badge>
                                             )}
                                         </div>
                                     </TableCell>

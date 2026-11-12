@@ -283,7 +283,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
                   onChange={(e) => setBillingDay(e.target.value)}
                   placeholder="Día del mes..."
                 />
-                <p className="text-[10px] text-muted-foreground">Día del mes en que vence la membresía.</p>
+                <p className="text-xs text-muted-foreground">Día del mes en que vence la membresía.</p>
               </div>
               <div className="space-y-2">
                 <Label>Días de Gracia</Label>
@@ -293,7 +293,7 @@ export default function EditMemberDialog({ member, open, onOpenChange }: Props) 
                   value={graceDays}
                   onChange={(e) => setGraceDays(e.target.value)}
                 />
-                <p className="text-[10px] text-muted-foreground">Días adicionales antes de marcar como atrasado.</p>
+                <p className="text-xs text-muted-foreground">Días adicionales antes de marcar como atrasado.</p>
               </div>
             </div>
           </div>

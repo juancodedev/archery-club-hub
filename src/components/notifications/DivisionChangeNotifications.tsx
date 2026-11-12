@@ -71,7 +71,7 @@ export default function DivisionChangeNotifications() {
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <Badge
-                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                             variant="destructive"
                         >
                             {unreadCount}
@@ -103,7 +103,7 @@ export default function DivisionChangeNotifications() {
                                         <p className="text-xs text-muted-foreground">
                                             Tu división ha cambiado de <span className="font-semibold">{n.old_division.name}</span> a <span className="font-semibold text-primary">{n.new_division.name}</span> debido a tu edad.
                                         </p>
-                                        <p className="text-[10px] text-muted-foreground">
+                                        <p className="text-xs text-muted-foreground">
                                             {format(new Date(n.change_date), "PPP", { locale: es })}
                                         </p>
                                         <Button

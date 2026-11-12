@@ -153,7 +153,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {isAdmin && (
             <>
               <div className="my-3 border-t border-border" />
-              <p className="px-3 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Administración</p>
+              <p className="px-3 mb-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">Administración</p>
               {uniqueItems.map(renderLink)}
             </>
           )}
@@ -169,7 +169,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">{member?.full_name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{member?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">{member?.email}</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={signOut}>
@@ -213,7 +213,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link to="/profile">
                 <Avatar className="h-7 w-7 md:h-8 md:w-8 border border-primary/20 hover:scale-105 transition-transform">
                   <AvatarImage src={getAvatarUrl(member?.avatar_url)} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-[9px] md:text-[10px] font-bold">
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs md:text-xs font-bold">
                     {member?.full_name?.substring(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -282,7 +282,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <Icon className="h-5 w-5" />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-semibold truncate w-full text-center",
+                  "text-xs font-semibold truncate w-full text-center",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>
                   {label}
@@ -298,7 +298,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground">
               <Menu className="h-5 w-5" />
             </div>
-            <span className="text-[10px] font-semibold text-muted-foreground truncate w-full text-center">Más</span>
+            <span className="text-xs font-semibold text-muted-foreground truncate w-full text-center">Más</span>
           </button>
         </nav>
       </div>

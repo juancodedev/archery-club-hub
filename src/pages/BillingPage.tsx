@@ -312,7 +312,7 @@ export default function BillingPage() {
                                 </Button>
 
                                 <div className="space-y-4 pt-4 border-t border-border/10">
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] mb-4">
                                         Funciones incluidas:
                                     </p>
                                     {(plan.features || []).map((feature: string) => (
@@ -473,7 +473,7 @@ export default function BillingPage() {
 
 function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
     return (
-        <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider", className)}>
+        <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider", className)}>
             {children}
         </span>
     )

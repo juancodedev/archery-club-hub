@@ -123,7 +123,7 @@ export default function PlanOverrideDialog({ club, isOpen, onOpenChange }: PlanO
                             onChange={(e) => setLimit(e.target.value)}
                             className="bg-muted/20"
                         />
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                             Si se establece, este valor prevalece sobre el límite del plan contratado.
                         </p>
                     </div>
@@ -141,7 +141,7 @@ export default function PlanOverrideDialog({ club, isOpen, onOpenChange }: PlanO
                             onChange={(e) => setGraceDays(e.target.value)}
                             className="bg-muted/20"
                         />
-                        <p className="text-[10px] text-muted-foreground">Días extra tras vencimiento.</p>
+                        <p className="text-xs text-muted-foreground">Días extra tras vencimiento.</p>
                     </div>
 
                     <div className="space-y-2">
@@ -157,7 +157,7 @@ export default function PlanOverrideDialog({ club, isOpen, onOpenChange }: PlanO
                             <option value="total">Total</option>
                             <option value="partial">Parcial (Lectura)</option>
                         </select>
-                        <p className="text-[10px] text-muted-foreground">Efecto al bloquear.</p>
+                        <p className="text-xs text-muted-foreground">Efecto al bloquear.</p>
                     </div>
                 </div>
 

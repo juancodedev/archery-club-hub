@@ -94,7 +94,7 @@ export default function DashboardPage() {
 
         {memberships.length > 1 && (
           <div className="w-full sm:w-auto sm:min-w-[260px] glass p-3 rounded-2xl border-primary/10">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Cambiar de Club</label>
+            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2 block px-1">Cambiar de Club</label>
             <Select value={member?.club_id ?? undefined} onValueChange={setActiveMembership}>
               <SelectTrigger className="h-10 bg-background/50 border-none shadow-none">
                 <SelectValue placeholder="Seleccionar Club" />
@@ -124,7 +124,7 @@ export default function DashboardPage() {
               <div className={cn("absolute -top-6 -right-6 h-20 w-20 rounded-full opacity-5 transition-opacity group-hover:opacity-10 bg-current", color.replace('text-', 'bg-'))} />
               <Icon className={cn("h-6 w-6 mb-4", color)} />
               <p className="text-2xl sm:text-3xl font-display font-black text-foreground truncate tabular-nums">{value}</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1 tracking-wider truncate">{label}</p>
+              <p className="text-xs uppercase font-bold text-muted-foreground mt-1 tracking-wider truncate">{label}</p>
             </Link>
           </motion.div>
         ))}
@@ -139,7 +139,7 @@ export default function DashboardPage() {
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Cumpleaños de Hoy 🎂</h2>
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Cumpleaños de Hoy 🎂</h2>
             <div className="flex flex-wrap gap-3">
               {todaysBirthdays.map((m) => (
                 <Link key={m.id} to="/birthdays">
@@ -152,7 +152,7 @@ export default function DashboardPage() {
                     </Avatar>
                     <div>
                       <p className="text-sm font-bold text-foreground leading-tight">{m.full_name}</p>
-                      <p className="text-[10px] text-primary font-black uppercase tracking-widest">¡Felicidades!</p>
+                      <p className="text-xs text-primary font-black uppercase tracking-widest">¡Felicidades!</p>
                     </div>
                   </div>
                 </Link>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions - Mobile First */}
       <div className="space-y-4">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Operaciones Tácticas</h2>
+        <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground px-1">Operaciones Tácticas</h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 md:flex flex-wrap gap-3">
           <Link to="/scores/new" className="w-full md:w-auto">
             <Button className="w-full h-12 gap-2 rounded-2xl font-black shadow-lg shadow-primary/30">
@@ -200,8 +200,8 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Últimos Registros</h2>
-          <Link to="/scores" className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline">Ver Todo</Link>
+          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Últimos Registros</h2>
+          <Link to="/scores" className="text-xs font-black uppercase tracking-widest text-primary hover:underline">Ver Todo</Link>
         </div>
 
         {scores && scores.length > 0 ? (
@@ -221,16 +221,16 @@ export default function DashboardPage() {
                   <div>
                     <p className="font-bold text-foreground text-sm sm:text-base leading-tight">{score.event_name || "Entrenamiento"}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-[10px] text-muted-foreground font-medium">
+                      <p className="text-xs text-muted-foreground font-medium">
                         {new Date(score.score_date).toLocaleDateString("es-CL", { day: 'numeric', month: 'short' })}
                       </p>
-                      {score.division && <Badge variant="secondary" className="text-[8px] h-4 px-1.5 font-bold uppercase">{score.division}</Badge>}
+                      {score.division && <Badge variant="secondary" className="text-xs h-4 px-1.5 font-bold uppercase">{score.division}</Badge>}
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-display font-black text-primary tabular-nums tracking-tighter">{score.total_score}</p>
-                  <p className="text-[8px] uppercase text-muted-foreground font-black tracking-widest -mt-1">Puntos</p>
+                  <p className="text-xs uppercase text-muted-foreground font-black tracking-widest -mt-1">Puntos</p>
                 </div>
               </motion.div>
             ))}

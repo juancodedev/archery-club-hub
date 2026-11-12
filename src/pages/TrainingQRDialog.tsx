@@ -81,7 +81,7 @@ export default function TrainingQRDialog({
             </p>
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                 Token validado - 24 horas
               </p>
             </div>
