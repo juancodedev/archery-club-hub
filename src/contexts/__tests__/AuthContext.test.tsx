@@ -6,7 +6,7 @@ import { useAuth } from "../AuthContextCore";
 // Use the real context instead of the global useAuth mock from setup.tsx.
 vi.mock("@/contexts/AuthContextCore", async (importOriginal) => await importOriginal());
 
-type MembersResult = { data: unknown[] | null; error: { message: string } | null };
+type MembersResult = { data: unknown[] | null; error: { message: string } | null } | "throw";
 
 const state = vi.hoisted(() => ({
   membersResults: [] as MembersResult[],
@@ -32,7 +32,10 @@ vi.mock("@/integrations/supabase/client", () => {
         }
         return {
           select: () => ({
-            eq: () => Promise.resolve(state.membersResults.shift() ?? { data: [], error: null }),
+            eq: () => {
+              const next = state.membersResults.shift() ?? { data: [], error: null };
+              return next === "throw" ? Promise.reject(new Error("fetch failed")) : Promise.resolve(next);
+            },
           }),
         };
       },
@@ -102,5 +105,37 @@ describe("AuthProvider member loading", () => {
     });
 
     expect(screen.getByTestId("member").textContent).toBe("no member");
+  });
+
+  it("keeps the loaded member when a later refresh throws", async () => {
+    state.membersResults = [ok([MEMBER_ROW]), "throw"];
+    render(<AuthProvider><Probe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("Ana Arquera (1)"));
+
+    await act(async () => {
+      state.authCallback?.("TOKEN_REFRESHED", { user: { id: "user-1", email: "ana@club.test" } });
+    });
+
+    expect(state.membersResults).toHaveLength(0);
+    expect(screen.getByTestId("member").textContent).toBe("Ana Arquera (1)");
+  });
+
+  it("does not keep another user's member when the query fails after an account switch", async () => {
+    state.membersResults = [ok([MEMBER_ROW]), failed];
+    render(<AuthProvider><Probe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("Ana Arquera (1)"));
+
+    await act(async () => {
+      state.authCallback?.("SIGNED_IN", { user: { id: "user-2", email: "bruno@club.test" } });
+    });
+
+    expect(state.membersResults).toHaveLength(0);
+    expect(screen.getByTestId("member").textContent).toBe("no member");
+  });
+
+  it("finishes loading without a member when the first query fails", async () => {
+    state.membersResults = [failed];
+    render(<AuthProvider><Probe /></AuthProvider>);
+    await waitFor(() => expect(screen.getByTestId("member").textContent).toBe("no member"));
   });
 });
