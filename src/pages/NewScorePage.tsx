@@ -14,7 +14,7 @@ import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as User
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
-import { calculateTotalScore, ifaaRingKeypad, validateArrowValue, xValueForRound } from "@/lib/scoringUtils";
+import { calculateTotalScore, ifaaArrowsPerEnd, ifaaRingKeypad, validateArrowValue, xValueForRound } from "@/lib/scoringUtils";
 import { cn } from "@/lib/utils";
 import type { TournamentType, MemberBasic } from "@/types/archery";
 import { TRAINING_PRESETS } from "@/lib/archeryConstants";
@@ -234,18 +234,8 @@ export default function NewScorePage() {
       }
 
       // Automatically override layout configuration based on IFAA round rules
-      let arrows = type.arrows_per_end;
+      const arrows = ifaaArrowsPerEnd(ifaa, type.arrows_per_end);
       const endsVal = type.ends_per_round;
-
-      if (ifaa === 'field' || ifaa === 'hunter' || ifaa === 'field_expert' || ifaa === 'indoor_standard' || ifaa === 'flint_indoor') {
-        arrows = 4;
-      } else if (ifaa === 'animal_2d' || ifaa === 'animal_3d') {
-        arrows = 3;
-      } else if (ifaa === '3d_hunting') {
-        arrows = 1;
-      } else if (ifaa === '3d_standard') {
-        arrows = 2;
-      }
 
       setArrowsPerEnd(arrows);
       setEndsCount(endsVal);

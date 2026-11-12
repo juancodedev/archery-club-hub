@@ -9,24 +9,55 @@ export interface ScoreResult {
 }
 
 /**
+ * Rondas IFAA puntuadas 5, 4, 3, 2, 1 con una X central que solo sirve para desempatar.
+ */
+const FIVE_RING_ROUNDS = ["indoor_standard", "field_expert"];
+
+/**
  * Valor de la X según la ronda.
- * En la ronda IFAA Indoor la X está dentro del 5, vale 5 y solo sirve para desempatar.
- * En el resto vale 10.
+ * En las rondas IFAA Indoor y Field Experto la X está dentro del 5, vale 5 y solo
+ * sirve para desempatar. En el resto vale 10.
  * @param ifaaRound - Ronda IFAA del tipo de torneo, o null si no es IFAA
  */
 export function xValueForRound(ifaaRound?: string | null): number {
-    return ifaaRound === "indoor_standard" ? 5 : 10;
+    return ifaaRound && FIVE_RING_ROUNDS.includes(ifaaRound) ? 5 : 10;
 }
 
 /**
- * Valores del teclado para las rondas IFAA de anillos (Field, Hunter, Indoor).
+ * Valores del teclado para las rondas IFAA de anillos (Field, Hunter, Field Experto, Indoor, Flint).
  * @param ifaaRound - Ronda IFAA del tipo de torneo
  */
 export function ifaaRingKeypad(ifaaRound?: string | null): string[] {
-    if (ifaaRound === "indoor_standard") {
+    if (ifaaRound && FIVE_RING_ROUNDS.includes(ifaaRound)) {
         return ["X", "5", "4", "3", "2", "1", "M"];
     }
     return ["5", "4", "3", "M"];
+}
+
+/**
+ * Flechas por serie según la ronda IFAA (Manual del Arquero IFAA).
+ * @param ifaaRound - Ronda IFAA del tipo de torneo, o null si no es IFAA
+ * @param configured - Flechas por serie del tipo de torneo, usadas fuera de IFAA
+ */
+export function ifaaArrowsPerEnd(ifaaRound: string | null | undefined, configured: number): number {
+    switch (ifaaRound) {
+        case "indoor_standard":
+            return 5;
+        case "field":
+        case "hunter":
+        case "field_expert":
+        case "flint_indoor":
+            return 4;
+        case "animal_2d":
+        case "animal_3d":
+            return 3;
+        case "3d_standard":
+            return 2;
+        case "3d_hunting":
+            return 1;
+        default:
+            return configured;
+    }
 }
 
 /**
@@ -159,39 +190,4 @@ export function formatArrowValue(value: string): string {
     }
 
     return v;
-}
-
-/**
- * Determina el color de una flecha según su valor
- * @param value - Valor de la flecha
- * @returns Clase CSS para el color
- */
-export function getArrowColor(value: string): string {
-    const numValue = arrowValue(value);
-
-    if (value.toUpperCase() === "X") {
-        return "text-yellow-500 font-bold";
-    }
-
-    if (numValue === 10) {
-        return "text-yellow-400 font-semibold";
-    }
-
-    if (numValue >= 9) {
-        return "text-green-500";
-    }
-
-    if (numValue >= 7) {
-        return "text-blue-500";
-    }
-
-    if (numValue >= 5) {
-        return "text-gray-400";
-    }
-
-    if (numValue === 0) {
-        return "text-red-400";
-    }
-
-    return "text-foreground";
 }

@@ -196,31 +196,6 @@ export const TRAINING_PRESETS = [
     }
 ] as const;
 
-// ─── SISTEMA DE PUNTUACIÓN ──────────────────────────────────────────────────
-
-/**
- * Anillos estándar (10 anillos, 5 colores):
- * Amarillo: X / 10
- * Rojo:     9  / 8
- * Azul:     7  / 6
- * Negro:    5  / 4
- * Blanco:   3  / 2 / 1
- *
- * La "X" (innermost) = 10 pts, pero cuenta como desempate en Indoor.
- */
-export const RING_COLORS: { min: number; max: number; color: string; name: string }[] = [
-    { min: 10, max: 10, color: "#FFD700", name: "Amarillo (X/10)" },
-    { min: 9, max: 9, color: "#FFD700", name: "Amarillo (9)" },
-    { min: 8, max: 8, color: "#E53E3E", name: "Rojo (8)" },
-    { min: 7, max: 7, color: "#E53E3E", name: "Rojo (7)" },
-    { min: 6, max: 6, color: "#3182CE", name: "Azul (6)" },
-    { min: 5, max: 5, color: "#3182CE", name: "Azul (5)" },
-    { min: 4, max: 4, color: "#1A202C", name: "Negro (4)" },
-    { min: 3, max: 3, color: "#1A202C", name: "Negro (3)" },
-    { min: 2, max: 2, color: "#FFFFFF", name: "Blanco (2)" },
-    { min: 1, max: 1, color: "#FFFFFF", name: "Blanco (1)" },
-];
-
 // ─── DISCIPLINAS NFAA/IFAA ──────────────────────────────────────────────────
 
 export const NFAA_DISCIPLINES = [

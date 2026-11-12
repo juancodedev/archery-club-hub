@@ -3,6 +3,7 @@ import {
     arrowValue,
     calculateEndScore,
     calculateTotalScore,
+    ifaaArrowsPerEnd,
     ifaaRingKeypad,
     validateArrowValue,
     xValueForRound,
@@ -73,10 +74,44 @@ describe("scoringUtils", () => {
             expect(ifaaRingKeypad("indoor_standard")).toEqual(["X", "5", "4", "3", "2", "1", "M"]);
         });
 
-        it("keeps 5, 4, 3 and M on the field and hunter keypads", () => {
-            for (const round of ["field", "hunter", "field_expert", "flint_indoor"]) {
+        it("keeps 5, 4, 3 and M on the field, hunter and flint keypads", () => {
+            for (const round of ["field", "hunter", "flint_indoor"]) {
                 expect(ifaaRingKeypad(round)).toEqual(["5", "4", "3", "M"]);
             }
+        });
+    });
+
+    describe("IFAA field expert round", () => {
+        it("scores X as 5 and still counts it for ties", () => {
+            const end = ["X", "4", "2", "1"];
+            const result = calculateTotalScore([end], false, xValueForRound("field_expert"));
+            expect(result.score).toBe(12);
+            expect(result.xCount).toBe(1);
+        });
+
+        it("offers X and 5 down to 1 on the keypad", () => {
+            expect(ifaaRingKeypad("field_expert")).toEqual(["X", "5", "4", "3", "2", "1", "M"]);
+        });
+    });
+
+    describe("ifaaArrowsPerEnd", () => {
+        it("uses five arrows per end in the indoor round", () => {
+            expect(ifaaArrowsPerEnd("indoor_standard", 4)).toBe(5);
+        });
+
+        it("keeps the arrows per end of the other IFAA rounds", () => {
+            expect(ifaaArrowsPerEnd("field", 6)).toBe(4);
+            expect(ifaaArrowsPerEnd("hunter", 6)).toBe(4);
+            expect(ifaaArrowsPerEnd("field_expert", 6)).toBe(4);
+            expect(ifaaArrowsPerEnd("flint_indoor", 6)).toBe(4);
+            expect(ifaaArrowsPerEnd("animal_2d", 6)).toBe(3);
+            expect(ifaaArrowsPerEnd("animal_3d", 6)).toBe(3);
+            expect(ifaaArrowsPerEnd("3d_hunting", 6)).toBe(1);
+            expect(ifaaArrowsPerEnd("3d_standard", 6)).toBe(2);
+        });
+
+        it("uses the tournament type setting outside IFAA rounds", () => {
+            expect(ifaaArrowsPerEnd(null, 6)).toBe(6);
         });
     });
 
