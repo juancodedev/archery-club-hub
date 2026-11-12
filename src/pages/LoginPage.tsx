@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Target, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContextCore";
 import { logger } from "@/lib/logger";
+import { safeRedirectPath } from "@/lib/safeRedirect";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
                 // Support custom redirect after login
                 const searchParams = new URLSearchParams(window.location.search);
-                const redirectPath = searchParams.get("redirect");
+                const redirectPath = safeRedirectPath(searchParams.get("redirect"));
                 if (redirectPath) {
                     logger.log(`➡️ [LoginPage] Redirecting to custom path: ${redirectPath}`);
                     navigate(redirectPath);
