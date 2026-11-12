@@ -1,5 +1,8 @@
 -- Access checks for member invitations.
 --
+-- This is a plain psql script, not a pgTAP test, so it lives outside
+-- supabase/tests where `supabase test db` would pick it up.
+--
 -- The full migration history does not replay on an empty database, so this test
 -- recreates the parts it needs as they stand in production:
 -- - the member_invitations table and its RLS policies
@@ -13,7 +16,7 @@
 --   docker cp supabase inv-test:/supabase
 --   docker exec inv-test psql -U postgres -v ON_ERROR_STOP=1 \
 --     -v migration=/supabase/migrations/20261112120000_close_invitation_token_exposure.sql \
---     -f /supabase/tests/invitation_access.test.sql
+--     -f /supabase/sql-checks/invitation_access.sql
 --   docker rm -f inv-test
 
 \set ON_ERROR_STOP on
