@@ -35,6 +35,30 @@ export function ifaaRingKeypad(ifaaRound?: string | null): string[] {
 }
 
 /**
+ * Color del anillo del blanco IFAA donde pegó una flecha, para pintar la celda.
+ * "neutral" se usa en rondas sin anillos (Animal, 3D, no IFAA) y en Field Experto
+ * y Flint, cuyos colores de zona todavía no están confirmados contra el manual.
+ */
+export type RingFace = "black" | "white" | "navy" | "miss" | "neutral" | "empty";
+
+const RING_FACES: Record<string, Record<string, RingFace>> = {
+    field: { "5": "black", "4": "white", "3": "black" },
+    hunter: { "5": "white", "4": "black", "3": "black" },
+    indoor_standard: { X: "white", "5": "white", "4": "navy", "3": "navy", "2": "navy", "1": "navy" },
+};
+
+/**
+ * @param ifaaRound - Ronda IFAA del tipo de torneo, o null si no es IFAA
+ * @param value - Valor de la flecha ('X', 'M', '5', ...)
+ */
+export function ringFace(ifaaRound: string | null | undefined, value: string): RingFace {
+    const v = value.toUpperCase().trim();
+    if (v === "" || v === "-") return "empty";
+    if (v === "M" || v === "0") return "miss";
+    return (ifaaRound && RING_FACES[ifaaRound]?.[v]) || "neutral";
+}
+
+/**
  * Flechas por serie según la ronda IFAA (Manual del Arquero IFAA).
  * @param ifaaRound - Ronda IFAA del tipo de torneo, o null si no es IFAA
  * @param configured - Flechas por serie del tipo de torneo, usadas fuera de IFAA

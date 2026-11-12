@@ -10,11 +10,12 @@ import { useToast } from "@/hooks/use-toast";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon } from "lucide-react";
+import { Crosshair, Calendar as CalendarIcon, Trophy, Target, Info, User as UserIcon, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DivisionSelect from "@/components/scores/DivisionSelect";
 import TournamentTypeSelect from "@/components/scores/TournamentTypeSelect";
-import { calculateTotalScore, ifaaArrowsPerEnd, ifaaRingKeypad, validateArrowValue, xValueForRound } from "@/lib/scoringUtils";
+import { calculateTotalScore, ifaaArrowsPerEnd, ifaaRingKeypad, ringFace, validateArrowValue, xValueForRound } from "@/lib/scoringUtils";
+import { RING_CELL_CLASSES } from "@/lib/ringCells";
 import { cn } from "@/lib/utils";
 import type { TournamentType, MemberBasic } from "@/types/archery";
 import { TRAINING_PRESETS } from "@/lib/archeryConstants";
@@ -534,10 +535,10 @@ export default function NewScorePage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="glass border-primary/20 hover:border-primary text-[10px] font-black uppercase tracking-tighter"
+                    className="glass border-primary/20 hover:border-primary text-xs font-black uppercase tracking-tighter"
                     onClick={() => applyPreset(p.id)}
                   >
-                    🎯 {p.name}
+                    {p.name}
                   </Button>
                 ))}
               </div>
@@ -619,13 +620,15 @@ export default function NewScorePage() {
                         className={cn(
                           "w-11 h-11 rounded-lg flex flex-col items-center justify-center text-xs font-black transition-all relative",
                           isActive
-                            ? "bg-primary text-black border-2 border-yellow-500 shadow-md shadow-primary/30 scale-105"
+                            ? "bg-primary text-primary-foreground border-2 border-primary shadow-md scale-105"
                             : isCompleted
-                            ? "bg-green-950/40 border border-green-500/40 text-green-400"
-                            : "bg-white/5 border border-border/30 text-muted-foreground hover:bg-white/10"
+                            ? "bg-card border border-primary/50 text-foreground"
+                            : "bg-muted border border-border text-muted-foreground hover:bg-accent"
                         )}
+                        aria-label={`Blanco ${idx + 1}, ${total} puntos`}
+                        aria-current={isActive ? "true" : undefined}
                       >
-                        <span className="text-[9px] opacity-75">#{idx + 1}</span>
+                        <span className="text-xs leading-none">#{idx + 1}</span>
                         <span className="text-sm tracking-tighter">{total}</span>
                       </button>
                     );
@@ -646,10 +649,11 @@ export default function NewScorePage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 hover:border-red-500/40 text-xs font-bold px-3 py-1 rounded-xl h-8"
+                    className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs font-bold px-3 py-1 rounded-xl h-8 gap-1.5"
                     onClick={() => resetTarget(activeEndIdx)}
                   >
-                    🗑️ Limpiar Blanco
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Limpiar Blanco
                   </Button>
                 </div>
 
@@ -665,13 +669,12 @@ export default function NewScorePage() {
                         type="button"
                         onClick={() => setActiveArrowIdx(aIdx)}
                         className={cn(
-                          "w-14 h-14 rounded-full font-black text-xl flex items-center justify-center transition-all border-2",
-                          isActiveSlot
-                            ? "bg-primary text-black border-yellow-500 shadow-md shadow-primary/30 scale-110"
-                            : val !== ""
-                            ? "bg-black/35 text-foreground border-primary/40"
-                            : "bg-black/20 text-muted-foreground/40 border-dashed border-border/30"
+                          "w-14 h-14 rounded-full font-display font-bold text-2xl flex items-center justify-center transition-all border-2",
+                          RING_CELL_CLASSES[ringFace(ifaaRound, val ?? "")],
+                          isActiveSlot && "ring-4 ring-ring ring-offset-2 ring-offset-background scale-110"
                         )}
+                        aria-label={`Flecha ${aIdx + 1}: ${val ? val : "vacía"}`}
+                        aria-pressed={isActiveSlot}
                       >
                         {val === "" ? "—" : val}
                       </button>
@@ -694,11 +697,10 @@ export default function NewScorePage() {
                             type="button"
                             onClick={() => handleIfaaArrowInput(val)}
                             className={cn(
-                              "h-16 rounded-2xl text-2xl font-black transition-all active:scale-95 shadow-lg border-2",
-                              val === "M"
-                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
-                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                              "h-16 rounded-2xl font-display text-3xl font-bold transition-all active:scale-95 shadow-sm border-2 hover:opacity-90",
+                              RING_CELL_CLASSES[ringFace(ifaaRound, val)]
                             )}
+                            aria-label={val === "M" ? "Fallo (M)" : val === "X" ? `X, vale ${xValue}` : val}
                           >
                             {val}
                           </button>
@@ -718,29 +720,29 @@ export default function NewScorePage() {
                             <button
                               type="button"
                               onClick={() => handleAnimalArrowInput(0, "KILL")}
-                              className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                              className="h-14 rounded-xl font-bold bg-primary border-2 border-primary text-primary-foreground hover:opacity-90 transition-all text-sm uppercase tracking-tighter"
                             >
-                              🎯 KILL (+20)
+                              KILL (+20)
                             </button>
                             <button
                               type="button"
                               onClick={() => handleAnimalArrowInput(0, "WOUND")}
-                              className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                              className="h-14 rounded-xl font-bold bg-card border-2 border-primary text-primary hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                             >
                               WOUND (+18)
                             </button>
                             <button
                               type="button"
                               onClick={() => handleAnimalArrowInput(0, "MISS")}
-                              className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                              className="h-14 rounded-xl font-bold bg-muted border-2 border-muted-foreground/40 text-muted-foreground hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                             >
-                              ❌ MISS
+                              MISS
                             </button>
                           </div>
                         ) : (
                           <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
                             <span>Flecha 1 registrada: <strong>{ends[activeEndIdx][0] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][0]})`}</strong></span>
-                            {ends[activeEndIdx][0] === "M" ? "⬇️ Siguiente" : "🔒 Blanco Completado"}
+                            {ends[activeEndIdx][0] === "M" ? "Siguiente flecha" : "Blanco completado"}
                           </div>
                         )}
                       </div>
@@ -754,29 +756,29 @@ export default function NewScorePage() {
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(1, "KILL")}
-                                className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-primary border-2 border-primary text-primary-foreground hover:opacity-90 transition-all text-sm uppercase tracking-tighter"
                               >
-                                🎯 KILL (+16)
+                                KILL (+16)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(1, "WOUND")}
-                                className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-card border-2 border-primary text-primary hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                               >
                                 WOUND (+14)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(1, "MISS")}
-                                className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-muted border-2 border-muted-foreground/40 text-muted-foreground hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                               >
-                                ❌ MISS
+                                MISS
                               </button>
                             </div>
                           ) : (
                             <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
                               <span>Flecha 2 registrada: <strong>{ends[activeEndIdx][1] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][1]})`}</strong></span>
-                              {ends[activeEndIdx][1] === "M" ? "⬇️ Siguiente" : "🔒 Blanco Completado"}
+                              {ends[activeEndIdx][1] === "M" ? "Siguiente flecha" : "Blanco completado"}
                             </div>
                           )}
                         </div>
@@ -791,29 +793,29 @@ export default function NewScorePage() {
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(2, "KILL")}
-                                className="h-14 rounded-xl font-bold bg-yellow-950/40 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-primary border-2 border-primary text-primary-foreground hover:opacity-90 transition-all text-sm uppercase tracking-tighter"
                               >
-                                🎯 KILL (+12)
+                                KILL (+12)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(2, "WOUND")}
-                                className="h-14 rounded-xl font-bold bg-green-950/40 border border-green-500/40 text-green-400 hover:bg-green-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-card border-2 border-primary text-primary hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                               >
                                 WOUND (+10)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => handleAnimalArrowInput(2, "MISS")}
-                                className="h-14 rounded-xl font-bold bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-950/60 transition-all text-sm uppercase tracking-tighter"
+                                className="h-14 rounded-xl font-bold bg-muted border-2 border-muted-foreground/40 text-muted-foreground hover:bg-accent transition-all text-sm uppercase tracking-tighter"
                               >
-                                ❌ MISS
+                                MISS
                               </button>
                             </div>
                           ) : (
                             <div className="glass p-3 rounded-xl flex items-center justify-between text-sm text-foreground/80">
                               <span>Flecha 3 registrada: <strong>{ends[activeEndIdx][2] === "M" ? "MISS" : `HIT (+${ends[activeEndIdx][2]})`}</strong></span>
-                              <span>🔒 Blanco Completado</span>
+                              <span>Blanco completado</span>
                             </div>
                           )}
                         </div>
@@ -839,10 +841,10 @@ export default function NewScorePage() {
                             type="button"
                             onClick={() => handle3dHuntingInput(item.score)}
                             className={cn(
-                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border-2",
+                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm border-2",
                               item.score === "M"
-                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
-                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                                ? cn(RING_CELL_CLASSES.miss, "hover:bg-accent")
+                                : cn(RING_CELL_CLASSES.neutral, "hover:border-primary hover:bg-accent")
                             )}
                           >
                             <span className="text-base font-black tracking-tight">{item.label}</span>
@@ -871,10 +873,10 @@ export default function NewScorePage() {
                             type="button"
                             onClick={() => handle3dStandardInput(item.score)}
                             className={cn(
-                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-lg border-2",
+                              "h-16 rounded-2xl flex flex-col items-center justify-center transition-all active:scale-95 shadow-sm border-2",
                               item.score === "M"
-                                ? "bg-red-950/40 border-red-500/40 text-red-400 hover:border-red-500 hover:bg-red-950/60"
-                                : "bg-black/40 border-primary/40 text-foreground hover:border-primary hover:bg-black/60"
+                                ? cn(RING_CELL_CLASSES.miss, "hover:bg-accent")
+                                : cn(RING_CELL_CLASSES.neutral, "hover:border-primary hover:bg-accent")
                             )}
                           >
                             <span className="text-base font-black tracking-tight">{item.label}</span>
@@ -893,7 +895,7 @@ export default function NewScorePage() {
               <div className="hidden md:block overflow-x-auto pb-4">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border uppercase tracking-widest text-[10px] text-muted-foreground font-bold">
+                    <tr className="border-b border-border uppercase tracking-widest text-xs text-muted-foreground font-bold">
                       <th className="py-3 px-2 text-left">Round</th>
                       {Array.from({ length: arrowsPerEnd }, (_, i) => (
                         <th key={i} className="py-3 px-1 text-center">F{i + 1}</th>
@@ -904,7 +906,7 @@ export default function NewScorePage() {
                   </thead>
                   <tbody>
                     {ends.map((end, endIdx) => (
-                      <tr key={endIdx} className="border-b border-border/30 hover:bg-white/5 transition-colors">
+                      <tr key={endIdx} className="border-b border-border/30 hover:bg-muted/50 transition-colors">
                         <td className="py-3 px-2 font-bold text-foreground/70">#{endIdx + 1}</td>
                         {end.map((arrow, arrowIdx) => (
                           <td key={arrowIdx} className="py-1.5 px-1">
@@ -933,11 +935,11 @@ export default function NewScorePage() {
                       <span className="font-black text-primary text-xs uppercase tracking-tighter">Round {endIdx + 1}</span>
                       <div className="flex gap-3">
                         <div className="flex flex-col items-center">
-                          <span className="text-[8px] font-bold text-muted-foreground uppercase">Parcial</span>
+                          <span className="text-xs font-bold text-muted-foreground uppercase">Parcial</span>
                           <span className="text-sm font-bold text-foreground">{endTotal(end)}</span>
                         </div>
                         <div className="flex flex-col items-center">
-                          <span className="text-[8px] font-bold text-muted-foreground uppercase">Acumulado</span>
+                          <span className="text-xs font-bold text-muted-foreground uppercase">Acumulado</span>
                           <span className="text-sm font-black text-primary">{runningTotal(endIdx)}</span>
                         </div>
                       </div>
@@ -966,12 +968,12 @@ export default function NewScorePage() {
             <div className="glass rounded-3xl px-8 py-5 text-center border-primary/20 shadow-2xl shadow-primary/10 relative overflow-hidden group">
               <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
               <div className="relative">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-[0.2em] mb-1">Puntaje Total</p>
+                <p className="text-xs text-muted-foreground uppercase font-black tracking-[0.2em] mb-1">Puntaje Total</p>
                 <div className="flex items-center justify-center gap-3">
-                  <Trophy className="h-6 w-6 text-yellow-500 animate-pulse" />
+                  <Trophy className="h-6 w-6 text-primary" aria-hidden="true" />
                   <p className="text-5xl font-display font-black text-primary tabular-nums tracking-tighter">{grandTotal}</p>
                   {xCount > 0 && (
-                    <span className="text-xl font-bold text-yellow-500/80">({xCount}X)</span>
+                    <span className="text-xl font-bold text-muted-foreground">({xCount}X)</span>
                   )}
                 </div>
               </div>

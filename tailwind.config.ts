@@ -19,6 +19,12 @@ export default {
         body: ["Barlow", "system-ui", "sans-serif"],
       },
       colors: {
+        // IFAA target face colors. They stay the same in dark mode, like the real faces.
+        ifaa: {
+          black: "#111214",
+          white: "#FFFFFF",
+          navy: "#041E42",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

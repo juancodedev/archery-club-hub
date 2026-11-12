@@ -5,6 +5,7 @@ import {
     calculateTotalScore,
     ifaaArrowsPerEnd,
     ifaaRingKeypad,
+    ringFace,
     validateArrowValue,
     xValueForRound,
 } from "../scoringUtils";
@@ -112,6 +113,47 @@ describe("scoringUtils", () => {
 
         it("uses the tournament type setting outside IFAA rounds", () => {
             expect(ifaaArrowsPerEnd(null, 6)).toBe(6);
+        });
+    });
+
+    describe("ringFace", () => {
+        it("paints field values like the field face: black spot, white ring, black outer ring", () => {
+            expect(["5", "4", "3"].map((v) => ringFace("field", v))).toEqual(["black", "white", "black"]);
+        });
+
+        it("paints hunter values like the hunter face: white spot on black", () => {
+            expect(["5", "4", "3"].map((v) => ringFace("hunter", v))).toEqual(["white", "black", "black"]);
+        });
+
+        it("paints indoor X and 5 white and 4 down to 1 navy", () => {
+            expect(["X", "5", "4", "3", "2", "1"].map((v) => ringFace("indoor_standard", v))).toEqual([
+                "white", "white", "navy", "navy", "navy", "navy",
+            ]);
+        });
+
+        it("keeps field expert and flint neutral until their face colors are confirmed", () => {
+            for (const round of ["field_expert", "flint_indoor"]) {
+                expect(["X", "5", "4", "3", "2", "1"].map((v) => ringFace(round, v))).toEqual(Array(6).fill("neutral"));
+            }
+        });
+
+        it("keeps animal, 3D and non-IFAA values neutral", () => {
+            expect(ringFace("animal_2d", "20")).toBe("neutral");
+            expect(ringFace("3d_standard", "10")).toBe("neutral");
+            expect(ringFace(null, "9")).toBe("neutral");
+        });
+
+        it("marks misses and empty slots in every round", () => {
+            for (const round of ["field", "indoor_standard", "animal_2d", null]) {
+                expect(ringFace(round, "M")).toBe("miss");
+                expect(ringFace(round, "0")).toBe("miss");
+                expect(ringFace(round, "")).toBe("empty");
+            }
+        });
+
+        it("reads lowercase x and padded values", () => {
+            expect(ringFace("indoor_standard", " x ")).toBe("white");
+            expect(ringFace("field", "m")).toBe("miss");
         });
     });
 
