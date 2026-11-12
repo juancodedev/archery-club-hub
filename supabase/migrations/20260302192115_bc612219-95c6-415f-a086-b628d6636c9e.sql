@@ -2,13 +2,17 @@
 -- 1. Fix is_super_admin function: remove hardcoded email check
 CREATE OR REPLACE FUNCTION public.is_super_admin(p_user_id uuid)
  RETURNS boolean
- LANGUAGE sql
+ LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
-SELECT EXISTS (
-  SELECT 1 FROM public.super_admins WHERE user_id = p_user_id
-);
+-- Replay note: plpgsql, not sql, because public.super_admins is never created
+-- by any migration; see 20260213183500_saas_hardening.
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.super_admins WHERE user_id = p_user_id
+  );
+END;
 $function$;
 
 -- 2. Fix system_settings RLS: remove hardcoded email from "SuperAdmin system settings all"

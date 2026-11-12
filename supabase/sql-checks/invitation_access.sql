@@ -3,8 +3,8 @@
 -- This is a plain psql script, not a pgTAP test, so it lives outside
 -- supabase/tests where `supabase test db` would pick it up.
 --
--- The full migration history does not replay on an empty database, so this test
--- recreates the parts it needs as they stand in production:
+-- It was written when the migration history did not replay, so it runs on a
+-- bare Postgres and recreates the parts it needs as they stand in production:
 -- - the member_invitations table and its RLS policies
 -- - the get_invitation_by_token RPC
 -- - stub accept_invitation_v2 overloads with their API grants
