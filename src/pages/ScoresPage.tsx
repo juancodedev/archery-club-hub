@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { arrowValue, xValueForRound } from "@/lib/scoringUtils";
+import RingCell from "@/components/scores/RingCell";
 import type { MemberBasic } from "@/types/archery";
 import { toast } from "sonner";
 import { getSafeErrorMessage } from "@/lib/errorUtils";
@@ -231,11 +231,11 @@ export default function ScoresPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="glass rounded-2xl border-white/5 overflow-hidden"
+        className="glass rounded-2xl border-border overflow-hidden"
       >
         <button
           onClick={() => setIsFiltersOpen(!isFiltersOpen)}
-          className="w-full p-4 flex items-center justify-between text-sm font-bold bg-white/5 hover:bg-white/10 transition-colors"
+          className="w-full p-4 flex items-center justify-between text-sm font-bold bg-muted/50 hover:bg-muted transition-colors"
         >
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-primary" /> Filtros Avanzados
@@ -247,12 +247,12 @@ export default function ScoresPage() {
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
-            className="p-5 space-y-6 border-t border-white/5"
+            className="p-5 space-y-6 border-t border-border"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {isSuperAdmin && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Club</Label>
+                  <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Club</Label>
                   <Select value={selectedClubId} onValueChange={setSelectedClubId}>
                     <SelectTrigger className="glass h-10"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent className="glass">
@@ -265,7 +265,7 @@ export default function ScoresPage() {
 
               {(isAdmin || isSuperAdmin) && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Arquero</Label>
+                  <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Arquero</Label>
                   <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
                     <SelectTrigger className="glass h-10"><SelectValue placeholder="Todos" /></SelectTrigger>
                     <SelectContent className="glass">
@@ -277,27 +277,27 @@ export default function ScoresPage() {
               )}
 
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Desde</Label>
+                <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Desde</Label>
                 <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="glass h-10" />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Hasta</Label>
+                <Label className="text-xs uppercase font-black text-muted-foreground tracking-widest">Hasta</Label>
                 <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="glass h-10" />
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-white/5">
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-border">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Label className="text-xs font-bold text-muted-foreground whitespace-nowrap uppercase tracking-tighter">Disciplina:</Label>
                 <Select value={modality} onValueChange={setModality}>
                   <SelectTrigger className="glass h-9 w-full sm:w-56"><SelectValue /></SelectTrigger>
                   <SelectContent className="glass">
                     <SelectItem value="all">Todas las disciplinas</SelectItem>
-                    <SelectItem value="outdoor">🎯 Aire Libre (Outdoor)</SelectItem>
-                    <SelectItem value="indoor">🏠 Sala (Indoor)</SelectItem>
-                    <SelectItem value="campo">🌲 Tiro de Campo (Field)</SelectItem>
-                    <SelectItem value="3d">🐗 3D</SelectItem>
+                    <SelectItem value="outdoor">Aire Libre (Outdoor)</SelectItem>
+                    <SelectItem value="indoor">Sala (Indoor)</SelectItem>
+                    <SelectItem value="campo">Tiro de Campo (Field)</SelectItem>
+                    <SelectItem value="3d">3D</SelectItem>
                     <SelectItem value="recurvo">Recurvo</SelectItem>
                     <SelectItem value="compuesto">Compuesto</SelectItem>
                     <SelectItem value="barebow">Barebow</SelectItem>
@@ -307,7 +307,7 @@ export default function ScoresPage() {
               </div>
               <Button variant="ghost" size="sm" onClick={() => {
                 setStartDate(""); setEndDate(""); setSelectedMemberId("all"); setModality("all");
-              }} className="text-[10px] h-8 font-black uppercase tracking-widest text-primary/70 hover:text-primary">
+              }} className="text-xs h-8 font-black uppercase tracking-widest text-primary/70 hover:text-primary">
                 Limpiar Búsqueda
               </Button>
             </div>
@@ -338,21 +338,21 @@ export default function ScoresPage() {
                   }}
                 >
                   <div
-                    className="glass rounded-2xl overflow-hidden border border-white/5 hover:border-primary/20 transition-all shadow-lg active:scale-[0.99]"
+                    className="glass rounded-2xl overflow-hidden border border-border hover:border-primary/20 transition-all shadow-lg active:scale-[0.99]"
                   >
               <button
                 onClick={() => setExpandedId(expandedId === score.id ? null : score.id)}
-                className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors relative"
+                className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors relative"
               >
                 <div className="flex items-center gap-5">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20 shadow-inner">
-                    {score.total_score >= 300 ? "🎯" : score.total_score.toString().charAt(0)}
+                    {score.total_score >= 300 ? <Target className="h-5 w-5" aria-hidden="true" /> : score.total_score.toString().charAt(0)}
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-lg leading-tight flex flex-wrap items-center gap-2">
                       {score.event_name || "Sesión de Entrenamiento"}
                       {isSuperAdmin && (
-                        <Badge variant="outline" className="text-[8px] bg-white/5 px-1.5 h-4 uppercase border-white/10">
+                        <Badge variant="outline" className="text-xs bg-muted px-1.5 h-4 uppercase border-border">
                           {score.clubs?.name}
                         </Badge>
                       )}
@@ -364,14 +364,14 @@ export default function ScoresPage() {
                       <span className="flex items-center gap-1.5">
                         <CalendarIcon className="h-3 w-3" /> {new Date(score.score_date).toLocaleDateString("es-CL")}
                       </span>
-                      {score.division && <Badge variant="secondary" className="text-[9px] h-4 px-1.5 capitalize font-black">{score.division}</Badge>}
+                      {score.division && <Badge variant="secondary" className="text-xs h-4 px-1.5 capitalize font-black">{score.division}</Badge>}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-5">
                   <div className="text-right">
                     <p className="text-3xl font-display font-black text-primary tabular-nums tracking-tighter">{score.total_score}</p>
-                    <p className="text-[9px] uppercase text-muted-foreground font-black tracking-[0.2em] -mt-1">Puntos</p>
+                    <p className="text-xs uppercase text-muted-foreground font-black tracking-[0.2em] -mt-1">Puntos</p>
                   </div>
                   {expandedId === score.id ? (
                     <ChevronUp className="h-5 w-5 text-muted-foreground" />
@@ -386,13 +386,13 @@ export default function ScoresPage() {
                   <div className="max-w-xl mx-auto space-y-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Target className="h-4 w-4 text-primary" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Desglose de rondas</span>
+                      <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Desglose de rondas</span>
                     </div>
 
                     <div className="overflow-x-auto pb-2 scrollbar-hide">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-white/10 uppercase tracking-tighter text-muted-foreground text-[10px] font-black">
+                          <tr className="border-b border-border uppercase tracking-tighter text-muted-foreground text-xs font-black">
                             <th className="py-2 px-2 text-left">ROUND</th>
                             {Array.from({ length: 5 }, (_, i) => (
                               <th key={i} className="py-2 px-1 text-center">F{i + 1}</th>
@@ -400,24 +400,16 @@ export default function ScoresPage() {
                             <th className="py-2 px-2 text-center text-primary font-black">TOTAL</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/5">
+                        <tbody className="divide-y divide-border">
                           {(score.ends as string[][])?.map((end: string[], endIdx: number) => {
                             const xValue = xValueForRound(score.tournament_types?.ifaa_round);
                             const total = end.reduce((s, a) => s + arrowValue(a, false, xValue), 0);
                             return (
-                              <tr key={endIdx} className="hover:bg-white/5 transition-colors">
-                                <td className="py-3 px-2 text-muted-foreground font-black text-[10px]">#{endIdx + 1}</td>
+                              <tr key={endIdx} className="hover:bg-muted/50 transition-colors">
+                                <td className="py-3 px-2 text-muted-foreground font-black text-xs">#{endIdx + 1}</td>
                                 {end.map((arrow, j) => (
                                   <td key={j} className="py-2 px-1 text-center">
-                                    <span className={cn(
-                                      "inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black shadow-sm",
-                                      arrow === "X" || arrow === "10" ? "bg-yellow-500/20 text-yellow-500 border border-yellow-500/30" :
-                                        ["9", "8"].includes(arrow) ? "bg-red-500/20 text-red-400 border border-red-500/30" :
-                                          ["7", "6"].includes(arrow) ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" :
-                                            arrow === "M" ? "bg-muted/50 text-muted-foreground/50 border border-transparent" : "bg-white/5 text-foreground/70 border border-white/5"
-                                    )}>
-                                      {arrow || "—"}
-                                    </span>
+                                    <RingCell ifaaRound={score.tournament_types?.ifaa_round} value={arrow} />
                                   </td>
                                 ))}
                                 <td className="py-2 px-2 text-center font-black text-foreground bg-primary/10 rounded-lg">{total}</td>
@@ -431,15 +423,15 @@ export default function ScoresPage() {
                     {score.detail && (
                       <div className="bg-primary/5 rounded-2xl p-4 text-xs text-muted-foreground border border-primary/10 relative">
                         <Info className="h-4 w-4 text-primary/30 absolute top-3 right-3" />
-                        <p className="font-bold uppercase text-[9px] mb-2 tracking-widest text-primary/60">Observaciones</p>
+                        <p className="font-bold uppercase text-xs mb-2 tracking-widest text-primary/60">Observaciones</p>
                         <p className="italic leading-relaxed">"{score.detail}"</p>
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5 justify-end">
+                    <div className="flex flex-wrap gap-2 pt-4 border-t border-border justify-end">
                       <Button
                         onClick={() => setActiveExportScore(score)}
-                        className="gap-2 text-xs font-black uppercase tracking-widest bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl h-9 px-4 shadow-lg shadow-emerald-500/20"
+                        className="gap-2 text-xs font-black uppercase tracking-widest rounded-xl h-9 px-4"
                       >
                         <Printer className="h-3.5 w-3.5" />
                         Exportar Tarjeta IFAA
@@ -450,7 +442,7 @@ export default function ScoresPage() {
                           <Link to={`/scores/new?editId=${score.id}`}>
                             <Button
                               variant="outline"
-                              className="gap-2 text-xs font-black uppercase tracking-widest border-white/10 hover:border-primary/50 text-foreground glass rounded-xl h-9 px-4"
+                              className="gap-2 text-xs font-black uppercase tracking-widest border-border hover:border-primary/50 text-foreground glass rounded-xl h-9 px-4"
                             >
                               <Edit className="h-3.5 w-3.5 text-primary" />
                               Editar
@@ -460,7 +452,7 @@ export default function ScoresPage() {
                           <Button
                             onClick={() => setDeleteTargetId(score.id)}
                             variant="destructive"
-                            className="gap-2 text-xs font-black uppercase tracking-widest rounded-xl h-9 px-4 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 transition-all"
+                            className="gap-2 text-xs font-black uppercase tracking-widest rounded-xl h-9 px-4"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Eliminar
@@ -478,7 +470,7 @@ export default function ScoresPage() {
           </div>
         </div>
       ) : (
-        <div className="glass rounded-3xl p-16 text-center space-y-6 border-dashed border-2 border-white/5">
+        <div className="glass rounded-3xl p-16 text-center space-y-6 border-dashed border-2 border-border">
           <Target className="h-16 w-16 mx-auto text-muted-foreground/20 animate-bounce" />
           <div className="space-y-2">
             <p className="text-xl font-bold text-foreground">Sin registros detectados</p>
@@ -496,18 +488,20 @@ export default function ScoresPage() {
       {/* IFAA SCORECARD EXPORT MODAL */}
       {activeExportScore && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm no-print overflow-y-auto animate-in fade-in duration-200">
-          <div className="glass w-full max-w-4xl rounded-3xl border border-white/10 p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
+          <div className="glass w-full max-w-4xl rounded-3xl border border-border p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto">
             <button
+              type="button"
+              aria-label="Cerrar vista de exportación"
               onClick={() => setActiveExportScore(null)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-white/5 transition-colors"
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/5 pb-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border pb-4">
               <div>
                 <h2 className="text-xl font-display font-bold text-foreground flex items-center gap-2">
-                  <Printer className="h-5 w-5 text-primary animate-pulse" /> Vista de Exportación
+                  <Printer className="h-5 w-5 text-primary" aria-hidden="true" /> Vista de Exportación
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">Generación oficial de ficha de puntaje IFAA</p>
               </div>
@@ -515,14 +509,14 @@ export default function ScoresPage() {
                 <Button
                   variant="outline"
                   onClick={() => setActiveExportScore(null)}
-                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-white/10"
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-border"
                 >
                   Cerrar
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => window.print()}
-                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-white/10 text-foreground hover:bg-white/5 gap-2"
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl border-border text-foreground hover:bg-muted/50 gap-2"
                 >
                   <Printer className="h-4 w-4 text-primary" />
                   Imprimir Físico
@@ -530,7 +524,7 @@ export default function ScoresPage() {
                 <Button
                   onClick={handleDownloadPDF}
                   disabled={downloadingPDF}
-                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/20 gap-2"
+                  className="flex-1 sm:flex-initial h-10 font-bold rounded-xl shadow-lg shadow-primary/20 gap-2"
                 >
                   {downloadingPDF ? "Cargando motor..." : "Generar y Descargar PDF"}
                 </Button>

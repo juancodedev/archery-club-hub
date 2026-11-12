@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { arrowValue, xValueForRound } from "@/lib/scoringUtils";
+import RingCell from "@/components/scores/RingCell";
 
 interface MemberScoreHistoryDialogProps {
   memberId: string | null;
@@ -114,7 +115,9 @@ export default function MemberScoreHistoryDialog({
                               <tr key={endIdx} className="border-b border-border/30">
                                 <td className="py-1 px-2 text-foreground font-medium">End {endIdx + 1}</td>
                                 {end.map((arrow, j) => (
-                                  <td key={j} className="py-1 px-1 text-center text-foreground">{arrow || "—"}</td>
+                                  <td key={j} className="py-1 px-1 text-center">
+                                    <RingCell ifaaRound={score.tournament_types?.ifaa_round} value={arrow} />
+                                  </td>
                                 ))}
                                 <td className="py-1 px-2 text-center font-semibold text-foreground">{total}</td>
                               </tr>
