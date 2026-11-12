@@ -30,7 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq("user_id", userId);
 
             if (membersError) {
+                // A failed query is not "no memberships": keep whatever was loaded so a
+                // transient error (for example during a token refresh) does not sign the
+                // user out of their club mid-session.
                 logger.error("Error al obtener membresías:", membersError);
+                return;
             }
 
             logger.log("Datos de membresía recibidos: " + JSON.stringify(membersData));
@@ -72,9 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
             logger.log("fetchMember finalizado.");
         } catch (e) {
+            // Same as a query error: keep the current member instead of clearing it.
             logger.error("Error crítico en AuthContext:", e);
-            setMemberships([]);
-            setMember(null);
         }
     };
 
